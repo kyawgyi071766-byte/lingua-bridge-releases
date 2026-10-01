@@ -1,0 +1,35 @@
+{
+  "appId": "com.lingua.bridge",
+  "productName": "Lingua Bridge",
+  "artifactName": "Lingua-Bridge-Setup-${version}.${ext}",
+  "directories": {
+    "output": "release-v1.0.35-public"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "build/lingua.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Lingua Bridge",
+    "installerIcon": "build/lingua.ico",
+    "uninstallerIcon": "build/lingua.ico"
+  }
+}

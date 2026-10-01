@@ -1,0 +1,9 @@
+desktop-bridge/
+release*/
+*.exe
+*.blockmap
+*.zip
+node_modules/
+.next/
+dist/
+out/

@@ -1,0 +1,17 @@
+LINGUA BRIDGE v1.0.22 — START HERE
+
+Only use these two scripts for this release:
+
+1) Server / website deploy
+   DEPLOY_VERCEL_v1.0.22_GLOBAL_PUBLIC_RELEASE.bat
+
+2) Windows public build
+   desktop-bridge\BUILD_WINDOWS_v1.0.22_GLOBAL_PUBLIC_RELEASE.bat
+
+After the Windows build finishes, open:
+   desktop-bridge\release-v1.0.22-public\PUBLIC_RELEASE_INFO.txt
+
+Then follow:
+   PUBLIC_LAUNCH_CHECKLIST_v1.0.22.md
+
+Older build/deploy scripts are stored under legacy-scripts so they are not accidentally used.

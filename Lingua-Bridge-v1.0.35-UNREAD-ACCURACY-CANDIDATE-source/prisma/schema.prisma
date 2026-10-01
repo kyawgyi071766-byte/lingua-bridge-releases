@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String?
+  role                  String    @default("user")
+  plan                  String    @default("free")
+  paidUntil             DateTime?
+  suspended             Boolean   @default(false)
+  emailVerifiedAt       DateTime?
+  verificationTokenHash String?   @unique
+  verificationExpiresAt DateTime?
+  resetTokenHash        String?   @unique
+  resetExpiresAt        DateTime?
+  sessionVersion        Int       @default(0)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  usageChars            Int       @default(0)
+  usageResetAt          DateTime  @default(now())
+  voiceUses             Int       @default(0)
+  voiceUsageResetAt     DateTime  @default(now())
+  grantType             String    @default("free") @map("grant_type")
+  accessCodeId          String?   @map("access_code_id")
+  lastActiveAt          DateTime  @default(now()) @map("last_active_at")
+  accessCode            AccessCode? @relation("ActiveAccessCode", fields: [accessCodeId], references: [id], onDelete: SetNull)
+  accessCodeRedemptions AccessCodeRedemption[]
+  devices               UserDevice[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  payments              Payment[]
+}
+
+
+
+model AccessCode {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  encryptedCode String   @map("encrypted_code")
+  level         String
+  maxUses       Int      @default(1) @map("max_uses")
+  usedCount     Int      @default(0) @map("used_count")
+  expiresAt     DateTime? @map("expires_at")
+  createdBy     String   @map("created_by")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  activeUsers   User[]   @relation("ActiveAccessCode")
+  redemptions   AccessCodeRedemption[]
+
+  @@index([isActive, expiresAt])
+  @@map("access_codes")
+}
+
+model AccessCodeRedemption {
+  id           String   @id @default(cuid())
+  accessCodeId String   @map("access_code_id")
+  userId       String   @map("user_id")
+  level        String
+  expiresAt    DateTime? @map("expires_at")
+  redeemedAt   DateTime @default(now()) @map("redeemed_at")
+  accessCode   AccessCode @relation(fields: [accessCodeId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([accessCodeId, userId])
+  @@index([userId, redeemedAt])
+  @@map("access_code_redemptions")
+}
+
+
+model UserDevice {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  fingerprintHash String   @map("fingerprint_hash")
+  deviceName      String   @map("device_name")
+  deviceType      String   @map("device_type")
+  platform        String
+  appVersion      String?  @map("app_version")
+  lastSeenAt      DateTime @default(now()) @map("last_seen_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  revokedAt       DateTime? @map("revoked_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fingerprintHash])
+  @@index([userId, revokedAt, lastSeenAt])
+  @@map("user_devices")
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  userId      String
+  plan        String
+  amount      Decimal       @db.Decimal(10, 2)
+  chain       String
+  txHash      String?       @unique
+  receiptHash String?       @unique @map("receipt_hash")
+  receiptStatus String?     @map("receipt_status")
+  receiptReview Json?       @map("receipt_review")
+  receiptSubmittedAt DateTime? @map("receipt_submitted_at")
+  status      PaymentStatus @default(pending)
+  claimedAt   DateTime      @default(now())
+  confirmedAt DateTime?
+  matchKey    String?       @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, claimedAt])
+  @@index([chain, status, claimedAt])
+}
+
+model SupportedApp {
+  id        String   @id @default(cuid())
+  name      String
+  quantity  Int      @default(1)
+  enabled   Boolean  @default(true)
+  color     String   @default("#2563eb")
+  createdAt DateTime @default(now())
+}
+
+model RateLimitBucket {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}

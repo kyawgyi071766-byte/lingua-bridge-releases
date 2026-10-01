@@ -1,0 +1,41 @@
+name: Build Lingua Bridge Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Syntax checks
+        shell: pwsh
+        run: |
+          node --check electron/main.cjs
+          node --check electron/host-preload.cjs
+          node --check electron/service-preload.cjs
+          node --check src/app.js
+          node --check scripts/build-static.cjs
+
+      - name: Build Windows installer
+        run: npm run build:win
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-bridge-windows
+          path: release/*
+          if-no-files-found: error

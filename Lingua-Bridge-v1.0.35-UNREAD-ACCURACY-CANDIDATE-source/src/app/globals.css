@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { @apply bg-slate-50 text-slate-900 antialiased; }
+
+.legal h1 { @apply text-3xl font-bold mb-4; }
+.legal h2 { @apply text-xl font-bold mt-8 mb-2; }
+.legal p { @apply text-slate-600 leading-7 mb-4; }
+.legal a { @apply text-brand-600 hover:underline; }

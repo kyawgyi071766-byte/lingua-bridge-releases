@@ -1,0 +1,25 @@
+{
+  "appId": "com.lingua.bridge.inline.translation.recovery.candidate",
+  "productName": "Lingua Bridge Inline Translation Recovery Candidate",
+  "directories": {
+    "output": "release-v1.0.35-public"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      {
+        "target": "zip",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "build/lingua.ico"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+.next
+.worktrees
+.superpowers
+.env
+.env.local
+*.db
+*.db-journal
+.DS_Store
+
+electron/runtime-config.json

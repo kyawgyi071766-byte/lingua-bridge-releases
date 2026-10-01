@@ -1,0 +1,106 @@
+name: Build test installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: Deployed Lingua HTTPS URL, for example https://lingua.example.com
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  SERVER_URL: ${{ inputs.server_url }}
+
+jobs:
+  android:
+    name: Android test APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npx cap add android
+      - run: npx cap sync android
+      - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-android-test-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  windows:
+    name: Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - shell: pwsh
+        run: npm run electron:build:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-windows
+          path: dist-electron/**
+
+  linux:
+    name: Linux installers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run electron:build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-linux
+          path: dist-electron/**
+
+  macos:
+    name: macOS test DMG
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run electron:build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-macos-test
+          path: dist-electron/**
+
+  ios-simulator:
+    name: iOS simulator build
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx cap add ios
+      - run: npx cap sync ios
+      - run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphonesimulator -derivedDataPath ios-build CODE_SIGNING_ALLOWED=NO build
+      - run: ditto -c -k --sequesterRsrc --keepParent ios-build/Build/Products/Release-iphonesimulator/App.app lingua-ios-simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-ios-simulator
+          path: lingua-ios-simulator.zip
