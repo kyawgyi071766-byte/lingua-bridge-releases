@@ -145,6 +145,18 @@ export default async function HomePage() {
           })}
         </div>
       </section>
+
+      {/* Customer sales and support contact */}
+      <section className="max-w-4xl mx-auto px-6 pb-16">
+        <div className="bg-brand-50 border border-brand-200 rounded-2xl p-6 text-center">
+          <h2 className="text-2xl font-bold">ဝယ်ယူရန်နှင့် အကူအညီရယူရန်</h2>
+          <p className="mt-2 text-slate-600">Pro သို့မဟုတ် Business အစီအစဉ် ဝယ်ယူခြင်း၊ အကောင့်အတည်ပြုခြင်းနှင့် ငွေပေးချေမှုအကူအညီအတွက် Owner ကို ဆက်သွယ်ပါ။ သင့် Lingua အကောင့် Gmail နှင့် လိုချင်သောအစီအစဉ်ကို ပေးပို့ပါ။</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Telegram မှ ဆက်သွယ်ရန်</a>
+            <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Gmail ပို့ရန်</a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
