@@ -19,6 +19,26 @@ env:
   SOURCE_DIR: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
 
 jobs:
+  quality-gate:
+    name: Web production build and release audits
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm ci
+      - run: npm run audit:static
+      - run: npm run audit:gemini
+      - run: npm run audit:public-release
+      - run: npm run build
+
+jobs:
   android:
     name: Android test APK
     runs-on: ubuntu-latest
