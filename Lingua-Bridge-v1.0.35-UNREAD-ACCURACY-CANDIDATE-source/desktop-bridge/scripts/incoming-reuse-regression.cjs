@@ -18,4 +18,25 @@ assert.equal(
   'incoming scan must compare the current message fingerprint before skipping'
 );
 
-console.log('PASS reused-message-node incoming translation guard');
+assert.match(
+  source,
+  /const TRANSLATION_CACHE_LIMIT = 5000;/,
+  'translation history cache must retain a durable local window'
+);
+assert.match(
+  source,
+  /function forceRefreshIncomingTranslation\(node\)/,
+  'each translation card must support an explicit refresh'
+);
+assert.match(
+  source,
+  /function ensureManualTranslateAction\(node\)/,
+  'untranslated incoming messages must expose a manual translation action'
+);
+assert.match(
+  source,
+  /className = 'lingua-refresh-translation'/,
+  'refresh controls must use the dedicated refresh icon class'
+);
+
+console.log('PASS reused-message-node and translation-history refresh guards');
