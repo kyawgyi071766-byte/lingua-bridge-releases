@@ -552,10 +552,113 @@ function isOutgoingMessage(node) {
     || Boolean(bubble.matches?.('[data-outgoing="true"], [data-owner="self"], [data-testid*="outgoing"]'));
 }
 
+function makeRefreshButton(label = 'Refresh translation') {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'lingua-refresh-translation';
+  button.setAttribute('aria-label', label);
+  button.title = label;
+  button.textContent = '↻';
+  Object.assign(button.style, {
+    width: '22px',
+    height: '22px',
+    minWidth: '22px',
+    padding: '0',
+    margin: '0 0 0 6px',
+    border: '0',
+    borderRadius: '50%',
+    background: 'transparent',
+    color: '#cbd5e1',
+    font: '700 17px/22px system-ui, sans-serif',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: '0.9'
+  });
+  button.addEventListener('mouseenter', () => { button.style.background = 'rgba(148,163,184,.16)'; });
+  button.addEventListener('mouseleave', () => { button.style.background = 'transparent'; });
+  return button;
+}
+
+function removeManualTranslateAction(node) {
+  try { findBubble(node)?.querySelector(':scope > .lingua-translate-action')?.remove(); } catch (_) {}
+}
+
+function ensureManualTranslateAction(node) {
+  if (!node?.isConnected || isOutgoingMessage(node)) return null;
+  const bubble = findBubble(node);
+  if (!bubble) return null;
+  if (bubble.querySelector(':scope > .lingua-inline-translation')) {
+    removeManualTranslateAction(node);
+    return null;
+  }
+  let action = bubble.querySelector(':scope > .lingua-translate-action');
+  if (action) return action;
+  action = document.createElement('div');
+  action.className = 'lingua-translate-action';
+  Object.assign(action.style, {
+    marginTop: '4px',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    minHeight: '22px'
+  });
+  const button = makeRefreshButton('Translate this message');
+  button.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    forceRefreshIncomingTranslation(node);
+  }, true);
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    forceRefreshIncomingTranslation(node);
+  }, true);
+  action.appendChild(button);
+  bubble.appendChild(action);
+  return action;
+}
+
+function ensureTranslationRefreshButton(host, node) {
+  if (!host) return null;
+  let row = host.querySelector('.lingua-inline-actions');
+  if (!row) {
+    row = document.createElement('div');
+    row.className = 'lingua-inline-actions';
+    Object.assign(row.style, {
+      marginTop: '3px',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      minHeight: '22px'
+    });
+    host.appendChild(row);
+  }
+  if (!row.querySelector('.lingua-refresh-translation')) {
+    const button = makeRefreshButton('Refresh translation');
+    button.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      forceRefreshIncomingTranslation(node);
+    }, true);
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      forceRefreshIncomingTranslation(node);
+    }, true);
+    row.appendChild(button);
+  }
+  return row;
+}
+
 function ensureTranslationHost(node) {
   const bubble = findBubble(node);
   let existing = bubble.querySelector(':scope > .lingua-inline-translation');
-  if (existing) return existing;
+  if (existing) {
+    removeManualTranslateAction(node);
+    return existing;
+  }
   const div = document.createElement('div');
   div.className = 'lingua-inline-translation';
   Object.assign(div.style, {
@@ -587,22 +690,21 @@ function ensureTranslationHost(node) {
     wordBreak: 'break-word'
   });
   div.append(meta, body);
-  // Messenger UIs often attach click handlers to the whole message bubble.
-  // Do not let clicking/selecting a Lingua card trigger the host messenger to
-  // re-render/collapse the bubble and accidentally remove the translation.
   for (const eventName of ['pointerdown', 'mousedown', 'click', 'dblclick']) {
     div.addEventListener(eventName, event => event.stopPropagation(), true);
   }
   bubble.appendChild(div);
+  removeManualTranslateAction(node);
   return div;
 }
 
-function setInlineTranslation(host, text, provider) {
+function setInlineTranslation(host, text, provider, node) {
   const meta = host.querySelector('.lingua-inline-meta');
   const body = host.querySelector('.lingua-inline-body');
   if (meta) meta.textContent = `Lingua · ${settings.incomingTargetLabel || String(settings.incomingTarget || '').toUpperCase()}`;
   if (body) body.textContent = String(text || '').trim();
   if (provider) host.title = `Translated by ${provider}`;
+  ensureTranslationRefreshButton(host, node);
 }
 
 function currentConversationCacheScope() {
