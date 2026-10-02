@@ -825,7 +825,7 @@ function scanMessages(force = false) {
       node.dataset.linguaFingerprint = fp;
       continue;
     }
-    if (!force && node.dataset.linguaSeenConversation === conversationKey) continue;
+    if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) continue;
     if (requestIncomingTranslation(node, 'realtime', force)) {
       node.dataset.linguaSeenConversation = conversationKey;
       realtimeQueued += 1;
@@ -841,7 +841,7 @@ function scanMessages(force = false) {
       if (!text) continue;
       const fp = fingerprint(text);
       if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) continue;
-      if (!force && node.dataset.linguaSeenConversation === conversationKey) continue;
+      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) continue;
       if (requestIncomingTranslation(node, 'history', force)) {
         node.dataset.linguaSeenConversation = conversationKey;
         historyQueued += 1;
