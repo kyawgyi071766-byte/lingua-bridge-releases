@@ -762,7 +762,7 @@ function restoreCachedTranslation(node, fp, targetLang = settings.incomingTarget
   const cached = translationCache.get(translationCacheKey(fp, targetLang, conversationKey));
   if (!cached?.text || !node?.isConnected) return false;
   const host = ensureTranslationHost(node);
-  setInlineTranslation(host, cached.text, cached.provider);
+  setInlineTranslation(host, cached.text, cached.provider, node);
   return true;
 }
 function fingerprint(text) {
@@ -774,7 +774,7 @@ function fingerprint(text) {
   return String(hash >>> 0);
 }
 
-function requestIncomingTranslation(node, priority = 'realtime', forceRetry = false) {
+function requestIncomingTranslation(node, priority = 'realtime', forceRetry = false, forceFresh = false) {
   if (!settings.isActive) return false;
   if (!settings.autoTranslateIncoming || !settings.showInlineTranslations) return false;
   if (node.closest('.lingua-inline-translation')) return false;
@@ -788,11 +788,20 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
   const fp = fingerprint(text);
   const pendingKey = translationCacheKey(fp, targetLang, conversationKey);
 
-  // If Telegram/WhatsApp re-rendered the message, restore a cached card first.
-  if (restoreCachedTranslation(node, fp, targetLang, conversationKey)) {
+  if (pendingIncomingFingerprints.has(pendingKey)) return false;
+
+  // Normal scans restore cached cards and do not call the provider again.
+  // Only the user's explicit refresh button invalidates this one cached result.
+  if (!forceFresh && restoreCachedTranslation(node, fp, targetLang, conversationKey)) {
     clearTranslationFailure(fp, targetLang);
     node.dataset.linguaFingerprint = fp;
     return false;
+  }
+  if (forceFresh) {
+    translationCache.delete(pendingKey);
+    persistTranslationCache();
+    clearTranslationFailure(fp, targetLang);
+    node.dataset.linguaFingerprint = '';
   }
 
   // A matching fingerprint used to return unconditionally here. That meant a
@@ -826,6 +835,27 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
     priority: priority === 'history' ? 'history' : 'realtime'
   });
   return true;
+}
+
+function forceRefreshIncomingTranslation(node) {
+  if (!node?.isConnected || !settings.isActive || !settings.showInlineTranslations) return false;
+  const text = cleanText(node.innerText || node.textContent);
+  if (!text || text.length < 2 || text.length > 5000 || isOutgoingMessage(node)) return false;
+  const targetLang = settings.incomingTarget || 'en';
+  const conversationKey = currentConversationCacheScope();
+  const fp = fingerprint(text);
+  const pendingKey = translationCacheKey(fp, targetLang, conversationKey);
+  if (pendingIncomingFingerprints.has(pendingKey)) {
+    ensureStatusChip('ဘာသာပြန်နေဆဲဖြစ်ပါတယ်…', 'info');
+    return false;
+  }
+  translationCache.delete(pendingKey);
+  persistTranslationCache();
+  clearTranslationFailure(fp, targetLang);
+  node.dataset.linguaFingerprint = '';
+  try { findBubble(node)?.querySelector(':scope > .lingua-inline-translation')?.remove(); } catch (_) {}
+  ensureStatusChip('Lingua: ပြန်လည်ဘာသာပြန်နေပါတယ်…', 'info', true);
+  return requestIncomingTranslation(node, 'realtime', true, true);
 }
 
 function showSentTranslationCard(node, original, detectedSource, sentText) {
@@ -1419,7 +1449,8 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       // Preserve the fingerprint. Clearing it here caused every Telegram/
       // WhatsApp DOM mutation to re-submit the same failed card indefinitely.
       node.dataset.linguaFingerprint = fp;
-      ensureStatusChip('ဘာသာပြန်ခြင်းမအောင်မြင်ပါ', 'info');
+      ensureManualTranslateAction(node);
+      ensureStatusChip('ဘာသာပြန်ခြင်းမအောင်မြင်ပါ — ↻ ကိုနှိပ်ပြီး ပြန်ကြိုးစားနိုင်ပါတယ်', 'info');
       try { ipcRenderer.sendToHost('lingua-translation-error', { kind:'incoming', error:message }); } catch (_) {}
       const retry = failureBackoffFor(fp, targetLang);
       if (retry && node.isConnected) {
@@ -1434,7 +1465,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     clearTranslationFailure(fp, targetLang);
     rememberTranslation(fp, result.translatedText, result.provider, targetLang, conversationKey);
     const host = ensureTranslationHost(node);
-    setInlineTranslation(host, result.translatedText, result.provider);
+    setInlineTranslation(host, result.translatedText, result.provider, node);
     return;
   }
 
