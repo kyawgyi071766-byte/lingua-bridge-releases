@@ -214,7 +214,7 @@ async function translateDeepL(text: string, target: string, source?: string): Pr
 
 function geminiModelCandidates() {
   const configuredModel = process.env.GEMINI_TRANSLATE_MODEL?.trim();
-  return [...new Set([configuredModel, 'gemini-3.5-flash-lite', 'gemini-3.8-flash'].filter(Boolean) as string[])];
+  return [...new Set([configuredModel, 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.7-flash'].filter(Boolean) as string[])];
 }
 
 function geminiLanguageName(code?: string) {
