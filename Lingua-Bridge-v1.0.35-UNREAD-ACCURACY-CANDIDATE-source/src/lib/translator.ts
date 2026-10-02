@@ -109,6 +109,9 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
     } catch (error) {
       lastError = error;
       if (!(error instanceof ProviderError) || !error.retryable || attempt === maxAttempts - 1) throw error;
+      // A 429 is a provider-quota signal; retrying the same request several
+      // times can amplify the outage. Move to the next model/provider quickly.
+      if (error.status === 429) throw error;
       const exponential = 850 * (2 ** attempt);
       const requested = Math.min(error.retryAfterMs || 0, 5_000);
       const jitter = Math.floor(Math.random() * 250);
@@ -449,7 +452,10 @@ export async function translateText(text: string, targetLang: string, sourceLang
     } catch (error) {
       lastError = error;
       failures.push(`${provider}: ${error instanceof Error ? error.message : 'unknown error'}`);
-      if ((process.env.TRANSLATE_PROVIDER || 'auto').toLowerCase() !== 'auto') throw error;
+      // TRANSLATE_PROVIDER selects the preferred provider; it is not a
+      // fail-closed mode unless TRANSLATE_PROVIDER_STRICT is explicitly set.
+      // Keep falling through so a 429/503/timeout on the preferred provider
+      // does not make an otherwise healthy translation chain fail.
     }
   }
 
