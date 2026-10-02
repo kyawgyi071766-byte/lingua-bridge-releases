@@ -940,6 +940,7 @@ function scanMessages(force = false) {
       } else if (!settings.autoTranslateHistorical && !force) {
         node.dataset.linguaFingerprint = fp;
         node.dataset.linguaSeenConversation = conversationKey;
+        if (!isOutgoingMessage(node)) ensureManualTranslateAction(node);
       }
     }
     primedConversationKeys.add(conversationKey);
@@ -956,12 +957,19 @@ function scanMessages(force = false) {
     const fp = fingerprint(text);
     if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
       node.dataset.linguaFingerprint = fp;
+      removeManualTranslateAction(node);
       continue;
     }
-    if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) continue;
+    if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) {
+      if (!node.closest?.('.lingua-inline-translation')) ensureManualTranslateAction(node);
+      continue;
+    }
     if (requestIncomingTranslation(node, 'realtime', force)) {
+      removeManualTranslateAction(node);
       node.dataset.linguaSeenConversation = conversationKey;
       realtimeQueued += 1;
+    } else if (!isOutgoingMessage(node) && !node.closest?.('.lingua-inline-translation')) {
+      ensureManualTranslateAction(node);
     }
   }
 
@@ -973,11 +981,20 @@ function scanMessages(force = false) {
       const text = cleanText(node.innerText || node.textContent);
       if (!text) continue;
       const fp = fingerprint(text);
-      if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) continue;
-      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) continue;
+      if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
+        removeManualTranslateAction(node);
+        continue;
+      }
+      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) {
+        if (!node.closest?.('.lingua-inline-translation')) ensureManualTranslateAction(node);
+        continue;
+      }
       if (requestIncomingTranslation(node, 'history', force)) {
+        removeManualTranslateAction(node);
         node.dataset.linguaSeenConversation = conversationKey;
         historyQueued += 1;
+      } else if (!isOutgoingMessage(node) && !node.closest?.('.lingua-inline-translation')) {
+        ensureManualTranslateAction(node);
       }
     }
   }
