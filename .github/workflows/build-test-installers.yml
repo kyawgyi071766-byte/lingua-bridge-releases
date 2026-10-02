@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: lingua-bridge-installers-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   SERVER_URL: ${{ inputs.server_url || 'https://lingua-github-import.vercel.app' }}
   SOURCE_DIR: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
@@ -22,6 +26,7 @@ jobs:
   quality-gate:
     name: Web production build and release audits
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
@@ -63,6 +68,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-android-test-apk
+          retention-days: 14
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/android/app/build/outputs/apk/debug/app-debug.apk
 
   windows:
@@ -85,6 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-windows
+          retention-days: 14
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   linux:
@@ -106,6 +113,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-linux
+          retention-days: 14
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   macos:
@@ -127,6 +135,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-macos-test
+          retention-days: 14
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   ios-simulator:
@@ -151,4 +160,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-ios-simulator
+          retention-days: 14
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/lingua-ios-simulator.zip
