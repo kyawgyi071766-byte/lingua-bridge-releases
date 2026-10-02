@@ -710,7 +710,7 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
 
   node.dataset.linguaFingerprint = fp;
   const id = `in_${Date.now()}_${++messageCounter}`;
-  pendingIncoming.set(id, { node, fp, targetLang, pendingKey });
+  pendingIncoming.set(id, { node, fp, targetLang, pendingKey, conversationKey });
   pendingIncomingFingerprints.add(pendingKey);
   ipcRenderer.sendToHost('lingua-translate-request', {
     id,
@@ -1302,9 +1302,11 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     const pending = pendingIncoming.get(result.id);
     if (!pending) return;
     pendingIncoming.delete(result.id);
-    const { node, fp, targetLang, pendingKey } = pending;
+    const { node, fp, targetLang, pendingKey, conversationKey } = pending;
     pendingIncomingFingerprints.delete(pendingKey);
     if (!node.isConnected || node.dataset.linguaFingerprint !== fp) return;
+    // Do not attach a late result to a different conversation after the user switches chats.
+    if (conversationKey && conversationKey !== currentConversationCacheScope()) return;
     // A result from a previous language selection must never be inserted into
     // the newly selected target-language card/cache.
     if (targetLang !== (settings.incomingTarget || 'en')) return;
@@ -1327,7 +1329,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       return;
     }
     clearTranslationFailure(fp, targetLang);
-    rememberTranslation(fp, result.translatedText, result.provider, targetLang);
+    rememberTranslation(fp, result.translatedText, result.provider, targetLang, conversationKey);
     const host = ensureTranslationHost(node);
     setInlineTranslation(host, result.translatedText, result.provider);
     return;
