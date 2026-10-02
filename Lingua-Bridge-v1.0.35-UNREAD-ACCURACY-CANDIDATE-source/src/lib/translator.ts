@@ -6,6 +6,46 @@ export type TranslationResult = { text: string; provider: TranslationProvider; d
 const LANGUAGE_CODES = new Map(LANGUAGES.map((language) => [language.code.toLowerCase(), language.code]));
 const NETWORK_PROVIDERS: Exclude<TranslationProvider, 'identity'>[] = ['deepl', 'gemini', 'microsoft', 'google'];
 
+type ProviderCircuit = { failures: number; openUntil: number; lastStatus?: number };
+
+const providerCircuits = new Map<Exclude<TranslationProvider, 'identity'>, ProviderCircuit>();
+const PROVIDER_COOLDOWNS_MS = {
+  deepl: 60_000,
+  gemini: 45_000,
+  microsoft: 45_000,
+  google: 45_000,
+};
+
+function providerCircuitOpen(provider: Exclude<TranslationProvider, 'identity'>) {
+  const state = providerCircuits.get(provider);
+  return Boolean(state?.openUntil && state.openUntil > Date.now());
+}
+
+function recordProviderSuccess(provider: Exclude<TranslationProvider, 'identity'>) {
+  providerCircuits.delete(provider);
+}
+
+function recordProviderFailure(provider: Exclude<TranslationProvider, 'identity'>, error: unknown) {
+  const status = error instanceof ProviderError ? error.status : undefined;
+  // Only circuit-break failures that are likely to persist briefly. Ordinary
+  // bad input must never disable a provider for everyone on a warm instance.
+  const breakerStatus = status === 429 || status === 456 || status === 408 || status === 425 || (typeof status === 'number' && status >= 500);
+  const timeout = error instanceof ProviderError && /timed out|timeout/i.test(error.message);
+  if (!breakerStatus && !timeout) return;
+  const previous = providerCircuits.get(provider);
+  const failures = (previous?.failures || 0) + 1;
+  const threshold = status === 429 || status === 456 ? 1 : 2;
+  if (failures >= threshold) {
+    providerCircuits.set(provider, {
+      failures,
+      openUntil: Date.now() + PROVIDER_COOLDOWNS_MS[provider],
+      lastStatus: status,
+    });
+  } else {
+    providerCircuits.set(provider, { failures, openUntil: 0, lastStatus: status });
+  }
+}
+
 export class TranslationInputError extends Error {}
 
 class ProviderError extends Error {
@@ -403,7 +443,7 @@ function providerOrder(target: string, source?: string): Exclude<TranslationProv
           : ['google', 'deepl', 'gemini', 'microsoft'];
   }
 
-  let filtered = requestedOrder.filter((provider) => providerIsConfigured(provider) && providerSupportsPair(provider, target, source));
+  let filtered = requestedOrder.filter((provider) => providerIsConfigured(provider) && providerSupportsPair(provider, target, source) && !providerCircuitOpen(provider));
 
   // DeepL gets the fast/common-language lane whenever it supports the pair.
   // Broad targets such as Burmese automatically skip DeepL and fall through to
@@ -448,9 +488,12 @@ export async function translateText(text: string, targetLang: string, sourceLang
   const failures: string[] = [];
   for (const provider of order) {
     try {
-      return await runProvider(provider, text, target, source);
+      const result = await runProvider(provider, text, target, source);
+      recordProviderSuccess(provider);
+      return result;
     } catch (error) {
       lastError = error;
+      recordProviderFailure(provider, error);
       failures.push(`${provider}: ${error instanceof Error ? error.message : 'unknown error'}`);
       // TRANSLATE_PROVIDER selects the preferred provider; it is not a
       // fail-closed mode unless TRANSLATE_PROVIDER_STRICT is explicitly set.
