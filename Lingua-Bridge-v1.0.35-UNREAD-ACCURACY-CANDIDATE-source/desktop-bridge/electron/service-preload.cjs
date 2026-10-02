@@ -37,6 +37,9 @@ let lastUnreadCount = -1;
 let unreadTimer = null;
 const translationCache = new Map();
 const TRANSLATION_CACHE_LIMIT = 400;
+const TRANSLATION_CACHE_STORAGE_KEY = 'lingua.translationCache.v2';
+const primedConversationKeys = new Set();
+let lastScanConversationKey = '';
 const translationFailureBackoff = new Map();
 const TRANSLATION_FAILURE_BACKOFF_LIMIT = 400;
 let translationProviderCooldownUntil = 0;
@@ -601,28 +604,64 @@ function setInlineTranslation(host, text, provider) {
   if (provider) host.title = `Translated by ${provider}`;
 }
 
-function translationCacheKey(fp, targetLang = settings.incomingTarget || 'en') {
-  return `${targetLang || 'en'}\u0000${fp}`;
-}
-
-function rememberTranslation(fp, text, provider, targetLang = settings.incomingTarget || 'en') {
-  const key = translationCacheKey(fp, targetLang);
-  translationCache.delete(key);
-  translationCache.set(key, { text:String(text || '').trim(), provider:String(provider || '') });
-  while (translationCache.size > TRANSLATION_CACHE_LIMIT) {
-    const oldest = translationCache.keys().next().value;
-    translationCache.delete(oldest);
+function currentConversationCacheScope() {
+  try {
+    const info = detectConversationInfo();
+    return String(info?.key || '');
+  } catch (_) {
+    return '';
   }
 }
 
-function restoreCachedTranslation(node, fp, targetLang = settings.incomingTarget || 'en') {
-  const cached = translationCache.get(translationCacheKey(fp, targetLang));
+function translationCacheKey(fp, targetLang = settings.incomingTarget || 'en', conversationKey = currentConversationCacheScope()) {
+  return `${conversationKey || 'conversation:unknown'}\u0000${targetLang || 'en'}\u0000${fp}`;
+}
+
+function persistTranslationCache() {
+  try {
+    const entries = [...translationCache.entries()].slice(-TRANSLATION_CACHE_LIMIT);
+    localStorage.setItem(TRANSLATION_CACHE_STORAGE_KEY, JSON.stringify(entries));
+  } catch (_) {}
+}
+
+function loadTranslationCache() {
+  try {
+    const raw = localStorage.getItem(TRANSLATION_CACHE_STORAGE_KEY);
+    const entries = JSON.parse(raw || '[]');
+    if (!Array.isArray(entries)) return;
+    translationCache.clear();
+    for (const item of entries.slice(-TRANSLATION_CACHE_LIMIT)) {
+      if (!Array.isArray(item) || item.length !== 2) continue;
+      const [key, value] = item;
+      if (typeof key !== 'string' || !value?.text) continue;
+      translationCache.set(key, {
+        text: String(value.text || '').trim(),
+        provider: String(value.provider || '')
+      });
+    }
+  } catch (_) {}
+}
+
+function rememberTranslation(fp, text, provider, targetLang = settings.incomingTarget || 'en', conversationKey = currentConversationCacheScope()) {
+  const key = translationCacheKey(fp, targetLang, conversationKey);
+  translationCache.delete(key);
+  translationCache.set(key, {
+    text: String(text || '').trim(),
+    provider: String(provider || '')
+  });
+  while (translationCache.size > TRANSLATION_CACHE_LIMIT) {
+    translationCache.delete(translationCache.keys().next().value);
+  }
+  persistTranslationCache();
+}
+
+function restoreCachedTranslation(node, fp, targetLang = settings.incomingTarget || 'en', conversationKey = currentConversationCacheScope()) {
+  const cached = translationCache.get(translationCacheKey(fp, targetLang, conversationKey));
   if (!cached?.text || !node?.isConnected) return false;
   const host = ensureTranslationHost(node);
   setInlineTranslation(host, cached.text, cached.provider);
   return true;
 }
-
 function fingerprint(text) {
   let hash = 2166136261;
   for (let i = 0; i < text.length; i += 1) {
@@ -642,11 +681,12 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
   if (!text || text.length < 2 || text.length > 5000) return false;
 
   const targetLang = settings.incomingTarget || 'en';
+  const conversationKey = currentConversationCacheScope();
   const fp = fingerprint(text);
-  const pendingKey = translationFailureKey(fp, targetLang);
+  const pendingKey = translationCacheKey(fp, targetLang, conversationKey);
 
   // If Telegram/WhatsApp re-rendered the message, restore a cached card first.
-  if (restoreCachedTranslation(node, fp, targetLang)) {
+  if (restoreCachedTranslation(node, fp, targetLang, conversationKey)) {
     clearTranslationFailure(fp, targetLang);
     node.dataset.linguaFingerprint = fp;
     return false;
@@ -743,33 +783,72 @@ function scanMessages(force = false) {
   const found = findMessageNodes();
   reportDiagnostics(found.length);
   if (!settings.autoTranslateIncoming && !force) return;
+
+  const conversationKey = currentConversationCacheScope();
+  if (conversationKey && lastScanConversationKey !== conversationKey) lastScanConversationKey = conversationKey;
+  const firstScan = conversationKey ? !primedConversationKeys.has(conversationKey) : false;
+
   if (force) {
     for (const node of found) {
       try { node.dataset.linguaFingerprint = ''; } catch (_) {}
     }
   }
 
-  // Always handle the newest visible messages first, then progressively backfill
-  // older visible history. The old fixed slice repeatedly examined the same last
-  // five bubbles, so older untranslated messages could remain untranslated forever.
+  // First open of a conversation: restore already-translated messages locally.
+  // Do not spend translation-provider requests on old history unless the user
+  // explicitly enabled historical translation.
+  if (firstScan) {
+    for (const node of found) {
+      const text = cleanText(node.innerText || node.textContent);
+      if (!text || isAudioLikeMessage(node)) continue;
+      const fp = fingerprint(text);
+      if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
+        node.dataset.linguaFingerprint = fp;
+      } else if (!settings.autoTranslateHistorical && !force) {
+        node.dataset.linguaFingerprint = fp;
+        node.dataset.linguaSeenConversation = conversationKey;
+      }
+    }
+    primedConversationKeys.add(conversationKey);
+    if (!settings.autoTranslateHistorical && !force) return;
+  }
+
   const newestFirst = found.slice().reverse();
   const realtimeBudget = force ? 5 : 3;
   let realtimeQueued = 0;
-  let index = 0;
-  for (; index < newestFirst.length && realtimeQueued < realtimeBudget; index += 1) {
-    if (requestIncomingTranslation(newestFirst[index], 'realtime', force)) realtimeQueued += 1;
+  for (const node of newestFirst) {
+    if (realtimeQueued >= realtimeBudget) break;
+    const text = cleanText(node.innerText || node.textContent);
+    if (!text) continue;
+    const fp = fingerprint(text);
+    if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
+      node.dataset.linguaFingerprint = fp;
+      continue;
+    }
+    if (!force && node.dataset.linguaSeenConversation === conversationKey) continue;
+    if (requestIncomingTranslation(node, 'realtime', force)) {
+      node.dataset.linguaSeenConversation = conversationKey;
+      realtimeQueued += 1;
+    }
   }
 
   if (settings.autoTranslateHistorical || force) {
     const historyBudget = force ? 14 : 7;
     let historyQueued = 0;
-    for (let i = 0; i < newestFirst.length && historyQueued < historyBudget; i += 1) {
-      const node = newestFirst[i];
-      if (requestIncomingTranslation(node, 'history', force)) historyQueued += 1;
+    for (const node of newestFirst) {
+      if (historyQueued >= historyBudget) break;
+      const text = cleanText(node.innerText || node.textContent);
+      if (!text) continue;
+      const fp = fingerprint(text);
+      if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) continue;
+      if (!force && node.dataset.linguaSeenConversation === conversationKey) continue;
+      if (requestIncomingTranslation(node, 'history', force)) {
+        node.dataset.linguaSeenConversation = conversationKey;
+        historyQueued += 1;
+      }
     }
   }
 }
-
 function scheduleScan() {
   if (!settings.isActive || scanTimer) return;
   // Leading-edge throttling prevents Telegram's continuous DOM mutations from
@@ -1327,6 +1406,7 @@ ipcRenderer.on('lingua-insert-text', (_event, payload) => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  loadTranslationCache();
   const observer = new MutationObserver(() => {
     reportUnread();
     if (!settings.isActive) return;
