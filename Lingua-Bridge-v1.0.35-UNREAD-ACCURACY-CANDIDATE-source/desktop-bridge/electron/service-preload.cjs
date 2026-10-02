@@ -558,7 +558,7 @@ function makeRefreshButton(label = 'Refresh translation') {
   button.className = 'lingua-refresh-translation';
   button.setAttribute('aria-label', label);
   button.title = label;
-  button.textContent = '↻';
+  button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V8a4 4 0 1 1-3.87 5H6.06A6 6 0 1 0 17.65 6.35Z"/></svg>';
   Object.assign(button.style, {
     width: '22px',
     height: '22px',
