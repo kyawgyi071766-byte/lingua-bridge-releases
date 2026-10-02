@@ -1,18 +1,20 @@
 name: Build test installers
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       server_url:
-        description: Deployed Lingua HTTPS URL, for example https://lingua.example.com
-        required: true
+        description: Deployed Lingua HTTPS URL
+        required: false
+        default: https://lingua-github-import.vercel.app
         type: string
-
 permissions:
   contents: read
 
 env:
-  SERVER_URL: ${{ inputs.server_url }}
+  SERVER_URL: ${{ inputs.server_url || 'https://lingua-github-import.vercel.app' }}
 
 jobs:
   android:
