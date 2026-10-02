@@ -36,7 +36,8 @@ let lastConversationSignature = '';
 let lastUnreadCount = -1;
 let unreadTimer = null;
 const translationCache = new Map();
-const TRANSLATION_CACHE_LIMIT = 400;
+// Keep a durable local history so reopening/switching conversations restores already-translated messages without sending them to the provider again.
+const TRANSLATION_CACHE_LIMIT = 5000;
 const TRANSLATION_CACHE_STORAGE_KEY = 'lingua.translationCache.v2';
 const primedConversationKeys = new Set();
 let lastScanConversationKey = '';
