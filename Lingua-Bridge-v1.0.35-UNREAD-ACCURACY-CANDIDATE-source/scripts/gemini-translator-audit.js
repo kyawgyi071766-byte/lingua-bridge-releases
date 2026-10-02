@@ -13,6 +13,7 @@ const checks = [
   ['Provider fallback is fail-open by default', translator.includes('TRANSLATE_PROVIDER selects the preferred provider') && translator.includes('Keep falling through')],
   ['429 retries do not amplify quota outages', translator.includes('if (error.status === 429) throw error;')],
   ['Provider circuit breaker exists', translator.includes('providerCircuitOpen') && translator.includes('recordProviderFailure')],
+  ['DeepL fast lane respects circuit breaker', translator.includes("!providerCircuitOpen('deepl')")],
   ['Desktop incoming results are conversation-scoped', fs.readFileSync('desktop-bridge/electron/service-preload.cjs','utf8').includes('conversationKey') && fs.readFileSync('desktop-bridge/electron/service-preload.cjs','utf8').includes('late result to a different conversation')],
 ];
 let failed = 0;
