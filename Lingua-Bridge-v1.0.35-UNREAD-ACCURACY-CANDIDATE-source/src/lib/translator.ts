@@ -30,7 +30,7 @@ function recordProviderFailure(provider: Exclude<TranslationProvider, 'identity'
   // Only circuit-break failures that are likely to persist briefly. Ordinary
   // bad input must never disable a provider for everyone on a warm instance.
   const breakerStatus = status === 429 || status === 456 || status === 408 || status === 425 || (typeof status === 'number' && status >= 500);
-  const timeout = error instanceof ProviderError && /timed out|timeout/i.test(error.message);
+  const timeout = error instanceof Error && /timed out|timeout|aborted/i.test(error.message);
   if (!breakerStatus && !timeout) return;
   const previous = providerCircuits.get(provider);
   const failures = (previous?.failures || 0) + 1;
