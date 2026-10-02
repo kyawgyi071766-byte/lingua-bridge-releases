@@ -39,7 +39,8 @@ jobs:
       - run: npm run build
 
   android:
-    name: Android test APK\n    needs: quality-gate
+    name: Android test APK
+    needs: quality-gate
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,7 +66,8 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/android/app/build/outputs/apk/debug/app-debug.apk
 
   windows:
-    name: Windows installer\n    needs: quality-gate
+    name: Windows installer
+    needs: quality-gate
     runs-on: windows-latest
     defaults:
       run:
@@ -86,7 +88,8 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   linux:
-    name: Linux installers\n    needs: quality-gate
+    name: Linux installers
+    needs: quality-gate
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -106,7 +109,8 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   macos:
-    name: macOS test DMG\n    needs: quality-gate
+    name: macOS test DMG
+    needs: quality-gate
     runs-on: macos-14
     defaults:
       run:
@@ -126,7 +130,8 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   ios-simulator:
-    name: iOS simulator build\n    needs: quality-gate
+    name: iOS simulator build
+    needs: quality-gate
     runs-on: macos-14
     defaults:
       run:
