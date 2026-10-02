@@ -448,7 +448,7 @@ function providerOrder(target: string, source?: string): Exclude<TranslationProv
   // DeepL gets the fast/common-language lane whenever it supports the pair.
   // Broad targets such as Burmese automatically skip DeepL and fall through to
   // Gemini/Microsoft/Google.
-  if (hasDeepL() && providerSupportsPair('deepl', target, source)) {
+  if (hasDeepL() && providerSupportsPair('deepl', target, source) && !providerCircuitOpen('deepl')) {
     filtered = ['deepl', ...filtered.filter((provider) => provider !== 'deepl')];
   }
   return Array.from(new Set(filtered));
