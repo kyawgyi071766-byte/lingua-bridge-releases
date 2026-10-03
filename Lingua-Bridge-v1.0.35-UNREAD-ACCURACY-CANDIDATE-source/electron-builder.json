@@ -3,6 +3,7 @@
   "productName": "Lingua Translate",
   "directories": { "output": "dist-electron" },
   "files": ["electron/**/*", "package.json"],
+  "extraMetadata": { "version": "1.0.35" },
   "win": { "target": "nsis" },
   "mac": { "target": "dmg", "category": "public.app-category.productivity" },
   "linux": { "target": ["AppImage", "deb"], "category": "Utility" },
