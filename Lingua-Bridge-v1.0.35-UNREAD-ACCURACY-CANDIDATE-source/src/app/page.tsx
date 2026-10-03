@@ -31,7 +31,7 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Lingua Bridge',
-    softwareVersion: '1.0.22',
+    softwareVersion: '1.0.35',
     applicationCategory: 'CommunicationApplication',
     operatingSystem: 'Windows 10, Windows 11',
     offers: [
@@ -45,7 +45,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <span className="inline-block bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-6">
-          v1.0.22 Global Public Release · Windows 10/11 · multilingual provider fallback
+          v1.0.35 Global Release · Windows 10/11 · English + Simplified Chinese · multilingual provider fallback
         </span>
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
           Translate anything,<br />
@@ -149,11 +149,19 @@ export default async function HomePage() {
       {/* Customer sales and support contact */}
       <section className="max-w-4xl mx-auto px-6 pb-16">
         <div className="bg-brand-50 border border-brand-200 rounded-2xl p-6 text-center">
-          <h2 className="text-2xl font-bold">ဝယ်ယူရန်နှင့် အကူအညီရယူရန်</h2>
-          <p className="mt-2 text-slate-600">Pro သို့မဟုတ် Business အစီအစဉ် ဝယ်ယူခြင်း၊ အကောင့်အတည်ပြုခြင်းနှင့် ငွေပေးချေမှုအကူအညီအတွက် Owner ကို ဆက်သွယ်ပါ။ သင့် Lingua အကောင့် Gmail နှင့် လိုချင်သောအစီအစဉ်ကို ပေးပို့ပါ။</p>
+          <h2 className="text-2xl font-bold">Purchase & Support</h2>
+          <p className="mt-2 text-slate-600">Contact the owner for Pro or Business purchases, account verification, and payment support. Send your Lingua account Gmail address and the plan you want.</p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Telegram မှ ဆက်သွယ်ရန်</a>
-            <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Gmail ပို့ရန်</a>
+            <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Contact on Telegram</a>
+            <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Email via Gmail</a>
+          </div>
+          <div className="mt-6 pt-5 border-t border-brand-200 text-left">
+            <h3 className="text-lg font-bold text-center">简体中文</h3>
+            <p className="mt-2 text-slate-600 text-center">如需购买 Pro 或 Business、账户验证或付款支持，请联系所有者。请提供您的 Lingua 账户 Gmail 地址以及您需要的套餐。</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">通过 Telegram 联系</a>
+              <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">发送电子邮件</a>
+            </div>
           </div>
         </div>
       </section>
