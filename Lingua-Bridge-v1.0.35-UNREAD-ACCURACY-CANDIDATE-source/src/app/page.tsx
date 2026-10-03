@@ -153,14 +153,14 @@ export default async function HomePage() {
           <p className="mt-2 text-slate-600">Contact the owner for Pro or Business purchases, account verification, and payment support. Send your Lingua account Gmail address and the plan you want.</p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Contact on Telegram</a>
-            <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Email via Gmail</a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Email via Gmail</a>
           </div>
           <div className="mt-6 pt-5 border-t border-brand-200 text-left">
             <h3 className="text-lg font-bold text-center">简体中文</h3>
             <p className="mt-2 text-slate-600 text-center">如需购买 Pro 或 Business、账户验证或付款支持，请联系所有者。请提供您的 Lingua 账户 Gmail 地址以及您需要的套餐。</p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">通过 Telegram 联系</a>
-              <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">发送电子邮件</a>
+              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">发送电子邮件</a>
             </div>
           </div>
         </div>
