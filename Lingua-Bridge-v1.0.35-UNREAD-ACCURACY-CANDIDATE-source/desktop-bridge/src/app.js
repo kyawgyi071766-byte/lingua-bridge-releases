@@ -77,6 +77,150 @@ const DISPLAY_LANGS = [...LANGS, ...PROVIDER_EXTRA_LANGS];
 
 const COMMON_LANG_CODES = ['en', 'zh', 'es', 'de', 'fr', 'ja', 'ko', 'it'];
 
+const UI_TRANSLATIONS = {
+  "zh-CN": {
+    "Lingua": "Lingua",
+    "No service selected": "未选择服务",
+    "Messaging accounts. Drag to reorder.": "消息账户。拖动以重新排序。",
+    "Expand messaging account sidebar": "展开消息账户侧栏",
+    "Collapse messaging account sidebar": "收起消息账户侧栏",
+    "Add messaging account": "添加消息账户",
+    "Lingua login required": "需要登录 Lingua",
+    "Hide fallback": "隐藏备用编辑器",
+    "Fallback composer": "备用编辑器",
+    "Account details": "账户详情",
+    "Rename": "重命名",
+    "Remove": "移除",
+    "Reload": "重新加载",
+    "Open Signal Desktop": "打开 Signal Desktop",
+    "Reset login": "重置登录",
+    "App settings, cache, proxy and updates": "应用设置、缓存、代理和更新",
+    "Search Google or enter a web address": "搜索 Google 或输入网址",
+    "Go": "前往",
+    "Add a messaging service.": "添加消息服务。",
+    "Fallback: type here, translate, then insert into the active chat. Normal use: type directly inside WhatsApp/Telegram and press Send.": "备用编辑器：在此输入、翻译，然后插入当前聊天。正常使用时，直接在 WhatsApp/Telegram 中输入并发送。",
+    "Translate & Insert": "翻译并插入",
+    "Translate & Send": "翻译并发送",
+    "Translation": "翻译",
+    "Expand translation settings": "展开翻译设置",
+    "Collapse translation settings": "收起翻译设置",
+    "Current": "当前",
+    "Global": "全局",
+    "Owner diagnostics": "所有者诊断",
+    "Live": "实时",
+    "Test": "测试",
+    "OWNER TEST MODE:": "所有者测试模式：",
+    "validates the chat workflow only. Mock output is not a real translation.": "仅验证聊天流程。模拟结果不是真实翻译。",
+    "Translation providers · owner only": "翻译服务商 · 仅所有者",
+    "Provider status": "服务商状态",
+    "Mock test provider": "模拟测试服务商",
+    "Ready": "就绪",
+    "Server": "服务器",
+    "Unknown": "未知",
+    "Configured": "已配置",
+    "Not configured / unknown": "未配置 / 未知",
+    "Gemini API": "Gemini API",
+    "Microsoft Translator": "Microsoft Translator",
+    "Google Cloud Translation": "Google Cloud Translation",
+    "Refresh provider status": "刷新服务商状态",
+    "Test live translation": "测试实时翻译",
+    "Messenger diagnostics · owner only": "消息应用诊断 · 仅所有者",
+    "Messenger adapter": "消息适配器",
+    "Service": "服务",
+    "Visible messages detected": "检测到的可见消息",
+    "Message box detected": "检测到消息输入框",
+    "Yes": "是",
+    "No": "否",
+    "Translate visible messages now": "立即翻译可见消息",
+    "Lingua account": "Lingua 账户",
+    "not required in test mode": "测试模式下无需账户",
+    "Signed in as": "已登录：",
+    "Log out": "退出登录",
+    "Billing": "账单",
+    "Redeem Gift Code": "兑换礼品码",
+    "Owner Admin": "所有者管理",
+    "Refresh plan": "刷新套餐",
+    "Email": "邮箱",
+    "Password": "密码",
+    "Log in": "登录",
+    "Voice translator · owner beta": "语音翻译 · 所有者测试版",
+    "The dedicated speech backend is not live yet. Typed/pasted transcripts can use the normal text translator as a fallback. Microphone and messenger voice-message transcription stay owner-only until the speech backend is enabled.": "专用语音后端尚未上线。输入或粘贴的文字稿可以使用普通文本翻译器作为备用方案。麦克风和消息应用语音转文字功能在语音后端启用前仅限所有者使用。",
+    "Speak, or type/paste the speech transcript here…": "请说话，或在此输入/粘贴语音文字稿…",
+    "Start mic": "开始麦克风",
+    "Stop": "停止",
+    "Translate voice": "翻译语音",
+    "Speak result": "朗读结果",
+    "Insert into chat": "插入聊天",
+    "Upgrade voice allowance": "升级语音额度",
+    "Languages & direct send": "语言与直接发送",
+    "You type": "您输入",
+    "Customer receives": "客户收到",
+    "My/source language": "我的/源语言",
+    "Show incoming customer messages in": "客户消息显示为",
+    "Send my messages in (customer language)": "我的消息发送为（客户语言）",
+    "Easy Translate mode": "轻松翻译模式",
+    "Translate directly inside messenger": "直接在消息应用中翻译",
+    "Auto-translate before Send / Enter": "发送/回车前自动翻译",
+    "Confirm translated text before send": "发送前确认翻译文本",
+    "Incoming message display": "来信显示",
+    "Auto translate incoming customer messages": "自动翻译客户来信",
+    "Auto translate visible history": "自动翻译可见历史消息",
+    "Show clean translation card under message": "在消息下显示简洁翻译卡片",
+    "Also translate my own sent messages": "同时翻译我发送的消息",
+    "Incoming translations are shown as compact Lingua cards. Your own sent messages are not translated underneath by default, keeping chats easier to read. Each added account keeps an isolated web session.": "来信翻译会显示为紧凑的 Lingua 卡片。默认不在您发送的消息下方重复翻译，让聊天更易阅读。每个添加的账户都拥有独立的网页会话。",
+    "Add messaging service": "添加消息服务",
+    "Choose quantity, then pick a service. Each web copy keeps its own isolated login session.": "选择数量，然后选择服务。每个网页副本都保持独立登录会话。",
+    "Close": "关闭",
+    "Quantity": "数量",
+    "Up to 20 at once. You can add more later.": "一次最多添加 20 个。之后可以继续添加。",
+    "Owner / Admin Custom App Manager": "所有者 / 管理员自定义应用管理",
+    "Add custom app": "添加自定义应用",
+    "Edit": "编辑",
+    "Delete template": "删除模板",
+    "No owner custom apps yet. Built-in apps are unchanged.": "还没有所有者自定义应用。内置应用保持不变。",
+    "Experimental": "实验性",
+    "Back": "后退",
+    "Forward": "前进",
+    "Google home": "Google 首页",
+    "Web address or Google search": "网址或 Google 搜索",
+    "Enter a valid web address or search.": "请输入有效网址或搜索内容。",
+    "Could not open that web address.": "无法打开该网址。",
+    "This language needs Gemini, Microsoft Translator, or Google Translate on the Lingua server. The current server has no broad-language provider configured, so your language setting was not changed.": "此语言需要 Lingua 服务器上的 Gemini、Microsoft Translator 或 Google Translate。当前服务器未配置广泛语言服务商，因此语言设置未更改。",
+    "Broad-language provider is ready. Myanmar/Burmese and other Gemini/Microsoft/Google languages are available.": "广泛语言服务商已就绪。缅甸语及其他 Gemini/Microsoft/Google 语言可用。",
+    "Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Myanmar/Burmese and other broad languages.": "当前服务器仅提供 DeepL。要使用缅甸语及其他广泛语言，请在 Vercel 上配置 Gemini、Microsoft Translator 或 Google Translate。",
+    "Scanning visible messages for translation…": "正在扫描可见消息进行翻译…",
+    "Account refreshed": "账户已刷新",
+    "Could not refresh account plan.": "无法刷新账户套餐。",
+    "Owner/Admin permission is required to add custom web apps.": "添加自定义网页应用需要所有者/管理员权限。",
+    "Translate anything,": "翻译任何内容，",
+    "in seconds.": "只需几秒。",
+    "Start translating free": "免费开始翻译",
+    "See pricing →": "查看价格 →",
+    "Customer download →": "客户下载 →"
+  }
+};
+
+function applyUiLanguage() {
+  const lang = state.uiLanguage || 'en';
+  const dict = UI_TRANSLATIONS[lang];
+  document.documentElement.lang = lang === 'zh-CN' ? 'zh-CN' : 'en';
+  if (!dict) return;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    const raw = node.nodeValue || '';
+    const key = raw.trim();
+    if (dict[key]) node.nodeValue = raw.replace(key, dict[key]);
+  });
+  document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(el => {
+    for (const attr of ['title','aria-label','placeholder']) {
+      const value = el.getAttribute(attr);
+      if (value && dict[value]) el.setAttribute(attr, dict[value]);
+    }
+  });
+}
+
 const state = {
   instances: JSON.parse(localStorage.getItem('lingua.instances') || '[]'),
   activeId: localStorage.getItem('lingua.activeId') || '',
@@ -121,6 +265,7 @@ const state = {
   voiceTranscript: '',
   voiceResult: '',
   voiceStatus: '',
+  uiLanguage: localStorage.getItem('lingua.uiLanguage') || 'en',
   voiceListening: false,
   appPrefs: JSON.parse(localStorage.getItem('lingua.appPrefs') || 'null') || {
     displayMode:'portrait',
@@ -500,7 +645,7 @@ function bindPersistentWebview(view, instance) {
           ok:false,
           error:error.message || String(error)
         });
-        setNotice('ဘာသာပြန်ခြင်းမအောင်မြင်ပါ');
+        setNotice('Translation failed.');
       }
       return;
     }
@@ -551,7 +696,7 @@ function bindPersistentWebview(view, instance) {
 
     if (event.channel === 'lingua-translation-error' && isActive) {
       const result = event.args[0] || {};
-      setNotice(result.kind === 'send' ? 'စာပို့ခြင်း မအောင်မြင်ပါ' : 'ဘာသာပြန်ခြင်းမအောင်မြင်ပါ');
+      setNotice(result.kind === 'send' ? 'Message sending failed.' : 'Translation failed.');
     }
   });
 }
@@ -1756,7 +1901,7 @@ function render() {
           <button class="small-btn" id="reloadService">Reload</button>
           ${svc.id === 'signal' ? `<button class="small-btn" id="openSignalDesktop">Open Signal Desktop</button>` : ''}
           <button class="small-btn" id="clearSession">Reset login</button>
-          <button class="small-btn settings-launch" id="appSettingsBtn" title="App settings, cache, proxy and updates">⚙ Settings</button>
+          <select class="small-btn ui-language-select" id="uiLanguage" aria-label="Interface language"><option value="en" ${state.uiLanguage==='en'?'selected':''}>English</option><option value="zh-CN" ${state.uiLanguage==='zh-CN'?'selected':''}>简体中文</option></select><button class="small-btn settings-launch" id="appSettingsBtn" title="App settings, cache, proxy and updates">⚙ Settings</button>
         </div>
 
         ${browserMode ? `<div class="browser-toolbar" aria-label="Chrome web navigation">
@@ -1916,6 +2061,7 @@ function render() {
     ${state.modal ? renderModal() : ''}
   `;
   bindEvents();
+  applyUiLanguage();
   syncPersistentWebviews();
 }
 
@@ -2025,6 +2171,7 @@ function bindEvents() {
     if (event.key === 'Enter') { event.preventDefault(); navigateBrowser(); }
   });
 
+  document.querySelector('#uiLanguage')?.addEventListener('change', e => { state.uiLanguage = e.target.value === 'zh-CN' ? 'zh-CN' : 'en'; localStorage.setItem('lingua.uiLanguage', state.uiLanguage); render(); });
   document.querySelector('#toggleSettings')?.addEventListener('click', () => {
     state.settingsCollapsed = !state.settingsCollapsed;
     persist();
