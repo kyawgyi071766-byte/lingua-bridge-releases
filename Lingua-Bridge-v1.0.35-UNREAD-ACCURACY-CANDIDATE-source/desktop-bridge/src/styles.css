@@ -292,3 +292,6 @@ html[data-lingua-display="portrait"] .app-shell:not(.settings-collapsed) { grid-
 
 html[data-lingua-display="landscape"] .app-shell.instances-collapsed:not(.settings-collapsed) { grid-template-columns:58px minmax(560px,1fr) 370px; }
 html[data-lingua-display="portrait"] .app-shell.instances-collapsed:not(.settings-collapsed) { grid-template-columns:60px minmax(560px,1fr) 312px; }
+
+.ui-language-select { min-width:118px; height:34px; cursor:pointer; }
+.ui-language-select option { background:#1b2230; color:#eef4ff; }
