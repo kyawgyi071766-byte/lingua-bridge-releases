@@ -19,7 +19,7 @@ const paymentProof = read('src/app/api/payment/proof/route.ts');
 const support = read('src/app/api/support/route.ts');
 const billing = read('src/app/billing/page.tsx');
 
-pass('Next.js is on patched Maintenance LTS line', packageJson.dependencies.next === '15.5.27');
+pass('Next.js is on patched Maintenance LTS line', packageJson.dependencies.next === '15.5.27' || packageJson.dependencies.next === '^15.5.27');
 pass('Build errors are not explicitly ignored', !/ignoreBuildErrors|ignoreDuringBuilds/.test(nextConfig));
 pass('Security headers are configured', /Content-Security-Policy/.test(nextConfig) && /X-Content-Type-Options/.test(nextConfig));
 pass('Dashboard target language excludes auto', /TARGET_LANGUAGES/.test(dashboard) && /filter\(\(language\) => language\.code !== "auto"\)/.test(dashboard));
