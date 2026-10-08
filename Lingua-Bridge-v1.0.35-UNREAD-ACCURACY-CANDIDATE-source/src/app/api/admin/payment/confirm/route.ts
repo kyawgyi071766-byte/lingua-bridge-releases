@@ -5,7 +5,7 @@ import { activatePayment, findMatchingTransfer } from '@/lib/cryptoPayments';
 import { isUnsafeCrossOriginRequest } from '@/lib/security';
 
 export async function POST(req: Request) {
-  if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
+  if (isUnsafeCrossOriginRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   const admin = await getOwnerAdmin();
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
