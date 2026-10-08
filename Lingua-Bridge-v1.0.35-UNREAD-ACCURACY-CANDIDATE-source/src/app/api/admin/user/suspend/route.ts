@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getOwnerAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { isCrossSiteRequest } from '@/lib/security';
+import { isUnsafeCrossOriginRequest } from '@/lib/security';
 
 export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
