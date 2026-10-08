@@ -10,7 +10,7 @@ import {
   isAccessLevel,
 } from '@/lib/accessCodes';
 import { prisma } from '@/lib/prisma';
-import { isCrossSiteRequest } from '@/lib/security';
+import { isUnsafeCrossOriginRequest } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
