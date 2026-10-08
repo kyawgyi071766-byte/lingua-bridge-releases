@@ -156,11 +156,11 @@ export default async function HomePage() {
             <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Email via Gmail</a>
           </div>
           <div className="mt-6 pt-5 border-t border-brand-200 text-left">
-            <h3 className="text-lg font-bold text-center">简体中文</h3>
-            <p className="mt-2 text-slate-600 text-center">如需购买 Pro 或 Business、账户验证或付款支持，请联系所有者。请提供您的 Lingua 账户 Gmail 地址以及您需要的套餐。</p>
+            <h3 className="text-lg font-bold text-center">Need help or assistance? Contact us</h3>
+            <p className="mt-2 text-slate-600 text-center">Owner support is available by email or Telegram for Pro/Business assistance, account verification, and payment support.</p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">通过 Telegram 联系</a>
-              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">发送电子邮件</a>
+              <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Telegram Support</a>
+              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Gmail Support</a>
             </div>
           </div>
         </div>
