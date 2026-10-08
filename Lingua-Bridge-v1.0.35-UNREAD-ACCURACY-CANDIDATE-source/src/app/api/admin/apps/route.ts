@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
+  if (isUnsafeCrossOriginRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json().catch(() => ({}));
   const name = typeof body.name === 'string' ? body.name.trim() : '';
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
+  if (isUnsafeCrossOriginRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
