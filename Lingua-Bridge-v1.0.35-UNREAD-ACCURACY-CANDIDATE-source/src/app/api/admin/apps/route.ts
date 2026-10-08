@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getOwnerAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { isCrossSiteRequest } from '@/lib/security';
+import { isUnsafeCrossOriginRequest } from '@/lib/security';
 
 async function requireAdmin() {
   return getOwnerAdmin();
