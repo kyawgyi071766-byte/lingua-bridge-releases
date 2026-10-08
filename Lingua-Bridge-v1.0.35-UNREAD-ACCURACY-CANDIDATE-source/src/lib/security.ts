@@ -32,6 +32,26 @@ export function isCrossSiteRequest(req: Request): boolean {
   return req.headers.get('sec-fetch-site') === 'cross-site';
 }
 
+/**
+ * Strong CSRF guard for authenticated browser mutations.
+ * Fetch Metadata is useful, but Origin is the authoritative browser signal
+ * when present. In production, mutations are accepted only from the configured
+ * site origin (or with an explicit same-origin Fetch Metadata signal).
+ */
+export function isUnsafeCrossOriginRequest(req: Request): boolean {
+  if (isCrossSiteRequest(req)) return true;
+
+  const origin = req.headers.get('origin')?.trim();
+  if (!origin) return process.env.NODE_ENV === 'production' && req.headers.get('sec-fetch-site') !== 'same-origin';
+
+  try {
+    const expected = getSiteUrl();
+    return new URL(origin).origin !== expected;
+  } catch {
+    return true;
+  }
+}
+
 export function getSiteUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').trim();
   let parsed: URL;
