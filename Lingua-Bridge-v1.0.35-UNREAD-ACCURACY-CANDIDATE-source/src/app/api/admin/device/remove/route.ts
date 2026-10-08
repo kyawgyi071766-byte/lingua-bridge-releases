@@ -4,7 +4,7 @@ import { revokeUserDevice } from '@/lib/devices';
 import { isUnsafeCrossOriginRequest } from '@/lib/security';
 
 export async function POST(req: Request) {
-  if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
+  if (isUnsafeCrossOriginRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   const admin = await getOwnerAdmin();
   if (!admin) return NextResponse.json({ error: 'Owner access required.' }, { status: 403 });
   const body = await req.json().catch(() => ({}));
