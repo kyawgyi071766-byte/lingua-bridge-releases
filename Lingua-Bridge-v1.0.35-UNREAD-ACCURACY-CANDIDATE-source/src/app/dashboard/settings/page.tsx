@@ -109,7 +109,7 @@ export default function SettingsPage() {
           </div>
           <p className="text-xs text-slate-500 mt-3">
             Preview: <span style={{ color: s.translateColor, fontSize: { small: "12px", medium: "14px", large: "17px", maximum: "20px" }[s.fontSize] }}>
-              Hello world — မင်္ဂလာပါ
+              Hello world — Hello!
             </span>
           </p>
         </div>
