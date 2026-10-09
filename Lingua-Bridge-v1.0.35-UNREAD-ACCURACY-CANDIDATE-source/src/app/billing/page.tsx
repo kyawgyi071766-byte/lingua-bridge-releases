@@ -75,11 +75,11 @@ export default async function BillingPage() {
       </div>
 
       <div className="mt-8 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h2 className="text-lg font-bold">ဝယ်ယူမှုနှင့် အကောင့်အတည်ပြုမှု အကူအညီ</h2>
-        <p className="text-sm text-slate-600 mt-2">Owner ထံ သင့် Lingua အကောင့် Gmail၊ ရွေးချယ်လိုသော Pro/Business အစီအစဉ်နှင့် မေးမြန်းလိုသည့်အချက်ကို ပေးပို့ပါ။</p>
+        <h2 className="text-lg font-bold">Purchase, Account & Payment Support</h2>
+        <p className="text-sm text-slate-600 mt-2">Contact the owner with your Lingua account Gmail address, preferred Pro or Business plan, and any questions.</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-semibold">Telegram မှ ဆက်သွယ်ရန်</a>
-          <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-4 py-2 rounded-lg font-semibold">Gmail ပို့ရန်</a>
+          <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-semibold">Contact on Telegram</a>
+          <a href="mailto:sshksshk2002@gmail.com" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-4 py-2 rounded-lg font-semibold">Email via Gmail</a>
         </div>
       </div>
 
