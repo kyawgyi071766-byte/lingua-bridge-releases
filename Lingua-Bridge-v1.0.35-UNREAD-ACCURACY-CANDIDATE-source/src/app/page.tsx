@@ -150,19 +150,12 @@ export default async function HomePage() {
       <section className="max-w-4xl mx-auto px-6 pb-16">
         <div className="bg-brand-50 border border-brand-200 rounded-2xl p-6 text-center">
           <h2 className="text-2xl font-bold">Purchase & Support</h2>
-          <p className="mt-2 text-slate-600">Contact the owner for Pro or Business purchases, account verification, and payment support. Send your Lingua account Gmail address and the plan you want.</p>
+          <p className="mt-2 text-slate-600">For Pro or Business purchases, account verification, or payment assistance, contact our support team. Include your Lingua account Gmail address and preferred plan.</p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Contact on Telegram</a>
             <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Email via Gmail</a>
           </div>
-          <div className="mt-6 pt-5 border-t border-brand-200 text-left">
-            <h3 className="text-lg font-bold text-center">Need help or assistance? Contact us</h3>
-            <p className="mt-2 text-slate-600 text-center">Owner support is available by email or Telegram for Pro/Business assistance, account verification, and payment support.</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <a href="https://t.me/linguabridgebridish" target="_blank" rel="noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold">Telegram Support</a>
-              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=sshksshk2002@gmail.com" target="_blank" rel="noreferrer" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 px-5 py-3 rounded-xl font-semibold">Gmail Support</a>
-            </div>
-          </div>
+
         </div>
       </section>
     </div>
