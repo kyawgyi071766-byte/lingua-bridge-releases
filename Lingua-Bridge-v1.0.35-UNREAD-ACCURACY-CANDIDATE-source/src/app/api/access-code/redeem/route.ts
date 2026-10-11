@@ -6,11 +6,11 @@ import { prisma } from '@/lib/prisma';
 import { planLimit, voicePlanLimit } from '@/lib/plans';
 import { consumeRateLimit } from '@/lib/rateLimit';
 import { ensureCurrentUsage } from '@/lib/usage';
-import { getClientAddress, isCrossSiteRequest } from '@/lib/security';
+import { getClientAddress, isUnsafeCrossOriginRequest } from '@/lib/security';
 import { ensureDeviceAccess, isLinguaDesktopRequest, revokeAllActiveDevices } from '@/lib/devices';
 
 export async function POST(req: Request) {
-  if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
+  if (isUnsafeCrossOriginRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
 
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Please log in before redeeming a code.' }, { status: 401 });
