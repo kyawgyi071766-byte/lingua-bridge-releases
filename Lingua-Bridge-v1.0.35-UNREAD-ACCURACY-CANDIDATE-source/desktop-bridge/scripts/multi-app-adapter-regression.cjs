@@ -94,6 +94,11 @@ for (const host of [
   'tiktok.com', 'vk.com', 'line.me', 'line.naver.jp',
   'teams.microsoft.com', 'teams.live.com', 'snapchat.com', 'zalo.me'
 ]) assert.ok(trustedHosts.includes(host), 'trusted host allow-list includes ' + host);
+const navigationHosts = (appSource.match(/const trustedMessengerHosts = \[([\s\S]*?)\];/) || [])[1] || '';
+for (const host of [
+  'tiktok.com', 'vk.com', 'line.me', 'line.naver.jp',
+  'teams.microsoft.com', 'teams.live.com', 'snapchat.com', 'zalo.me'
+]) assert.ok(navigationHosts.includes("'" + host + "'"), 'navigation allow-list includes ' + host);
 
 // Composer and send fallbacks must be used even when platform-specific classes
 // change; send interception is additionally label- and proximity-aware.
@@ -103,6 +108,10 @@ assert.ok(serviceSource.includes('const COMMON_SEND_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().sendSelectors || []), ...COMMON_SEND_FALLBACKS'));
 assert.ok(/function matchesSendTarget\(target\)[\s\S]*?sendLabel[\s\S]*?horizontalGap < 420/.test(serviceSource));
 assert.ok(/function findComposer\(\)[\s\S]*?composerScore\(all\[0\]\) > 0/.test(serviceSource));
+assert.ok(serviceSource.includes('const COMMON_MESSAGE_FALLBACKS = ['));
+assert.ok(serviceSource.includes('...(rule().messageSelectors || []), ...COMMON_MESSAGE_FALLBACKS'));
+assert.ok(serviceSource.includes('const COMMON_BUBBLE_FALLBACKS = ['));
+assert.ok(serviceSource.includes('...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS'));
 
 // Test own-message recognition for platform-specific class conventions.
 function functionSource(name) {
