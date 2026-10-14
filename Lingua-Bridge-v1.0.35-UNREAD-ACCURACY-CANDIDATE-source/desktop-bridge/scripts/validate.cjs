@@ -44,7 +44,7 @@ for (const [label, condition] of [
   ['voice translator UI present', app.includes('Voice translator') && app.includes('voiceTranslate')],
   ['unfinished voice UI is owner-only', app.includes('Voice translator · owner beta') && app.includes("${owner ? `")],
   ['server-side voice endpoints wired', main.includes('/api/voice/usage') && main.includes('/api/voice/translate')],
-  ['current version marker present', app.includes("lingua.desktopVersion', '1.0.35")],
+  ['current version marker present', /lingua\.desktopVersion', '1\.0\.36'/.test(app)],
   ['Current profiles are conversation-scoped', app.includes("perConversation") && app.includes("conversationScopeKey") && app.includes("lingua-conversation")],
   ['Global editor is decoupled from active-chat settings', app.includes("function editorSettings()") && app.includes("function currentSettings()") && app.includes("Switching the editor tab must never change/reload the chat")],
   ['Current profile snapshots Global to prevent later overwrite', app.includes("state.perConversation[key] = { ...currentSettings() }")],
