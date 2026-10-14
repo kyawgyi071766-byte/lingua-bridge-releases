@@ -543,7 +543,7 @@ const COPY_TIMESTAMP_SELECTOR = [
   'time', '.time', '.message-time', '.messageTime', '[class*="timestamp"]',
   '[class*="message-time"]', '[data-testid*="timestamp"]', '[data-testid*="message-time"]'
 ].join(', ');
-const COPY_DECORATION_SELECTOR = \`svg, button, \${COPY_TIMESTAMP_SELECTOR}\`;
+const COPY_DECORATION_SELECTOR = 'svg, button, ' + COPY_TIMESTAMP_SELECTOR;
 const COPY_REMOVE_SELECTOR = [
   'svg', 'button', 'script', 'style', COPY_TIMESTAMP_SELECTOR, COPY_UI_SELECTOR
 ].join(', ');
