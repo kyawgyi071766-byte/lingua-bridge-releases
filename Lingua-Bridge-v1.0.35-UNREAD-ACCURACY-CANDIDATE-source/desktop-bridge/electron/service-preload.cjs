@@ -150,6 +150,42 @@ const SERVICE_RULES = [
     sendSelectors: ['button[type="submit"]', 'div[role="button"][aria-label="Send"]']
   },
   {
+    id: 'tiktok',
+    match: host => host === 'tiktok.com' || host.endsWith('.tiktok.com'),
+    // TikTok's web inbox has changed DOM names over time. Prefer message text
+    // nodes, then support the e2e/test-id families observed on current inboxes.
+    messageSelectors: [
+      '[data-e2e="message-content"]',
+      '[data-e2e="message-list-item"] [data-e2e*="message"]',
+      '[data-e2e="message-list-item"] [dir="auto"]',
+      '[data-testid*="message-content"]',
+      '[data-message-text]',
+      '[class*="messageText"]',
+      '[class*="MessageText"]',
+      '[class*="message-content"]',
+      '[class*="MessageContent"]'
+    ],
+    bubbleSelectors: [
+      '[data-e2e="message-list-item"]', '[data-e2e*="message-item"]',
+      '[data-message-id]', '[class*="messageListItem"]', '[class*="MessageItem"]'
+    ],
+    composerSelectors: [
+      '[data-e2e="message-input-area"] [contenteditable="true"]',
+      '[data-e2e="message-input"] [contenteditable="true"]',
+      '[data-e2e="message-input-area"] textarea',
+      '[data-e2e*="message-input"] [role="textbox"]',
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"][data-placeholder]',
+      '[contenteditable="true"]',
+      'textarea[placeholder]'
+    ],
+    sendSelectors: [
+      '[data-e2e="send-msg-btn"]', '[data-e2e*="send-msg"]',
+      '[data-testid*="send"]', 'button[aria-label*="Send" i]',
+      'button[title*="Send" i]', '[class*="sendButton"]', '[class*="sendBtn"]'
+    ]
+  },
+  {
     id: 'discord',
     match: host => host.includes('discord.com'),
     messageSelectors: ['[id^="message-content-"]'],
@@ -198,12 +234,153 @@ const SERVICE_RULES = [
     sendSelectors: ['button.msg-form__send-button', 'button[type="submit"][aria-label*="Send"]', 'button[aria-label*="Send"]']
   },
   {
+    id: 'vk',
+    match: host => host === 'vk.com' || host.endsWith('.vk.com'),
+    messageSelectors: [
+      '.im-mess--text', '.im-mess__text', '.im_msg_text',
+      '.im-mess-stack [class*="text"]', '[data-msgid] [dir="auto"]',
+      '[data-message-id] [dir="auto"]', '[data-message-text]'
+    ],
+    bubbleSelectors: ['.im-mess-stack', '.im-mess', '[data-msgid]', '[data-message-id]'],
+    composerSelectors: [
+      '#im_editable[contenteditable="true"]', '.im-chat-input--text',
+      '[contenteditable="true"][role="textbox"]', '[contenteditable="true"]',
+      'textarea[placeholder]', 'textarea'
+    ],
+    sendSelectors: [
+      '.im-chat-input--send', 'button[aria-label*="Send" i]',
+      'button[title*="Send" i]', '[data-testid*="send"]'
+    ]
+  },
+  {
+    id: 'line',
+    match: host => host === 'line.me' || host.endsWith('.line.me') || host.endsWith('.line.naver.jp'),
+    messageSelectors: [
+      '[data-testid="message-text"]', '[data-message-text]',
+      '[data-message-id] [dir="auto"]', '[class*="messageText"]',
+      '[class*="MessageText"]', '[class*="message-content"]',
+      '[class*="MessageContent"]', '.text-content'
+    ],
+    bubbleSelectors: [
+      '[data-message-id]', '[data-testid*="message"]',
+      '[class*="messageListItem"]', '[class*="MessageItem"]', '.message'
+    ],
+    composerSelectors: [
+      '[data-testid*="composer"] [contenteditable="true"]',
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"][data-placeholder]', '[contenteditable="true"]',
+      'textarea[placeholder]', 'textarea'
+    ],
+    sendSelectors: [
+      '[data-testid*="send"]', 'button[aria-label*="Send" i]',
+      'button[title*="Send" i]', '[class*="sendButton"]', '[class*="send-btn"]'
+    ]
+  },
+  {
+    id: 'teams',
+    match: host => host === 'teams.microsoft.com' || host.endsWith('.teams.microsoft.com')
+      || host === 'teams.live.com' || host.endsWith('.teams.live.com'),
+    messageSelectors: [
+      '[data-tid="messageBodyContent"]', '[data-tid="chat-pane-message"] [dir="auto"]',
+      '[data-tid="messageBodyContent"] [dir="auto"]',
+      '[data-tid="message-body-content"]', '[data-message-id] [dir="auto"]',
+      '[data-message-text]', '.message-body-content'
+    ],
+    bubbleSelectors: [
+      '[data-tid="chat-pane-message"]', '[data-tid*="message"]', '[data-message-id]',
+      '[class*="messageListItem"]', '[class*="MessageItem"]'
+    ],
+    composerSelectors: [
+      '[data-tid="ckeditor"][contenteditable="true"]',
+      '[data-tid="ckeditor"] [contenteditable="true"]',
+      '.ck-editor__editable[contenteditable="true"]',
+      '[contenteditable="true"][data-placeholder]',
+      '[role="textbox"][contenteditable="true"]', 'textarea'
+    ],
+    sendSelectors: [
+      'button[data-tid*="send" i]', '[data-tid*="send-message" i]',
+      'button[aria-label^="Send" i]', 'button[title^="Send" i]'
+    ]
+  },
+  {
+    id: 'snapchat',
+    match: host => host === 'snapchat.com' || host.endsWith('.snapchat.com'),
+    messageSelectors: [
+      '[data-testid*="message-content"]', '[data-testid*="message"] [dir="auto"]',
+      '[data-message-text]', '[data-message-id] [dir="auto"]',
+      '[class*="messageText"]', '[class*="MessageText"]',
+      '[class*="chat-message"] [dir="auto"]', '.text-content'
+    ],
+    bubbleSelectors: [
+      '[data-message-id]', '[data-testid*="message"]',
+      '[class*="messageListItem"]', '[class*="MessageItem"]', '[class*="chat-message"]'
+    ],
+    composerSelectors: [
+      '[data-testid*="composer"] [contenteditable="true"]',
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"][data-placeholder]', '[contenteditable="true"]',
+      'textarea[placeholder]', 'textarea'
+    ],
+    sendSelectors: [
+      '[data-testid*="send"]', 'button[aria-label*="Send" i]',
+      'button[title*="Send" i]', '[class*="sendButton"]', '[class*="send-btn"]'
+    ]
+  },
+  {
+    id: 'zalo',
+    match: host => host === 'zalo.me' || host.endsWith('.zalo.me'),
+    messageSelectors: [
+      '.chat-message__content', '.message-content', '.chat-item-content',
+      '[data-id-message] [dir="auto"]', '[data-message-id] [dir="auto"]',
+      '[class*="message-content"]', '[class*="messageContent"]',
+      '[data-message-text]'
+    ],
+    bubbleSelectors: [
+      '[data-id-message]', '[data-message-id]', '.chat-message',
+      '[class*="messageItem"]', '[class*="message-item"]', '.chat-item'
+    ],
+    composerSelectors: [
+      '.chat-input textarea', '.input-area textarea',
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"][data-placeholder]', '[contenteditable="true"]',
+      'textarea[placeholder]', 'textarea'
+    ],
+    sendSelectors: [
+      'button[aria-label*="Send" i]', 'button[aria-label*="Gửi" i]',
+      'button[title*="Send" i]', '[data-testid*="send"]',
+      '[class*="sendButton"]', '[class*="send-btn"]'
+    ]
+  },
+  {
     id: 'generic',
     match: () => true,
-    messageSelectors: ['[data-message-text]', '.message-text', '.text-content'],
-    bubbleSelectors: ['[data-message-id]', '.message', '[role="row"]'],
-    composerSelectors: ['div[contenteditable="true"][role="textbox"]', 'textarea'],
-    sendSelectors: ['button[aria-label="Send"]', 'button[type="submit"]']
+    // Last-resort selectors for custom apps and platforms whose UI markup changes.
+    // Composer selection is scored against focus, viewport position, width, and labels.
+    messageSelectors: [
+      '[data-e2e="message-content"]', '[data-testid*="message-content"]',
+      '[data-message-text]', '[data-message-id] [dir="auto"]',
+      '[class*="messageText"]', '[class*="message-text"]',
+      '[class*="message-content"]', '[class*="MessageContent"]',
+      '.message-text', '.text-content'
+    ],
+    bubbleSelectors: [
+      '[data-message-id]', '[data-e2e="message-list-item"]',
+      '[data-testid*="message"]', '[class*="MessageItem"]',
+      '[class*="messageListItem"]', '.message', '[role="listitem"]', '[role="row"]'
+    ],
+    composerSelectors: [
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"][data-placeholder]',
+      '[data-testid*="composer"] [contenteditable="true"]',
+      '[data-e2e*="message-input"] [contenteditable="true"]',
+      'div[contenteditable="true"]', 'textarea[placeholder]', 'textarea'
+    ],
+    sendSelectors: [
+      'button[aria-label*="Send" i]', 'button[title*="Send" i]',
+      '[data-testid*="send" i]', '[data-e2e*="send" i]',
+      '[data-tid*="send" i]', '[class*="sendButton"]',
+      '[class*="send-btn"]', 'button[type="submit"]'
+    ]
   }
 ];
 
@@ -689,8 +866,11 @@ function isOutgoingMessage(node) {
     if (rect && rect.width > 0 && rect.left > (innerWidth * 0.42) && rect.right > (innerWidth * 0.72)) return true;
   }
   const cls = String(bubble.className || '');
-  return /\b(outgoing|message-out|sent-by-me|from-me|own-message)\b/i.test(cls)
-    || Boolean(bubble.matches?.('[data-outgoing="true"], [data-owner="self"], [data-testid*="outgoing"]'));
+  if (service === 'vk' && /\bim-mess(?:_out|--out)|outgoing\b/i.test(cls)) return true;
+  if (service === 'teams' && /\b(?:own|outgoing|sent-by-me|from-me|message--out)\b/i.test(cls)) return true;
+  if (service === 'tiktok' && /\b(?:own-message|message--out|outgoing|sent-by-me|from-me)\b/i.test(cls)) return true;
+  return /\b(outgoing|message-out|message--out|sent|sent-by-me|from-me|own-message|is-sent|im-mess_out|my-message)\b/i.test(cls)
+    || Boolean(bubble.matches?.('[data-outgoing="true"], [data-owner="self"], [data-testid*="outgoing"], [data-is-outgoing="true"], [data-out="1"]'));
 }
 
 function makeRefreshButton(label = 'Refresh translation') {
@@ -1181,11 +1361,25 @@ function composerScore(el) {
   return score;
 }
 
+const COMMON_COMPOSER_FALLBACKS = [
+  '[contenteditable="true"][role="textbox"]',
+  '[contenteditable="true"][data-placeholder]',
+  '[data-testid*="composer"] [contenteditable="true"]',
+  '[data-e2e*="message-input"] [contenteditable="true"]',
+  'div[contenteditable="true"]',
+  'textarea[placeholder]',
+  'textarea'
+];
+
 function findComposer() {
   const all = [];
   const seen = new Set();
-  for (const selector of rule().composerSelectors) {
-    for (const el of document.querySelectorAll(selector)) {
+  // Site-specific selectors are preferred, but always score generic candidates
+  // too. This lets an app keep working when its composer loses a role/class.
+  for (const selector of [...(rule().composerSelectors || []), ...COMMON_COMPOSER_FALLBACKS]) {
+    let matches = [];
+    try { matches = document.querySelectorAll(selector); } catch (_) { continue; }
+    for (const el of matches) {
       if (seen.has(el) || !isVisible(el)) continue;
       seen.add(el);
       all.push(el);
@@ -1193,14 +1387,26 @@ function findComposer() {
   }
   if (!all.length) return null;
   all.sort((a, b) => composerScore(b) - composerScore(a));
-  return composerScore(all[0]) > -100 ? all[0] : null;
+  // Do not treat a header search box or an arbitrary editor as a chat composer.
+  return composerScore(all[0]) > 0 ? all[0] : null;
 }
+
+const COMMON_SEND_FALLBACKS = [
+  'button[aria-label*="Send" i]',
+  '[role="button"][aria-label*="Send" i]',
+  'button[title*="Send" i]',
+  '[data-testid*="send" i]',
+  '[data-e2e*="send" i]',
+  '[data-tid*="send" i]',
+  '[class*="sendButton"]',
+  '[class*="send-btn"]'
+];
 
 function findSendElement() {
   const composer = findComposer();
   const cRect = composer?.getBoundingClientRect?.();
   const candidates = [];
-  for (const selector of rule().sendSelectors) {
+  for (const selector of [...(rule().sendSelectors || []), ...COMMON_SEND_FALLBACKS]) {
     for (const raw of document.querySelectorAll(selector)) {
       const el = raw.closest?.('button, [role=button]') || raw;
       if (!isVisible(el) || el.id === 'lingua-send-shield') continue;
@@ -1291,22 +1497,32 @@ function setComposerText(el, text) {
 
 function matchesSendTarget(target) {
   if (!(target instanceof Element)) return false;
-  for (const selector of rule().sendSelectors) {
-    if (target.matches(selector) || target.closest(selector)) return true;
+  for (const selector of [...(rule().sendSelectors || []), ...COMMON_SEND_FALLBACKS]) {
+    try {
+      if (target.matches(selector) || target.closest(selector)) return true;
+    } catch (_) {}
   }
-  // Telegram occasionally changes the exact send-button wrapper while keeping it
-  // beside the composer. Only treat a generic button as Send when text exists.
-  if (rule().id === 'telegram') {
-    const composer = findComposer();
-    const button = target.closest('button, [role="button"]');
-    if (composer && button && composerText(composer)) {
-      const label = cleanText(button.getAttribute('aria-label') || button.getAttribute('title') || button.textContent).toLowerCase();
-      if (/^(send|send message|发送|傳送|보내기|отправить)$/.test(label)) return true;
-      const c = String(button.className || '');
-      if (/\b(send|btn-send|send-button)\b/i.test(c)) return true;
-    }
-  }
-  return false;
+
+  // DOM labels and CSS classes differ across languages and frequent redesigns.
+  // Only use this fallback for a visible button close to a non-empty composer.
+  const composer = findComposer();
+  const button = target.closest('button, [role="button"]');
+  if (!composer || !button || !composerText(composer) || !isVisible(button)) return false;
+  const label = cleanText([
+    button.getAttribute('aria-label'), button.getAttribute('title'),
+    button.getAttribute('data-e2e'), button.getAttribute('data-testid'),
+    button.getAttribute('data-tid'), button.textContent
+  ].filter(Boolean).join(' ')).toLowerCase();
+  const sendLabel = /(^|[\s_-])(send|send message|send now|发送|傳送|送信|보내기|отправить|envoyer|enviar|senden|invio|gửi)([\s_-]|$)/i.test(label);
+  const cls = String(button.className || '');
+  const sendClass = /(^|[\s_-])(send|send-btn|send-button|sendbtn)([\s_-]|$)/i.test(cls);
+  if (!sendLabel && !sendClass) return false;
+
+  const br = button.getBoundingClientRect();
+  const cr = composer.getBoundingClientRect();
+  const horizontalGap = Math.max(0, cr.left - br.right, br.left - cr.right);
+  const verticalGap = Math.max(0, cr.top - br.bottom, br.top - cr.bottom);
+  return horizontalGap < 420 && verticalGap < 180;
 }
 
 function clickSend() {
