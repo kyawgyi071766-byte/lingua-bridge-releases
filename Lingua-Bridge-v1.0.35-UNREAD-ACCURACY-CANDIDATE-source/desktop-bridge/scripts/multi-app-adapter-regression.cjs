@@ -125,6 +125,9 @@ assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'pointerdown
 assert.ok(serviceSource.includes("document.addEventListener('submit', onNativeSubmit, true)"), 'form-submit fallback exists');
 assert.ok(serviceSource.includes('pending.composer'), 'translation result remains tied to the originating editor');
 assert.ok(serviceSource.includes('pending.conversationKey'), 'send is guarded when chat changes during translation');
+assert.ok(serviceSource.includes('const nearComposerEnd ='), 'icon-only Send buttons have a guarded spatial fallback');
+assert.ok(serviceSource.includes('clickSend(pending.sendButton)'), 'translated text uses the same native Send button when available');
+assert.ok(/送|ส่ง|ပို့|إرسال|ارسال/.test(serviceSource), 'localized Send labels are supported');
 
 // Test own-message recognition for platform-specific class conventions.
 function functionSource(name) {
