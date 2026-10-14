@@ -534,6 +534,146 @@ function findBubble(node) {
   return node.parentElement || node;
 }
 
+const COPY_UI_SELECTOR = [
+  '#lingua-native-chip', '#lingua-composer-target-hint', '#lingua-send-shield',
+  '.lingua-inline-translation', '.lingua-translate-action', '.lingua-inline-actions',
+  '.lingua-refresh-translation'
+].join(', ');
+const COPY_TIMESTAMP_SELECTOR = [
+  'time', '.time', '.message-time', '.messageTime', '[class*="timestamp"]',
+  '[class*="message-time"]', '[data-testid*="timestamp"]', '[data-testid*="message-time"]'
+].join(', ');
+const COPY_REMOVE_SELECTOR = [
+  'svg', 'button', 'script', 'style', COPY_TIMESTAMP_SELECTOR, COPY_UI_SELECTOR
+].join(', ');
+
+function elementFromCopyNode(node) {
+  if (!node) return null;
+  return node.nodeType === 1 ? node : (node.parentElement || null);
+}
+
+function isCopyDecorationElement(element) {
+  if (!element) return false;
+  try {
+    if (element.matches?.(COPY_TIMESTAMP_SELECTOR)) return true;
+    if (element.closest?.(`svg, button, ${COPY_TIMESTAMP_SELECTOR}`)) return true;
+    if (element.closest?.(COPY_UI_SELECTOR)) return true;
+  } catch (_) {}
+  return false;
+}
+
+function isEditableCopyTarget(element) {
+  try {
+    return Boolean(element?.closest?.('input, textarea, select, [contenteditable="true"], [role="textbox"]'));
+  } catch (_) {
+    return false;
+  }
+}
+
+function findMessageTextNodeForCopy(element) {
+  if (!element) return null;
+  const injectedUi = element.closest?.(COPY_UI_SELECTOR);
+  const associatedNode = injectedUi?.__linguaSourceNode;
+  if (associatedNode && associatedNode.isConnected !== false) return associatedNode;
+  if (isCopyDecorationElement(element)) return null;
+
+  for (const selector of rule().messageSelectors || []) {
+    try {
+      const candidate = element.matches?.(selector) ? element : element.closest?.(selector);
+      if (candidate && !candidate.matches?.(COPY_TIMESTAMP_SELECTOR)
+        && !candidate.closest?.(COPY_UI_SELECTOR)) return candidate;
+    } catch (_) {}
+  }
+
+  // If the endpoint is a timestamp or sibling inside the message bubble, find
+  // its single original message-text node using the same service-specific rules.
+  const bubble = findBubble(element);
+  if (!bubble?.querySelectorAll) return null;
+  for (const selector of rule().messageSelectors || []) {
+    try {
+      const candidates = [...bubble.querySelectorAll(selector)].filter(candidate =>
+        !candidate.matches?.(COPY_TIMESTAMP_SELECTOR)
+        && !candidate.closest?.(COPY_UI_SELECTOR)
+        && cleanText(candidate.innerText || candidate.textContent)
+      );
+      if (candidates.length === 1) return candidates[0];
+    } catch (_) {}
+  }
+  return null;
+}
+
+function extractMessageCopyText(sourceNode) {
+  if (!sourceNode?.cloneNode) return '';
+  const clone = sourceNode.cloneNode(true);
+  try {
+    clone.querySelectorAll(COPY_REMOVE_SELECTOR).forEach(element => element.remove());
+  } catch (_) {}
+  const raw = String(clone.innerText ?? clone.textContent ?? '');
+  return raw
+    .replace(/\\u200b/g, '')
+    .replace(/\\r\\n?/g, '\\n')
+    .split('\\n')
+    .map(line => line.replace(/[ \\t]+/g, ' ').trimEnd())
+    .join('\\n')
+    .replace(/\\n{3,}/g, '\\n\\n')
+    .trim();
+}
+
+function copyBubbleForPoint(element, sourceNode) {
+  const injectedUi = element?.closest?.(COPY_UI_SELECTOR);
+  if (injectedUi?.__linguaSourceNode) return findBubble(injectedUi.__linguaSourceNode);
+  return findBubble(sourceNode || element);
+}
+
+function sanitizeMessageCopy(event) {
+  if (!event?.clipboardData?.setData || !window.getSelection) return;
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || !selection.rangeCount) return;
+
+  const start = elementFromCopyNode(selection.anchorNode);
+  const end = elementFromCopyNode(selection.focusNode);
+  if (!start || !end || isEditableCopyTarget(start) || isEditableCopyTarget(end)) return;
+
+  const startSource = findMessageTextNodeForCopy(start);
+  const endSource = findMessageTextNodeForCopy(end);
+  // Do not hijack a selection that spans two separate messages.
+  if (startSource && endSource && startSource !== endSource) return;
+  const source = startSource || endSource;
+  if (!source) return;
+
+  const bubble = findBubble(source);
+  const startBubble = copyBubbleForPoint(start, startSource);
+  const endBubble = copyBubbleForPoint(end, endSource);
+  if (bubble && startBubble && bubble !== startBubble) return;
+  if (bubble && endBubble && bubble !== endBubble) return;
+  if (startBubble && endBubble && startBubble !== endBubble) return;
+
+  const cleanTextValue = extractMessageCopyText(source);
+  if (!cleanTextValue) return;
+
+  const selectedText = String(selection.toString?.() || '').replace(/\\u200b/g, '').trim();
+  const normalizedSelected = cleanText(selectedText);
+  const normalizedSource = cleanText(cleanTextValue);
+  const bothInsideSource = Boolean(
+    startSource && endSource && startSource === endSource
+    && source.contains?.(start) && source.contains?.(end)
+    && !start.closest?.(COPY_UI_SELECTOR) && !end.closest?.(COPY_UI_SELECTOR)
+    && !isCopyDecorationElement(start) && !isCopyDecorationElement(end)
+  );
+  // Keep intentional partial selections when they contain only message text.
+  // If the selection also contains Lingua cards, SVGs, timestamps, or labels,
+  // replace it with only the clean original message body.
+  const clipboardText = bothInsideSource && normalizedSelected
+    && normalizedSource.includes(normalizedSelected)
+    ? selectedText
+    : cleanTextValue;
+
+  event.clipboardData.setData('text/plain', clipboardText);
+  event.preventDefault();
+  event.stopImmediatePropagation?.();
+  event.stopPropagation?.();
+}
+
 function isOutgoingMessage(node) {
   const bubble = findBubble(node);
   if (!bubble) return false;
@@ -597,7 +737,10 @@ function ensureManualTranslateAction(node) {
   if (action) return action;
   action = document.createElement('div');
   action.className = 'lingua-translate-action';
+  action.__linguaSourceNode = node;
   Object.assign(action.style, {
+    userSelect: 'none',
+    webkitUserSelect: 'none',
     marginTop: '4px',
     display: 'flex',
     justifyContent: 'flex-end',
@@ -627,6 +770,8 @@ function ensureTranslationRefreshButton(host, node) {
     row = document.createElement('div');
     row.className = 'lingua-inline-actions';
     Object.assign(row.style, {
+      userSelect: 'none',
+      webkitUserSelect: 'none',
       marginTop: '3px',
       display: 'flex',
       justifyContent: 'flex-end',
@@ -649,6 +794,7 @@ function ensureTranslationRefreshButton(host, node) {
     }, true);
     row.appendChild(button);
   }
+  row.__linguaSourceNode = node;
   return row;
 }
 
@@ -661,7 +807,10 @@ function ensureTranslationHost(node) {
   }
   const div = document.createElement('div');
   div.className = 'lingua-inline-translation';
+  div.__linguaSourceNode = node;
   Object.assign(div.style, {
+    userSelect: 'none',
+    webkitUserSelect: 'none',
     marginTop: '6px',
     padding: '7px 9px',
     borderLeft: '3px solid #60a5fa',
@@ -1560,6 +1709,10 @@ ipcRenderer.on('lingua-insert-text', (_event, payload) => {
 
 window.addEventListener('DOMContentLoaded', () => {
   loadTranslationCache();
+  // Treat a chat bubble as a message, not a block of webpage markup. This
+  // keeps Lingua's injected translation controls and native timestamps out
+  // of copied text while preserving ordinary partial text selections.
+  document.addEventListener('copy', sanitizeMessageCopy, true);
   const observer = new MutationObserver(() => {
     reportUnread();
     if (!settings.isActive) return;
