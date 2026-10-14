@@ -70,8 +70,14 @@ for (const [host, id] of domainCases) assertProfile(host, id);
 
 const tiktok = rules.find(rule => rule.id === 'tiktok');
 assert.ok(tiktok.messageSelectors.some(s => s.includes('data-e2e="message-content"')));
+assert.ok(tiktok.messageSelectors.some(s => s.toLowerCase().includes('data-e2e*="message"')));
+assert.ok(tiktok.messageSelectors.some(s => s.toLowerCase().includes('data-testid*="message"')));
+assert.ok(tiktok.messageSelectors.some(s => s.toLowerCase().includes('chat-message')));
+assert.ok(tiktok.bubbleSelectors.some(s => s.toLowerCase().includes('message-item')));
 assert.ok(tiktok.composerSelectors.some(s => s.includes('data-e2e="message-input-area"')));
+assert.ok(tiktok.composerSelectors.some(s => s.toLowerCase().includes('data-testid*="composer"')));
 assert.ok(tiktok.sendSelectors.some(s => s.includes('send-msg-btn')));
+assert.match(serviceSource, /tiktok:\s*\[[\s\S]*?chat-room-title/);
 const vk = rules.find(rule => rule.id === 'vk');
 assert.ok(vk.messageSelectors.some(s => s.includes('im-mess--text')));
 const teams = rules.find(rule => rule.id === 'teams');
@@ -117,8 +123,13 @@ assert.ok(/function matchesSendTarget\(target\)[\s\S]*?sendLabel[\s\S]*?horizont
 assert.ok(/function findComposer\(\)[\s\S]*?composerScore\(all\[0\]\) > 0/.test(serviceSource));
 assert.ok(serviceSource.includes('const COMMON_MESSAGE_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().messageSelectors || []), ...COMMON_MESSAGE_FALLBACKS'));
+assert.ok(serviceSource.includes('[data-e2e*="message" i] [dir="auto"]'));
+assert.ok(serviceSource.includes('[data-testid*="message" i] [dir="auto"]'));
+assert.ok(serviceSource.includes('[class*="chat-message" i] [dir="auto"]'));
 assert.ok(serviceSource.includes('const COMMON_BUBBLE_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS'));
+assert.ok(serviceSource.includes('[data-testid*="message-item" i]'));
+assert.ok(serviceSource.includes('[class*="chat-message" i]'));
 assert.ok(serviceSource.includes('function findComposerForEventTarget(target)'), 'focused-editor fallback exists');
 assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'keydown', composer)"), 'Enter uses the actual editor');
 assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'pointerdown', composerForSendAction(), button)"), 'Send button uses the focused editor and preserves the original Send control');
