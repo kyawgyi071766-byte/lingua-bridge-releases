@@ -140,11 +140,11 @@ function functionSource(name) {
   const context = vm.createContext({
     document: { activeElement: null },
     innerHeight: 1000,
-    cleanText: value => String(value || '').replace(/\\s+/g, ' ').trim(),
+    cleanText: value => String(value || '').replace(/\s+/g, ' ').trim(),
     isVisible: element => Boolean(element && element.visible),
   });
   vm.runInContext(
-    functionSource('composerScore') + '\\n' +
+    functionSource('composerScore') + '\n' +
     functionSource('findComposerForEventTarget') + '\\n' +
     'globalThis.__findComposerForEventTarget = findComposerForEventTarget;',
     context
