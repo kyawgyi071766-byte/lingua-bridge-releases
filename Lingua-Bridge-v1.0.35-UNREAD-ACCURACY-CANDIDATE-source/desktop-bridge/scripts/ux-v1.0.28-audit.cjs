@@ -18,7 +18,7 @@ const checks = [
   ['hover edit help', app.includes('Right-click this account to save/edit name and phone.')],
   ['translation card click isolation', preload.includes("for (const eventName of ['pointerdown', 'mousedown', 'click', 'dblclick'])") && preload.includes('event.stopPropagation()')],
   ['translation cache exists', preload.includes('const translationCache = new Map()') && preload.includes('TRANSLATION_CACHE_LIMIT')],
-  ['translation result cached', preload.includes('rememberTranslation(fp, result.translatedText, result.provider, targetLang)')],
+  ['translation result cached', /rememberTranslation\(fp,\s*result\.translatedText,\s*result\.provider,\s*targetLang(?:,\s*conversationKey)?\)/.test(preload)],
   ['translation card restoration', preload.includes('restoreCachedTranslation(node, fp, targetLang)') || preload.includes('restoreCachedTranslation(node, fp)')],
   ['per-message incoming auto-detect retained', preload.includes("sourceLang: 'auto'")],
   ['persistent no-refresh retained', app.includes('persistentViews') && app.includes('syncPersistentWebviews')],
