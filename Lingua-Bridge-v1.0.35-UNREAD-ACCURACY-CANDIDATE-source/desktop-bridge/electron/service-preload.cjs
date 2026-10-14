@@ -1601,6 +1601,10 @@ function setComposerText(el, text) {
 
 function matchesSendTarget(target) {
   if (!(target instanceof Element)) return false;
+  // The transparent Lingua shield handles its own event and is not a native
+  // Send button. Never re-intercept it as a website button.
+  if (target.closest?.('#lingua-send-shield, .lingua-inline-translation, .lingua-translate-action, .lingua-inline-actions, .lingua-native-chip')) return false;
+
   for (const selector of [...(rule().sendSelectors || []), ...COMMON_SEND_FALLBACKS]) {
     try {
       if (target.matches(selector) || target.closest(selector)) return true;
@@ -1608,30 +1612,41 @@ function matchesSendTarget(target) {
   }
 
   // DOM labels and CSS classes differ across languages and frequent redesigns.
-  // Only use this fallback for a visible button close to a non-empty composer.
-  const composer = findComposer();
+  // Prefer labels, but allow a small icon-only button at the right edge of a
+  // non-empty focused composer when the site uses no stable Send selector.
   const button = target.closest('button, [role="button"]');
-  if (!composer || !button || !composerText(composer) || !isVisible(button)) return false;
+  const composer = findComposerForEventTarget(document.activeElement)
+    || lastFocusedComposer
+    || findComposer();
+  if (!composer || !button || !composerText(composer) || !isVisible(composer) || !isVisible(button)) return false;
+  if (button.id === 'lingua-send-shield' || button.closest?.('#lingua-send-shield')) return false;
+
   const label = cleanText([
     button.getAttribute('aria-label'), button.getAttribute('title'),
     button.getAttribute('data-e2e'), button.getAttribute('data-testid'),
     button.getAttribute('data-tid'), button.textContent
   ].filter(Boolean).join(' ')).toLowerCase();
-  const sendLabel = /(^|[\s_-])(send|send message|send now|发送|傳送|送信|보내기|отправить|envoyer|enviar|senden|invio|gửi)([\s_-]|$)/i.test(label);
+  const sendLabel = /(^|[\s_-])(send|send message|send now|submit|发送|傳送|送信|보내기|отправить|envoyer|enviar|enviar mensagem|senden|invio|gửi|gönder|kirim|hantar)([\s_-]|$)|送|ส่ง|ပို့|إرسال|ارسال/i.test(label);
   const cls = String(button.className || '');
   const sendClass = /(^|[\s_-])(send|send-btn|send-button|sendbtn)([\s_-]|$)/i.test(cls);
-  if (!sendLabel && !sendClass) return false;
-
   const br = button.getBoundingClientRect();
   const cr = composer.getBoundingClientRect();
   const horizontalGap = Math.max(0, cr.left - br.right, br.left - cr.right);
   const verticalGap = Math.max(0, cr.top - br.bottom, br.top - cr.bottom);
-  return horizontalGap < 420 && verticalGap < 180;
+  if (sendLabel || sendClass) return horizontalGap < 420 && verticalGap < 180;
+
+  // Icon-only send buttons tend to sit within or just below the composer, on
+  // its right-hand side. Reject attachment/reaction buttons toward the left.
+  const buttonIsSmall = br.width > 0 && br.width <= 100 && br.height > 0 && br.height <= 100;
+  const nearComposerEnd = br.left >= cr.left + cr.width * 0.55 && br.left <= cr.right + 120;
+  return buttonIsSmall && nearComposerEnd && horizontalGap < 150 && verticalGap < 90;
 }
 
-function clickSend() {
+function clickSend(buttonOverride = null) {
   bypassNextSendUntil = Date.now() + 2000;
-  const found = findSendElement();
+  const found = buttonOverride && buttonOverride.isConnected !== false && isVisible(buttonOverride)
+    ? buttonOverride
+    : findSendElement();
   if (found) {
     found.click();
     return true;
@@ -1742,12 +1757,12 @@ function ensureSendShield() {
     });
     shield.addEventListener('pointerdown', event => {
       preventEvent(event);
-      if (!outgoingBusy) requestOutgoingTranslation(null, 'send-shield-pointer');
+      if (!outgoingBusy) requestOutgoingTranslation(null, 'send-shield-pointer', composerForSendAction(), findSendElement());
     }, true);
     shield.addEventListener('mousedown', event => preventEvent(event), true);
     shield.addEventListener('click', event => {
       preventEvent(event);
-      if (!outgoingBusy) requestOutgoingTranslation(null, 'send-shield-click');
+      if (!outgoingBusy) requestOutgoingTranslation(null, 'send-shield-click', composerForSendAction(), findSendElement());
     }, true);
     document.documentElement.appendChild(shield);
   }
@@ -1787,7 +1802,7 @@ function preventEvent(event) {
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
 }
 
-function requestOutgoingTranslation(event, trigger = 'send', composerOverride = null) {
+function requestOutgoingTranslation(event, trigger = 'send', composerOverride = null, sendButtonOverride = null) {
   if (!settings.isActive || !directSendEnabled()) return false;
 
   // While the first key/pointer event is being translated, browsers can still
@@ -1830,6 +1845,7 @@ function requestOutgoingTranslation(event, trigger = 'send', composerOverride = 
   const id = `out_${Date.now()}_${++messageCounter}`;
   pendingOutgoing.set(id, {
     composer, original: text, trigger, cleared: true,
+    sendButton: sendButtonOverride && sendButtonOverride.isConnected !== false ? sendButtonOverride : null,
     conversationKey: currentConversationCacheScope(),
     route: `${location.pathname || ''}${location.search || ''}${location.hash || ''}`
   });
@@ -1890,17 +1906,23 @@ function onNativeBeforeInput(event) {
 }
 
 function onNativePointerDown(event) {
-  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'pointerdown', composerForSendAction());
+  if (matchesSendTarget(event.target)) {
+    const button = event.target?.closest?.('button, [role="button"]') || null;
+    requestOutgoingTranslation(event, 'pointerdown', composerForSendAction(), button);
+  }
 }
 
 function onNativeClick(event) {
-  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'click', composerForSendAction());
+  if (matchesSendTarget(event.target)) {
+    const button = event.target?.closest?.('button, [role="button"]') || null;
+    requestOutgoingTranslation(event, 'click', composerForSendAction(), button);
+  }
 }
 
 function onNativeSubmit(event) {
   const composer = composerForSendAction();
   if (!composer || !event.target?.contains?.(composer)) return;
-  requestOutgoingTranslation(event, 'submit', composer);
+  requestOutgoingTranslation(event, 'submit', composer, findSendElement());
 }
 
 window.addEventListener('keydown', onNativeKeydown, true);
@@ -2055,7 +2077,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
           return;
         }
         const existingNodes = new Set(findMessageNodes());
-        if (clickSend()) watchSentTranslationCard(expectedText, pending.original, result.detectedSource, existingNodes);
+        if (clickSend(pending.sendButton)) watchSentTranslationCard(expectedText, pending.original, result.detectedSource, existingNodes);
         setTimeout(updateComposerHint, 120);
       }, 220);
     }
