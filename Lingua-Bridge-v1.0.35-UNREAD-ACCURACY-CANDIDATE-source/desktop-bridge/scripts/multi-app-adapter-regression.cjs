@@ -145,7 +145,7 @@ function functionSource(name) {
   });
   vm.runInContext(
     functionSource('composerScore') + '\n' +
-    functionSource('findComposerForEventTarget') + '\\n' +
+    functionSource('findComposerForEventTarget') + '\n' +
     'globalThis.__findComposerForEventTarget = findComposerForEventTarget;',
     context
   );
