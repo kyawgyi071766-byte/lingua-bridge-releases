@@ -6,8 +6,8 @@ const preload = fs.readFileSync(path.join(root, 'electron', 'service-preload.cjs
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
 const checks = [
-  ['current package version', pkg.version === '1.0.35'],
-  ['current version marker', app.includes("lingua.desktopVersion', '1.0.35") && app.includes('v1.0.35')],
+  ['current package version', pkg.version === '1.0.36'],
+  ['current version marker', app.includes("lingua.desktopVersion', '1.0.36") && app.includes('v1.0.36')],
   ['composer hint source label payload', app.includes('sourceLangLabel:') && preload.includes('settings.sourceLangLabel')],
   ['empty composer hint survives focus', preload.includes('if (hasText)') && !preload.includes('if (focused || hasText)')],
   ['composer hint arrow text', preload.includes('`${sourceLabel} → ${targetLabel}`')],
