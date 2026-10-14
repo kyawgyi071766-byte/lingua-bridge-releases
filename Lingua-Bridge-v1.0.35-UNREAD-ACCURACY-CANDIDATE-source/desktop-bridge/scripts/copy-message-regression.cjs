@@ -6,9 +6,9 @@ const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../electron/service-preload.cjs'), 'utf8');
 
 function functionSource(name) {
-  const begin = source.indexOf(`function ${name}(`);
-  const end = source.indexOf('\\nfunction ', begin + 10);
-  assert(begin >= 0 && end > begin, `${name} helper exists`);
+  const begin = source.indexOf('function ' + name + '(');
+  const end = source.indexOf('\nfunction ', begin + 10);
+  assert(begin >= 0 && end > begin, name + ' helper exists');
   return source.slice(begin, end);
 }
 
@@ -19,14 +19,14 @@ const COPY_REMOVE_SELECTOR = [
 ].join(', ');
 
 function cleanText(value) {
-  return String(value || '').replace(/\\u200b/g, '').replace(/\\s+/g, ' ').trim();
+  return String(value || '').replace(/\u200b/g, '').replace(/\s+/g, ' ').trim();
 }
 
 // Exercise the real extraction helper with a lightweight clone mock that
 // models native timestamps, the injected translation card, and SVG controls.
 {
   const state = {
-    text: 'Customer sentence\\nLingua · EN\\nTranslated sentence\\n10:42 PM',
+    text: 'Customer sentence\nLingua · EN\nTranslated sentence\n10:42 PM',
     removed: new Set(),
   };
   const clone = {
@@ -96,11 +96,10 @@ function cleanText(value) {
   written = null;
   prevented = false;
   stopped = false;
-  const timestamp = { bubble, decoration: true };
   const cardEnd = { source: sourceNode, bubble, insideSource: false, decoration: true };
   context.selection = {
     anchorNode: plainStart, focusNode: cardEnd, rangeCount: 1, isCollapsed: false,
-    toString: () => 'Customer sent this sentence\\nLingua · EN\\nTranslation\\n10:42 PM',
+    toString: () => 'Customer sent this sentence\nLingua · EN\nTranslation\n10:42 PM',
   };
   context.sanitizeMessageCopy({
     clipboardData: { setData: (_type, value) => { written = value; } },
@@ -125,7 +124,7 @@ function cleanText(value) {
     focusNode: { source: otherSource, bubble: otherBubble, insideSource: true },
     rangeCount: 1,
     isCollapsed: false,
-    toString: () => 'Customer sentence\\nMy own sent sentence',
+    toString: () => 'Customer sentence\nMy own sent sentence',
   };
   context.sanitizeMessageCopy({
     clipboardData: { setData: (_type, value) => { written = value; } },
@@ -137,7 +136,7 @@ function cleanText(value) {
   assert.equal(prevented, false);
 }
 
-assert.match(source, /document\\.addEventListener\\('copy', sanitizeMessageCopy, true\\)/);
+assert.match(source, /document\.addEventListener\('copy', sanitizeMessageCopy, true\)/);
 assert.match(source, /userSelect: 'none'/);
 console.log('PASS clean message copy excludes Lingua UI, SVG controls, and timestamps');
 console.log('PASS plain partial selections remain text-only and cross-message selections are not hijacked');
