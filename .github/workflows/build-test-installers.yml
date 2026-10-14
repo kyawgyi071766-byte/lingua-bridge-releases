@@ -98,6 +98,32 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/*.exe
           if-no-files-found: error
 
+  desktop-bridge-windows:
+    name: Lingua Bridge desktop Windows installer
+    needs: quality-gate
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/package-lock.json
+      - run: npm ci
+      - run: npm run qa
+      - run: npm run build:win
+      - name: Publish Lingua Bridge desktop installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-bridge-desktop-windows-v1.0.35
+          retention-days: 14
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release/*.exe
+          if-no-files-found: error
+
   linux:
     name: Linux installers
     needs: quality-gate
