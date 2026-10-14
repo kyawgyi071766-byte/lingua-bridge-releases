@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../src/app.js'), 'utf8');
 const start = source.indexOf('function incomingQueueKey(');
-const end = source.indexOf('\n\nwindow.addEventListener(', start);
+const end = source.indexOf('window.addEventListener(', start);
 assert(start >= 0 && end > start);
 const sent = [];
 const view = { send: (channel, value) => sent.push({ channel, ...value }) };
