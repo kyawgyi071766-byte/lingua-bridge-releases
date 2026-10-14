@@ -29,6 +29,7 @@ jobs:
           node --check electron/service-preload.cjs
           node --check src/app.js
           node --check scripts/build-static.cjs
+          node scripts/multi-app-adapter-regression.cjs
 
       - name: Build Windows installer
         run: npm run build:win
