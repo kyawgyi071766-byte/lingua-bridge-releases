@@ -241,7 +241,7 @@ const SERVICE_RULES = [
       '.im-mess-stack [class*="text"]', '[data-msgid] [dir="auto"]',
       '[data-message-id] [dir="auto"]', '[data-message-text]'
     ],
-    bubbleSelectors: ['.im-mess-stack', '.im-mess', '[data-msgid]', '[data-message-id]'],
+    bubbleSelectors: ['.im-mess', '[data-msgid]', '[data-message-id]'],
     composerSelectors: [
       '#im_editable[contenteditable="true"]', '.im-chat-input--text',
       '[contenteditable="true"][role="textbox"]', '[contenteditable="true"]',
@@ -262,7 +262,7 @@ const SERVICE_RULES = [
       '[class*="MessageContent"]', '.text-content'
     ],
     bubbleSelectors: [
-      '[data-message-id]', '[data-testid*="message"]',
+      '[data-message-id]', '[data-testid*="message-item"]', '[data-testid*="message-bubble"]',
       '[class*="messageListItem"]', '[class*="MessageItem"]', '.message'
     ],
     composerSelectors: [
@@ -287,7 +287,7 @@ const SERVICE_RULES = [
       '[data-message-text]', '.message-body-content'
     ],
     bubbleSelectors: [
-      '[data-tid="chat-pane-message"]', '[data-tid*="message"]', '[data-message-id]',
+      '[data-tid="chat-pane-message"]', '[data-message-id]',
       '[class*="messageListItem"]', '[class*="MessageItem"]'
     ],
     composerSelectors: [
@@ -312,7 +312,7 @@ const SERVICE_RULES = [
       '[class*="chat-message"] [dir="auto"]', '.text-content'
     ],
     bubbleSelectors: [
-      '[data-message-id]', '[data-testid*="message"]',
+      '[data-message-id]', '[data-testid*="message-item"]', '[data-testid*="message-bubble"]',
       '[class*="messageListItem"]', '[class*="MessageItem"]', '[class*="chat-message"]'
     ],
     composerSelectors: [
@@ -337,7 +337,7 @@ const SERVICE_RULES = [
     ],
     bubbleSelectors: [
       '[data-id-message]', '[data-message-id]', '.chat-message',
-      '[class*="messageItem"]', '[class*="message-item"]', '.chat-item'
+      '[class*="messageItem"]', '[class*="message-item"]'
     ],
     composerSelectors: [
       '.chat-input textarea', '.input-area textarea',
@@ -365,7 +365,7 @@ const SERVICE_RULES = [
     ],
     bubbleSelectors: [
       '[data-message-id]', '[data-e2e="message-list-item"]',
-      '[data-testid*="message"]', '[class*="MessageItem"]',
+      '[data-testid*="message-item"]', '[data-testid*="message-bubble"]', '[class*="MessageItem"]',
       '[class*="messageListItem"]', '.message', '[role="listitem"]', '[role="row"]'
     ],
     composerSelectors: [
