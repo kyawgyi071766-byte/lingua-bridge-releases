@@ -543,6 +543,7 @@ const COPY_TIMESTAMP_SELECTOR = [
   'time', '.time', '.message-time', '.messageTime', '[class*="timestamp"]',
   '[class*="message-time"]', '[data-testid*="timestamp"]', '[data-testid*="message-time"]'
 ].join(', ');
+const COPY_DECORATION_SELECTOR = \`svg, button, \${COPY_TIMESTAMP_SELECTOR}\`;
 const COPY_REMOVE_SELECTOR = [
   'svg', 'button', 'script', 'style', COPY_TIMESTAMP_SELECTOR, COPY_UI_SELECTOR
 ].join(', ');
@@ -556,7 +557,7 @@ function isCopyDecorationElement(element) {
   if (!element) return false;
   try {
     if (element.matches?.(COPY_TIMESTAMP_SELECTOR)) return true;
-    if (element.closest?.(`svg, button, ${COPY_TIMESTAMP_SELECTOR}`)) return true;
+    if (element.closest?.(COPY_DECORATION_SELECTOR)) return true;
     if (element.closest?.(COPY_UI_SELECTOR)) return true;
   } catch (_) {}
   return false;
@@ -610,12 +611,12 @@ function extractMessageCopyText(sourceNode) {
   } catch (_) {}
   const raw = String(clone.innerText ?? clone.textContent ?? '');
   return raw
-    .replace(/\\u200b/g, '')
-    .replace(/\\r\\n?/g, '\\n')
-    .split('\\n')
-    .map(line => line.replace(/[ \\t]+/g, ' ').trimEnd())
-    .join('\\n')
-    .replace(/\\n{3,}/g, '\\n\\n')
+    .replace(/\u200b/g, '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+/g, ' ').trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
@@ -651,7 +652,7 @@ function sanitizeMessageCopy(event) {
   const cleanTextValue = extractMessageCopyText(source);
   if (!cleanTextValue) return;
 
-  const selectedText = String(selection.toString?.() || '').replace(/\\u200b/g, '').trim();
+  const selectedText = String(selection.toString?.() || '').replace(/\u200b/g, '').trim();
   const normalizedSelected = cleanText(selectedText);
   const normalizedSource = cleanText(cleanTextValue);
   const bothInsideSource = Boolean(
