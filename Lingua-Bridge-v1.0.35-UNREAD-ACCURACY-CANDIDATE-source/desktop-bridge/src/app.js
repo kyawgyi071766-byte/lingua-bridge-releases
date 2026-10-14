@@ -786,7 +786,7 @@ function syncPersistentWebviews() {
 // Legacy v1.0.3 per-instance Current settings are migrated lazily to the first
 // detected conversation in that instance so an existing Korean/Chinese/etc.
 // chat keeps its previous target instead of suddenly inheriting Global.
-if (localStorage.getItem('lingua.desktopVersion') !== '1.0.35') {
+if (localStorage.getItem('lingua.desktopVersion') !== '1.0.36') {
   if (!ALL_LANGUAGE_CODES.has(state.globalSettings.sourceLang)) state.globalSettings.sourceLang = 'auto';
   if (!INCOMING_LANGUAGE_CODES.has(state.globalSettings.incomingTarget) || state.globalSettings.incomingTarget === 'auto') state.globalSettings.incomingTarget = 'en';
   if (!ALL_LANGUAGE_CODES.has(state.globalSettings.outgoingTarget) || state.globalSettings.outgoingTarget === 'auto') state.globalSettings.outgoingTarget = 'en';
@@ -812,7 +812,7 @@ if (localStorage.getItem('lingua.desktopVersion') !== '1.0.35') {
 
   state.translationMode = 'live';
   persist();
-  localStorage.setItem('lingua.desktopVersion', '1.0.35');
+  localStorage.setItem('lingua.desktopVersion', '1.0.36');
 }
 
 if (!state.instances.length) {
@@ -1865,7 +1865,7 @@ function render() {
   document.querySelector('#app').innerHTML = `
     <div class="app-shell ${state.showFallbackComposer ? 'fallback-open' : ''} ${state.settingsCollapsed ? 'settings-collapsed' : ''} ${state.instancesCollapsed ? 'instances-collapsed' : ''}">
       <aside class="instances">
-        <div class="brand"><img class="brand-logo" src="./lingua-logo.png" alt="Lingua logo"><span>Lingua</span><small class="version-badge">v1.0.35</small></div>
+        <div class="brand"><img class="brand-logo" src="./lingua-logo.png" alt="Lingua logo"><span>Lingua</span><small class="version-badge">v1.0.36</small></div>
         <div class="instance-list" aria-label="Messaging accounts. Drag to reorder.">
           ${state.instances.map(item => {
             const s = serviceFor(item);
