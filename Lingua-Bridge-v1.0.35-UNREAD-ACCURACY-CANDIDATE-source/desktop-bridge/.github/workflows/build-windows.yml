@@ -30,6 +30,7 @@ jobs:
           node --check src/app.js
           node --check scripts/build-static.cjs
           node scripts/multi-app-adapter-regression.cjs
+          node scripts/webview-settings-regression.cjs
 
       - name: Build Windows installer
         run: npm run build:win
