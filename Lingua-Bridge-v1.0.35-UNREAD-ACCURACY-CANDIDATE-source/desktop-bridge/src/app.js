@@ -433,8 +433,14 @@ async function refreshSignalDesktopStatus({ rerender=false } = {}) {
   return state.signalStatus;
 }
 
-function sendSettingsToPersistentView(view, instance, isActive) {
+function sendSettingsToPersistentView(view, instance, isActive, { force = false } = {}) {
   if (!view || !instance || serviceFor(instance).browser) return;
+  // Electron can emit host-side render/sync events before a webview guest has
+  // finished navigation. Do not mark settings as delivered until the guest is
+  // ready to receive IPC; otherwise its preload starts with isActive=false and
+  // all automatic translation stays disabled until a setting is changed.
+  if (view.dataset?.ready !== '1') return;
+
   const settings = settingsForInstance(instance);
   const payload = {
     ...settings,
@@ -444,11 +450,15 @@ function sendSettingsToPersistentView(view, instance, isActive) {
     outgoingTargetLabel: languageName(settings.outgoingTarget)
   };
   const signature = JSON.stringify(payload);
-  if (view.dataset.linguaSettingsSignature === signature) return;
-  view.dataset.linguaSettingsSignature = signature;
+  if (!force && view.dataset.linguaSettingsSignature === signature) return;
   try {
     view.send('lingua-settings', payload);
-  } catch (_) {}
+    // Cache only after send succeeds. A forced send on each dom-ready is
+    // required because a reload creates a new preload with default settings.
+    view.dataset.linguaSettingsSignature = signature;
+  } catch (_) {
+    // Leave the signature unchanged so a subsequent sync can retry delivery.
+  }
 }
 
 function rememberBrowserUrlFor(instance, url) {
@@ -584,10 +594,10 @@ function bindPersistentWebview(view, instance) {
       view.style.opacity = '1';
       const loading = document.querySelector('#linguaPersistentLoading');
       if (loading) loading.style.display = 'none';
-      if (!browserMode) sendSettingsToPersistentView(view, instance, true);
+      if (!browserMode) sendSettingsToPersistentView(view, instance, true, { force: true });
       setNotice('');
     } else if (!browserMode) {
-      sendSettingsToPersistentView(view, instance, false);
+      sendSettingsToPersistentView(view, instance, false, { force: true });
     }
     if (browserMode) {
       try { rememberBrowserUrlFor(instance, view.getURL()); } catch (_) {}
@@ -604,6 +614,10 @@ function bindPersistentWebview(view, instance) {
   }
 
   view.addEventListener('did-start-loading', () => {
+    // Reset readiness for every full navigation/reload. The next dom-ready
+    // must re-send settings to the new service-preload instance.
+    view.dataset.ready = '0';
+    view.dataset.linguaSettingsSignature = '';
     if (instance.id === state.activeId && view.dataset.ready !== '1') {
       const loading = document.querySelector('#linguaPersistentLoading');
       if (loading) loading.style.display = 'grid';
