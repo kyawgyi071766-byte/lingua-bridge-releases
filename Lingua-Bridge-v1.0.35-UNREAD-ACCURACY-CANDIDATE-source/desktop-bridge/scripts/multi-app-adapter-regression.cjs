@@ -33,7 +33,14 @@ function assertProfile(host, expectedId, label = host) {
   assert.equal(rule.id, expectedId, label + ' selects the expected adapter');
   assert.ok(rule.messageSelectors.length > 0, label + ' has message selectors');
   assert.ok(rule.composerSelectors.length > 0, label + ' has composer selectors');
-  assert.ok(rule.sendSelectors.length > 0, label + ' has send selectors');
+  if (expectedId === 'discord') {
+    // Discord normally sends from Enter; this adapter intentionally has no
+    // generic button selector to avoid intercepting unrelated toolbar buttons.
+    assert.equal(rule.sendSelectors.length, 0, label + ' uses keyboard send');
+    assert.ok(serviceSource.includes("function onNativeKeydown(event)"), 'keyboard send interception is wired');
+  } else {
+    assert.ok(rule.sendSelectors.length > 0, label + ' has send selectors');
+  }
   return rule;
 }
 
@@ -126,6 +133,35 @@ const context = vm.createContext({
   findBubble: node => node?.bubble || null,
   innerWidth: 1280,
 });
+// Prefer the closest message bubble over an outer row/list container even
+// when the outer container's selector is listed first.
+{
+  const findBubble = new Function(
+    'rule', 'COMMON_BUBBLE_FALLBACKS',
+    functionSource('findBubble') + '\nglobalThis.__findBubble = findBubble; return findBubble;'
+  )(() => ({ bubbleSelectors: ['[role="row"]', '.message'] }), [
+    '[role="row"]', '[role="listitem"]', '.message'
+  ]);
+  function node(parentElement, selectors = []) {
+    return {
+      parentElement,
+      matches: selector => selectors.includes(selector),
+      closest(selector) {
+        let current = this;
+        while (current) {
+          if (current.matches(selector)) return current;
+          current = current.parentElement;
+        }
+        return null;
+      }
+    };
+  }
+  const wrapper = node(null, ['[role="row"]']);
+  const bubble = node(wrapper, ['.message']);
+  const textNode = node(bubble);
+  assert.equal(findBubble(textNode), bubble);
+}
+
 vm.runInContext(functionSource('isOutgoingMessage') + '\nglobalThis.__isOutgoingMessage = isOutgoingMessage;', context);
 assert.equal(context.__isOutgoingMessage({ bubble: { className: 'message--out' } }), true);
 currentRule = rules.find(rule => rule.id === 'vk');
@@ -135,4 +171,4 @@ assert.equal(context.__isOutgoingMessage({ bubble: { className: 'message--outgoi
 
 console.log('PASS platform-specific message/composer adapters for TikTok, VK, LINE, Teams, Snapchat, Zalo, and existing web messengers');
 console.log('PASS common composer/send fallbacks and trusted host allow-list');
-console.log('PASS platform-specific outgoing-message recognition');
+console.log('PASS platform-specific outgoing-message recognition and innermost message bubble selection');
