@@ -53,7 +53,7 @@ for (const [label, condition] of [
   ['Broad languages are exposed through provider-backed extras', app.includes('PROVIDER_EXTRA_LANGS') && app.includes('["ar"') && app.includes('["hi"') && app.includes('["my"') && app.includes('["th"') && app.includes('["vi"') && app.includes('langOptions(settings.sourceLang,true,PROVIDER_EXTRA_LANGS)') && app.includes('langOptions(settings.outgoingTarget,false,PROVIDER_EXTRA_LANGS)')],
   ['legacy unsupported language settings migrate safely', app.includes('ALL_LANGUAGE_CODES.has') && app.includes("incomingTarget = 'en'") && app.includes("sourceLang = 'auto'")],
   ['commercial default is Live mode', app.includes("translationMode: localStorage.getItem('lingua.translationMode') || 'live'")],
-  ['successful live smoke test clears stale error banner', app.includes("state.noticeError = false;\n    render();")],
+  ['successful live smoke test clears stale error banner', /async function testLiveTranslation\(\)[\s\S]*?state\.noticeError\s*=\s*false;\s*render\(\);/.test(app)],
   ['pre-send native composer hotfix present', fs.readFileSync(path.join(root, 'electron/service-preload.cjs'), 'utf8').includes("function onNativeBeforeInput") && fs.readFileSync(path.join(root, 'electron/service-preload.cjs'), 'utf8').includes("setComposerText(composer, '');")],
   ['Chromium-level Enter interception wired', main.includes("before-input-event") && main.includes("lingua-native-enter")],
   ['send-button shield wired', fs.readFileSync(path.join(root, 'electron/service-preload.cjs'), 'utf8').includes("lingua-send-shield")],
