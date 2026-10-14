@@ -43,6 +43,7 @@ jobs:
       - run: npm run audit:public-release
       - run: node desktop-bridge/scripts/copy-message-regression.cjs
       - run: node desktop-bridge/scripts/multi-app-adapter-regression.cjs
+      - run: node desktop-bridge/scripts/webview-settings-regression.cjs
       - run: npm run build
 
   android:
