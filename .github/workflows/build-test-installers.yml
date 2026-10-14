@@ -3,6 +3,8 @@ name: Build test installers
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       server_url:
@@ -47,6 +49,7 @@ jobs:
       - run: npm run build
 
   android:
+    if: github.event_name != 'pull_request'
     name: Android test APK
     needs: quality-gate
     runs-on: ubuntu-latest
@@ -75,6 +78,7 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/android/app/build/outputs/apk/debug/app-debug.apk
 
   windows:
+    if: github.event_name != 'pull_request'
     name: Windows installer
     needs: quality-gate
     runs-on: windows-latest
@@ -100,6 +104,7 @@ jobs:
           if-no-files-found: error
 
   desktop-bridge-windows:
+    if: github.event_name != 'pull_request'
     name: Lingua Bridge desktop Windows installer
     needs: quality-gate
     runs-on: windows-latest
@@ -126,6 +131,7 @@ jobs:
           if-no-files-found: error
 
   linux:
+    if: github.event_name != 'pull_request'
     name: Linux installers
     needs: quality-gate
     runs-on: ubuntu-latest
@@ -148,6 +154,7 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   macos:
+    if: github.event_name != 'pull_request'
     name: macOS test DMG
     needs: quality-gate
     runs-on: macos-14
@@ -170,6 +177,7 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/**
 
   ios-simulator:
+    if: github.event_name != 'pull_request'
     name: iOS simulator build
     needs: quality-gate
     runs-on: macos-14
