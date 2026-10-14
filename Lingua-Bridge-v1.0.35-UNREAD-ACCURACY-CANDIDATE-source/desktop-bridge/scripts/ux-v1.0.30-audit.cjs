@@ -7,7 +7,7 @@ const main = fs.readFileSync(path.join(root, 'electron', 'main.cjs'), 'utf8');
 const checks = [
   ['pending fingerprint dedupe', preload.includes('pendingIncomingFingerprints')],
   ['retry no longer permanently suppressed', preload.includes('permit a real') && preload.includes('translationRetryBlocked(fp, forceRetry, targetLang)')],
-  ['progressive history backfill', preload.includes('progressively backfill') && preload.includes('historyBudget = force ? 14 : 7')],
+  ['progressive history backfill', preload.includes('historyBudget = force ? 14 : 7') && preload.includes('node.dataset.linguaSeenConversation === conversationKey') && preload.includes('node.dataset.linguaSeenConversation = conversationKey')],
   ['leading edge scheduler', preload.includes('if (!settings.isActive || scanTimer) return') && preload.includes('}, 70)')],
   ['slow diagnostics timer', preload.includes('}, 3500)')],
   ['common language concurrency', app.includes('const concurrencyLimit = peekBroad ? 1 : 2')],
