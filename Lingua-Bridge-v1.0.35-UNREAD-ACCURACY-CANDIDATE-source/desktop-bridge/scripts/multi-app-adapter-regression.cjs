@@ -121,7 +121,7 @@ assert.ok(serviceSource.includes('const COMMON_BUBBLE_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS'));
 assert.ok(serviceSource.includes('function findComposerForEventTarget(target)'), 'focused-editor fallback exists');
 assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'keydown', composer)"), 'Enter uses the actual editor');
-assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'pointerdown', composerForSendAction())"), 'Send button uses the focused editor');
+assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'pointerdown', composerForSendAction(), button)"), 'Send button uses the focused editor and preserves the original Send control');
 assert.ok(serviceSource.includes("document.addEventListener('submit', onNativeSubmit, true)"), 'form-submit fallback exists');
 assert.ok(serviceSource.includes('pending.composer'), 'translation result remains tied to the originating editor');
 assert.ok(serviceSource.includes('pending.conversationKey'), 'send is guarded when chat changes during translation');
