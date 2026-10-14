@@ -11,11 +11,11 @@ const source = fs.readFileSync(
 // arrives. The scan must not suppress that node merely because the conversation
 // was already seen; it may only skip when both conversation and fingerprint
 // are unchanged.
-const guard = 'if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) continue;';
+const guardPattern = /if \(!force && node\.dataset\.linguaSeenConversation === conversationKey && node\.dataset\.linguaFingerprint === fp\) \{/g;
 assert.equal(
-  source.split(guard).length - 1,
+  [...source.matchAll(guardPattern)].length,
   2,
-  'incoming scan must compare the current message fingerprint before skipping'
+  'incoming scan must compare conversation and current message fingerprint before skipping'
 );
 
 assert.match(
