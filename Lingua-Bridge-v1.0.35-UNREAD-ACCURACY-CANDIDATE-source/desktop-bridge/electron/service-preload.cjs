@@ -30,6 +30,7 @@ let statusChipTimer = null;
 let suppressNativeUntil = 0;
 let lastEnterHadShift = false;
 let composerFocused = false;
+let lastFocusedComposer = null;
 let sendShieldTimer = null;
 let uiAssistTimer = null;
 let lastConversationSignature = '';
@@ -1439,6 +1440,61 @@ function findComposer() {
   return composerScore(all[0]) > 0 ? all[0] : null;
 }
 
+function findComposerForEventTarget(target) {
+  const element = target?.nodeType === 1 ? target : target?.parentElement;
+  if (!element?.closest || !element?.matches) return null;
+
+  // Prefer the actual editor under the user's cursor. This fallback is vital
+  // for messaging sites whose composer markup changes more often than message
+  // selectors (TikTok and custom inboxes in particular).
+  const editableSelector = 'textarea, input:not([type="search"]):not([type="password"]):not([type="hidden"]), [contenteditable="true"], [role="textbox"]';
+  let candidate = null;
+  try {
+    candidate = element.matches(editableSelector) ? element : element.closest(editableSelector);
+  } catch (_) {}
+  if (!candidate || !isVisible(candidate)) return null;
+
+  const inputType = String(candidate.getAttribute?.('type') || '').toLowerCase();
+  if (inputType === 'search' || inputType === 'password' || inputType === 'hidden') return null;
+
+  const hints = [
+    candidate.id, candidate.className,
+    candidate.getAttribute?.('aria-label'),
+    candidate.getAttribute?.('data-placeholder'),
+    candidate.getAttribute?.('placeholder'),
+    candidate.getAttribute?.('data-testid'),
+    candidate.getAttribute?.('data-e2e'),
+    candidate.getAttribute?.('data-tid'),
+    candidate.getAttribute?.('name')
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  // Never treat search/navigation/account fields as a message composer.
+  if (/search|find|lookup|password|username|email address|address bar|搜索|搜尋|查找/i.test(hints)) return null;
+  try {
+    if (candidate.closest('header, nav, [role="search"], [class*="search" i], [class*="Search"]')) return null;
+  } catch (_) {}
+
+  const semantic = /message|messaging|chat|compose|reply|send|direct.?message|dm|inbox|comment|input-message|chat-input|message-input|write|type/i.test(hints);
+  const rect = candidate.getBoundingClientRect();
+  const active = document.activeElement === candidate || Boolean(candidate.contains?.(document.activeElement));
+  const bottomComposer = rect.top >= innerHeight * 0.45;
+  if (composerScore(candidate) <= 0 || (!semantic && !bottomComposer)) return null;
+  if (!active && !semantic && !bottomComposer) return null;
+  return candidate;
+}
+
+function composerForSendAction() {
+  const active = findComposerForEventTarget(document.activeElement);
+  if (active) {
+    lastFocusedComposer = active;
+    return active;
+  }
+  if (lastFocusedComposer && lastFocusedComposer.isConnected !== false && isVisible(lastFocusedComposer)) {
+    return lastFocusedComposer;
+  }
+  return findComposer();
+}
+
 const COMMON_SEND_FALLBACKS = [
   'button[aria-label*="Send" i]',
   '[role="button"][aria-label*="Send" i]',
@@ -1731,7 +1787,7 @@ function preventEvent(event) {
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
 }
 
-function requestOutgoingTranslation(event, trigger = 'send') {
+function requestOutgoingTranslation(event, trigger = 'send', composerOverride = null) {
   if (!settings.isActive || !directSendEnabled()) return false;
 
   // While the first key/pointer event is being translated, browsers can still
@@ -1746,8 +1802,8 @@ function requestOutgoingTranslation(event, trigger = 'send') {
   // bypassNextSendUntil is set only for Lingua's own verified translated send.
   if (Date.now() < bypassNextSendUntil) return false;
 
-  const composer = findComposer();
-  if (!composer) return false;
+  const composer = composerOverride || findComposer();
+  if (!composer || composer.isConnected === false || !isVisible(composer)) return false;
   const text = composerText(composer);
   if (!text) return false;
   if (approvedOutgoingText && approvedOutgoingText === text) {
@@ -1772,7 +1828,11 @@ function requestOutgoingTranslation(event, trigger = 'send') {
   setComposerText(composer, '');
 
   const id = `out_${Date.now()}_${++messageCounter}`;
-  pendingOutgoing.set(id, { composer, original: text, trigger, cleared: true });
+  pendingOutgoing.set(id, {
+    composer, original: text, trigger, cleared: true,
+    conversationKey: currentConversationCacheScope(),
+    route: `${location.pathname || ''}${location.search || ''}${location.hash || ''}`
+  });
   ipcRenderer.sendToHost('lingua-translate-request', {
     id,
     kind: 'outgoing-native',
@@ -1802,17 +1862,45 @@ function onNativeKeypress(event) {
 function onNativeKeydown(event) {
   lastEnterHadShift = Boolean(event.shiftKey);
   if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
-  const composer = findComposer();
-  if (!composer) return;
-  if (event.target === composer || composer.contains(event.target)) requestOutgoingTranslation(event, 'keydown');
+  const composer = findComposerForEventTarget(event.target);
+  if (composer) {
+    lastFocusedComposer = composer;
+    requestOutgoingTranslation(event, 'keydown', composer);
+  }
+}
+
+function onNativeKeypress(event) {
+  if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  const composer = findComposerForEventTarget(event.target);
+  if (composer) {
+    lastFocusedComposer = composer;
+    requestOutgoingTranslation(event, 'keypress', composer);
+  }
+}
+
+function onNativeBeforeInput(event) {
+  if (!settings.translateBeforeSending || !settings.interceptNativeComposer) return;
+  if (event.inputType !== 'insertParagraph' && event.inputType !== 'insertLineBreak') return;
+  if (lastEnterHadShift) return;
+  const composer = findComposerForEventTarget(event.target);
+  if (composer) {
+    lastFocusedComposer = composer;
+    requestOutgoingTranslation(event, 'beforeinput', composer);
+  }
 }
 
 function onNativePointerDown(event) {
-  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'pointerdown');
+  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'pointerdown', composerForSendAction());
 }
 
 function onNativeClick(event) {
-  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'click');
+  if (matchesSendTarget(event.target)) requestOutgoingTranslation(event, 'click', composerForSendAction());
+}
+
+function onNativeSubmit(event) {
+  const composer = composerForSendAction();
+  if (!composer || !event.target?.contains?.(composer)) return;
+  requestOutgoingTranslation(event, 'submit', composer);
 }
 
 window.addEventListener('keydown', onNativeKeydown, true);
@@ -1821,11 +1909,16 @@ window.addEventListener('beforeinput', onNativeBeforeInput, true);
 window.addEventListener('pointerdown', onNativePointerDown, true);
 window.addEventListener('mousedown', onNativePointerDown, true);
 window.addEventListener('click', onNativeClick, true);
-document.addEventListener('focusin', () => setTimeout(updateComposerHint, 25), true);
+document.addEventListener('submit', onNativeSubmit, true);
+document.addEventListener('focusin', event => {
+  const composer = findComposerForEventTarget(event.target);
+  if (composer) lastFocusedComposer = composer;
+  setTimeout(updateComposerHint, 25);
+}, true);
 document.addEventListener('focusout', () => setTimeout(updateComposerHint, 25), true);
 
 ipcRenderer.on('lingua-native-enter', () => {
-  requestOutgoingTranslation(null, 'chromium-before-input');
+  requestOutgoingTranslation(null, 'chromium-before-input', composerForSendAction());
 });
 
 ipcRenderer.on('lingua-settings', (_event, next) => {
@@ -1908,15 +2001,21 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     // The first native send gesture has completed. Allow a deliberate second
     // press in confirm-before-send mode immediately after the translation arrives.
     suppressNativeUntil = 0;
-    if (!result.ok) {
-      const composer = findComposer() || pending.composer;
-      if (composer && pending.original) setComposerText(composer, pending.original);
-      ensureStatusChip('ဘာသာပြန်ခြင်းမအောင်မြင်ပါ', 'info');
+    const composer = pending.composer;
+    const sameConversation = !pending.conversationKey
+      || !currentConversationCacheScope()
+      || pending.conversationKey === currentConversationCacheScope();
+    if (!sameConversation) {
+      ensureStatusChip('ဘာသာပြန်နေစဉ် Chat ပြောင်းသွားပါတယ်။ စာကို မပို့ထားပါ — မှန်ကန်တဲ့ Chat ကိုပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။', 'error', true);
       return;
     }
-    const composer = findComposer() || pending.composer;
-    if (!composer) {
-      ensureStatusChip('စာပို့ခြင်း မအောင်မြင်ပါ', 'info');
+    if (!composer || composer.isConnected === false || !isVisible(composer)) {
+      ensureStatusChip('စာပို့တဲ့နေရာ ပြောင်းသွားပါတယ်။ စာကို အလိုအလျောက် မပို့ထားပါ — မူရင်း Chat ကိုပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။', 'error', true);
+      return;
+    }
+    if (!result.ok) {
+      if (pending.original) setComposerText(composer, pending.original);
+      ensureStatusChip('ဘာသာပြန်ခြင်းမအောင်မြင်ပါ', 'info');
       return;
     }
     const translatedText = String(result.translatedText || '');
@@ -1947,8 +2046,8 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       approvedOutgoingCard = null;
       ensureStatusChip('Lingua: translated and sending…', 'success');
       setTimeout(() => {
-        const active = findComposer() || composer;
-        if (!active || composerText(active) !== expectedText) {
+        const active = pending.composer;
+        if (!active || active.isConnected === false || !isVisible(active) || composerText(active) !== expectedText) {
           if (active) setComposerText(active, pending.original || '');
           ensureStatusChip('စာပို့ခြင်း မအောင်မြင်ပါ', 'info');
           return;
