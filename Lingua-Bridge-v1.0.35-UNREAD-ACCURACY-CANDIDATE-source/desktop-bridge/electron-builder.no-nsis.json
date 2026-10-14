@@ -2,7 +2,7 @@
   "appId": "com.lingua.bridge.inline.translation.recovery.candidate",
   "productName": "Lingua Bridge Inline Translation Recovery Candidate",
   "directories": {
-    "output": "release-v1.0.35-public"
+    "output": "release-v1.0.36-public"
   },
   "files": [
     "dist/**/*",
