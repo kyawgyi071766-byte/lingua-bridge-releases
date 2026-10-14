@@ -3,3 +3,15 @@ desktop-bridge/win-unpacked/
 *.exe
 *.zip
 Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.35-public/
+
+# Local environment files and credentials (example templates remain tracked)
+.env
+.env.*
+!.env.example
+
+# Local deployment configuration and private keys
+.vercel/
+*.pem
+*.key
+*.p12
+*.pfx
