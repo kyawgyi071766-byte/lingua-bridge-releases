@@ -682,31 +682,65 @@ function isAudioLikeMessage(node) {
   return Boolean(audioUi && text.length < 180);
 }
 
+const COMMON_MESSAGE_FALLBACKS = [
+  '[data-e2e="message-content"]',
+  '[data-testid*="message-content"]',
+  '[data-message-text]',
+  '[data-message-id] [dir="auto"]',
+  '[data-tid="messageBodyContent"]',
+  '[class*="messageText"]',
+  '[class*="message-text"]',
+  '[class*="message-content"]',
+  '[class*="MessageContent"]',
+  '.message-text',
+  '.text-content'
+];
+const COMMON_BUBBLE_FALLBACKS = [
+  '[data-e2e="message-list-item"]',
+  '[data-message-id]',
+  '[data-testid*="message"]',
+  '[class*="MessageItem"]',
+  '[class*="messageListItem"]',
+  '[class*="message-list-item"]',
+  '.message',
+  '[role="listitem"]',
+  '[role="row"]'
+];
+
 function findMessageNodes() {
   const nodes = [];
   const seenBubbles = new Set();
+  const seenNodes = new Set();
   const composer = findComposer();
-  for (const selector of rule().messageSelectors) {
-    document.querySelectorAll(selector).forEach(node => {
-      if (nodes.length >= 80 || !isVisible(node)) return;
+  const selectors = [...(rule().messageSelectors || []), ...COMMON_MESSAGE_FALLBACKS];
+  for (const selector of selectors) {
+    let matches = [];
+    try { matches = document.querySelectorAll(selector); } catch (_) { continue; }
+    matches.forEach(node => {
+      if (nodes.length >= 80 || seenNodes.has(node) || !isVisible(node)) return;
+      seenNodes.add(node);
       if (composer && (node === composer || composer.contains(node) || node.contains(composer))) return;
-      if (node.closest('#lingua-native-chip, .lingua-inline-translation')) return;
+      if (node.closest('#lingua-native-chip, .lingua-inline-translation, .lingua-translate-action, .lingua-inline-actions')) return;
       const text = cleanText(node.innerText || node.textContent);
       if (!text || text.length < 2 || text.length > 5000) return;
-      const bubble = findBubble(node);
       if (isAudioLikeMessage(node)) return;
-      if (seenBubbles.has(bubble)) return;
+      const bubble = findBubble(node);
+      if (!bubble || seenBubbles.has(bubble)) return;
       seenBubbles.add(bubble);
       nodes.push(node);
     });
+    if (nodes.length >= 80) break;
   }
   return nodes;
 }
 
 function findBubble(node) {
-  for (const selector of rule().bubbleSelectors || []) {
-    const bubble = node.closest(selector);
-    if (bubble) return bubble;
+  const selectors = [...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS];
+  for (const selector of selectors) {
+    try {
+      const bubble = node.closest(selector);
+      if (bubble) return bubble;
+    } catch (_) {}
   }
   return node.parentElement || node;
 }
