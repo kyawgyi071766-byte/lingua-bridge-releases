@@ -21,7 +21,7 @@
   "dependencies": {},
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^1.2.0",
-    "concurrently": "^9.1.2",
+    "concurrently": "^10.0.6",
     "cross-env": "^7.0.3",
     "electron": "^34.3.0",
     "electron-builder": "^25.1.8",
