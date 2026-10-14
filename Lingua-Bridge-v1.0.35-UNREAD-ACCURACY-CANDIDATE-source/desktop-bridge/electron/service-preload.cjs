@@ -736,13 +736,27 @@ function findMessageNodes() {
 
 function findBubble(node) {
   const selectors = [...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS];
+  let best = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
   for (const selector of selectors) {
     try {
       const bubble = node.closest(selector);
-      if (bubble) return bubble;
+      if (!bubble) continue;
+      let distance = 0;
+      let cursor = node;
+      while (cursor && cursor !== bubble) {
+        distance += 1;
+        cursor = cursor.parentElement;
+      }
+      if (cursor === bubble && distance < bestDistance) {
+        best = bubble;
+        bestDistance = distance;
+      }
     } catch (_) {}
   }
-  return node.parentElement || node;
+  // Prefer the innermost matching message bubble, not a conversation/list
+  // wrapper that happens to match an earlier selector.
+  return best || node.parentElement || node;
 }
 
 const COPY_UI_SELECTOR = [
