@@ -159,26 +159,35 @@ const SERVICE_RULES = [
       '[data-e2e="message-content"]',
       '[data-e2e="message-list-item"] [data-e2e*="message"]',
       '[data-e2e="message-list-item"] [dir="auto"]',
-      '[data-testid*="message-content"]',
+      '[data-e2e*="message" i] [dir="auto"]',
+      '[data-testid*="message-content" i]',
+      '[data-testid*="message" i] [dir="auto"]',
       '[data-message-text]',
+      '[data-message-id] [dir="auto"]',
       '[class*="messageText"]',
       '[class*="MessageText"]',
       '[class*="message-content"]',
-      '[class*="MessageContent"]'
+      '[class*="MessageContent"]',
+      '[class*="chat-message" i] [dir="auto"]'
     ],
     bubbleSelectors: [
-      '[data-e2e="message-list-item"]', '[data-e2e*="message-item"]',
-      '[data-message-id]', '[class*="messageListItem"]', '[class*="MessageItem"]'
+      '[data-e2e="message-list-item"]', '[data-e2e*="message-item" i]',
+      '[data-message-id]', '[data-testid*="message-item" i]', '[data-testid*="message-bubble" i]',
+      '[class*="messageListItem"]', '[class*="MessageItem"]', '[class*="message-list-item" i]',
+      '[class*="chat-message" i]'
     ],
     composerSelectors: [
       '[data-e2e="message-input-area"] [contenteditable="true"]',
       '[data-e2e="message-input"] [contenteditable="true"]',
       '[data-e2e="message-input-area"] textarea',
-      '[data-e2e*="message-input"] [role="textbox"]',
+      '[data-e2e*="message-input" i] [role="textbox"]',
+      '[data-testid*="composer" i] [contenteditable="true"]',
+      '[data-testid*="message-input" i]',
       '[contenteditable="true"][role="textbox"]',
       '[contenteditable="true"][data-placeholder]',
       '[contenteditable="true"]',
-      'textarea[placeholder]'
+      'textarea[placeholder]',
+      'textarea'
     ],
     sendSelectors: [
       '[data-e2e="send-msg-btn"]', '[data-e2e*="send-msg"]',
@@ -444,6 +453,14 @@ const CONVERSATION_TITLE_SELECTORS = {
     '.msg-entity-lockup__entity-title',
     '.msg-thread__link-to-profile'
   ],
+  tiktok: [
+    '[data-e2e="chat-room-title"]',
+    '[data-testid*="conversation-title" i]',
+    '[data-e2e*="conversation-title" i]',
+    '[class*="chat-header" i] [dir="auto"]',
+    '[class*="message-header" i] [dir="auto"]',
+    'main header [dir="auto"]'
+  ],
   generic: [
     'main header h1',
     'main header h2',
@@ -578,6 +595,7 @@ function normalizeConversationTitle(value) {
   const lowered = title.toLowerCase();
   if ([
     'telegram', 'whatsapp', 'messenger', 'instagram', 'discord', 'google chat', 'slack', 'google messages', 'linkedin',
+    'tiktok', 'vk', 'line', 'microsoft teams', 'teams', 'snapchat', 'zalo',
     'search', 'online', 'last seen recently', 'pinned message', 'messages'
   ].includes(lowered)) return '';
   return title;
@@ -685,24 +703,32 @@ function isAudioLikeMessage(node) {
 
 const COMMON_MESSAGE_FALLBACKS = [
   '[data-e2e="message-content"]',
-  '[data-testid*="message-content"]',
+  '[data-e2e*="message" i] [dir="auto"]',
+  '[data-testid*="message-content" i]',
+  '[data-testid*="message-text" i]',
+  '[data-testid*="message" i] [dir="auto"]',
   '[data-message-text]',
   '[data-message-id] [dir="auto"]',
   '[data-tid="messageBodyContent"]',
   '[class*="messageText"]',
-  '[class*="message-text"]',
-  '[class*="message-content"]',
+  '[class*="message-text" i]',
+  '[class*="message-content" i]',
   '[class*="MessageContent"]',
+  '[class*="chat-message" i] [dir="auto"]',
+  '[role="article"] [dir="auto"]',
   '.message-text',
   '.text-content'
 ];
 const COMMON_BUBBLE_FALLBACKS = [
   '[data-e2e="message-list-item"]',
+  '[data-e2e*="message-item" i]',
   '[data-message-id]',
-  '[data-testid*="message"]',
+  '[data-testid*="message-item" i]',
+  '[data-testid*="message-bubble" i]',
   '[class*="MessageItem"]',
   '[class*="messageListItem"]',
-  '[class*="message-list-item"]',
+  '[class*="message-list-item" i]',
+  '[class*="chat-message" i]',
   '.message',
   '[role="listitem"]',
   '[role="row"]'
