@@ -11,8 +11,10 @@ const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 const TRUSTED_MESSENGER_HOSTS = [
   'web.whatsapp.com', 'web.telegram.org', 'messenger.com', 'www.messenger.com',
   'facebook.com', 'www.facebook.com', 'instagram.com', 'www.instagram.com',
-  'discord.com', 'x.com', 'twitter.com', 'chat.google.com', 'vk.com', 'www.tiktok.com',
-  'slack.com', 'messages.google.com', 'linkedin.com', 'www.linkedin.com', 'signal.org', 'www.signal.org'
+  'discord.com', 'x.com', 'twitter.com', 'chat.google.com', 'vk.com', 'tiktok.com',
+  'slack.com', 'messages.google.com', 'linkedin.com', 'www.linkedin.com',
+  'line.me', 'line.naver.jp', 'teams.microsoft.com', 'teams.live.com',
+  'snapchat.com', 'zalo.me', 'signal.org', 'www.signal.org'
 ];
 
 
