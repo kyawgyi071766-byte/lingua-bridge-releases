@@ -2002,9 +2002,11 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     // press in confirm-before-send mode immediately after the translation arrives.
     suppressNativeUntil = 0;
     const composer = pending.composer;
-    const sameConversation = !pending.conversationKey
-      || !currentConversationCacheScope()
-      || pending.conversationKey === currentConversationCacheScope();
+    const currentConversationKey = currentConversationCacheScope();
+    const currentRoute = `${location.pathname || ''}${location.search || ''}${location.hash || ''}`;
+    const sameConversation = pending.conversationKey && currentConversationKey
+      ? pending.conversationKey === currentConversationKey
+      : (!pending.route || !currentRoute || pending.route === currentRoute);
     if (!sameConversation) {
       ensureStatusChip('ဘာသာပြန်နေစဉ် Chat ပြောင်းသွားပါတယ်။ စာကို မပို့ထားပါ — မှန်ကန်တဲ့ Chat ကိုပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။', 'error', true);
       return;
