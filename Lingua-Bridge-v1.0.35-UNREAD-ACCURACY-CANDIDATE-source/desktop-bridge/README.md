@@ -4,7 +4,7 @@ Desktop client for the Lingua SaaS backend. It is designed to behave like an Eas
 
 ## Main workflow
 
-1. Add WhatsApp, Telegram, Messenger, Instagram, Discord, X, Google Chat or another supported web chat.
+1. Add WhatsApp, Telegram, Messenger, Instagram, Discord, X, Google Chat, TikTok, VK, LINE, Teams, Snapchat, Zalo, Slack, Google Messages, LinkedIn, or another supported web chat.
 2. Add the same service multiple times; every copy gets an isolated persistent browser session, so different accounts can remain logged in at the same time.
 3. Choose a Current-account or Global translation profile.
 4. Incoming visible messages can be translated automatically and displayed directly under the original message.
@@ -28,7 +28,7 @@ This keeps API keys private and keeps plan quotas, account suspension, billing, 
 - Lingua's SaaS login session is encrypted at rest with Electron `safeStorage` when the operating system provides encryption.
 - Translation results are cached locally to reduce duplicate API requests caused by virtualized chat UIs.
 - Automatic outgoing translation can require a second user confirmation before sending.
-- Web service DOM structures can change. The app includes current selectors plus a fallback composer, but live compatibility testing is required before commercial release.
+- Web service DOM structures can change. The app includes per-service selectors, a focused-editor fallback, Send/Enter/form-submit interception, and generic selectors for custom web chats. Website DOMs can still change, so test each service after app updates.
 
 ## Development
 
@@ -36,6 +36,6 @@ Install dependencies and run `npm run dev`.
 
 ## Windows installer
 
-On Windows, run `npm run build:win`. The installer is generated in `release/`.
+On Windows, run `npm run build:win`. The v1.0.36 installer is generated in `release-v1.0.36-public/`.
 
 For public distribution, code-sign the installer and test the current WhatsApp Web / Telegram Web / other service UIs and terms before shipping.

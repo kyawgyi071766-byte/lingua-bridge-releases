@@ -119,6 +119,15 @@ assert.ok(serviceSource.includes('const COMMON_MESSAGE_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().messageSelectors || []), ...COMMON_MESSAGE_FALLBACKS'));
 assert.ok(serviceSource.includes('const COMMON_BUBBLE_FALLBACKS = ['));
 assert.ok(serviceSource.includes('...(rule().bubbleSelectors || []), ...COMMON_BUBBLE_FALLBACKS'));
+assert.ok(serviceSource.includes('function findComposerForEventTarget(target)'), 'focused-editor fallback exists');
+assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'keydown', composer)"), 'Enter uses the actual editor');
+assert.ok(serviceSource.includes("requestOutgoingTranslation(event, 'pointerdown', composerForSendAction())"), 'Send button uses the focused editor');
+assert.ok(serviceSource.includes("document.addEventListener('submit', onNativeSubmit, true)"), 'form-submit fallback exists');
+assert.ok(serviceSource.includes('pending.composer'), 'translation result remains tied to the originating editor');
+assert.ok(serviceSource.includes('pending.conversationKey'), 'send is guarded when chat changes during translation');
+assert.ok(serviceSource.includes('const nearComposerEnd ='), 'icon-only Send buttons have a guarded spatial fallback');
+assert.ok(serviceSource.includes('clickSend(pending.sendButton)'), 'translated text uses the same native Send button when available');
+assert.ok(/送|ส่ง|ပို့|إرسال|ارسال/.test(serviceSource), 'localized Send labels are supported');
 
 // Test own-message recognition for platform-specific class conventions.
 function functionSource(name) {
@@ -127,6 +136,82 @@ function functionSource(name) {
   assert(start >= 0 && end > start, name + ' helper exists');
   return serviceSource.slice(start, end);
 }
+
+// Exercise the focused-composer fallback used when a platform's DOM no longer
+// matches its preferred selector. It must find message inputs but reject search boxes.
+{
+  const context = vm.createContext({
+    document: { activeElement: null },
+    innerHeight: 1000,
+    cleanText: value => String(value || '').replace(/\s+/g, ' ').trim(),
+    isVisible: element => Boolean(element && element.visible),
+  });
+  vm.runInContext(
+    functionSource('composerScore') + '\n' +
+    functionSource('findComposerForEventTarget') + '\n' +
+    'globalThis.__findComposerForEventTarget = findComposerForEventTarget;',
+    context
+  );
+
+  function editable({tagName = 'DIV', type = '', attrs = {}, className = '', top = 650, searchAncestor = false, parent = null} = {}) {
+    const element = {
+      nodeType: 1,
+      tagName,
+      type,
+      className,
+      id: '',
+      parentElement: parent,
+      visible: true,
+      isConnected: true,
+      getAttribute(name) { return attrs[name] ?? (name === 'type' ? type : null); },
+      matches(selector) {
+        if (selector.includes('textarea') && selector.includes('contenteditable="true"')) {
+          if (['TEXTAREA', 'INPUT'].includes(tagName)) return !['search', 'password', 'hidden'].includes(type);
+          return Boolean(attrs.contenteditable === 'true' || attrs.role === 'textbox');
+        }
+        return false;
+      },
+      closest(selector) {
+        if (selector.includes('textarea') && selector.includes('contenteditable="true"')) {
+          return this.matches(selector) ? this : (parent?.closest?.(selector) || null);
+        }
+        if (searchAncestor && /header|nav|role="search"|class\*=search/i.test(selector)) return { nodeType: 1 };
+        return parent?.closest?.(selector) || null;
+      },
+      contains(node) { return node === this || parent?.contains?.(node) || false; },
+      getBoundingClientRect() { return { top, bottom: top + 40, left: 500, right: 900, width: 400, height: 40 }; },
+    };
+    return element;
+  }
+
+  const tiktokEditor = editable({
+    attrs: { contenteditable: 'true', 'data-e2e': 'message-input-area', placeholder: 'Send a message' },
+    className: 'editor-new-build',
+    top: 340,
+  });
+  context.document.activeElement = tiktokEditor;
+  assert.equal(context.__findComposerForEventTarget(tiktokEditor), tiktokEditor,
+    'active message editor is found even when its CSS class changes');
+
+  const searchBox = editable({
+    tagName: 'INPUT', type: 'search',
+    attrs: { type: 'search', placeholder: 'Search TikTok' },
+    top: 20,
+  });
+  context.document.activeElement = searchBox;
+  assert.equal(context.__findComposerForEventTarget(searchBox), null,
+    'search fields are never treated as message composers');
+
+  const child = {
+    nodeType: 1, parentElement: tiktokEditor,
+    matches: () => false,
+    closest: selector => tiktokEditor.matches(selector) ? tiktokEditor : null,
+  };
+  context.document.activeElement = tiktokEditor;
+  assert.equal(context.__findComposerForEventTarget(child), tiktokEditor,
+    'Enter from a nested child resolves to its message editor');
+}
+
 let currentRule = rules.find(rule => rule.id === 'tiktok');
 const context = vm.createContext({
   rule: () => currentRule,

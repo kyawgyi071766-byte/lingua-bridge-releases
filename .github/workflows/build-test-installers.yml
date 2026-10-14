@@ -119,9 +119,9 @@ jobs:
       - name: Publish Lingua Bridge desktop installer
         uses: actions/upload-artifact@v4
         with:
-          name: lingua-bridge-desktop-windows-v1.0.35
+          name: lingua-bridge-desktop-windows-v1.0.36
           retention-days: 14
-          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release/*.exe
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.36-public/*.exe
           if-no-files-found: error
 
   linux:
