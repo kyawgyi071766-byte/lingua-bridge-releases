@@ -399,9 +399,10 @@ function canEscapeBackActiveView() {
     const trustedMessengerHosts = [
       'web.whatsapp.com', 'web.telegram.org', 'messenger.com', 'www.messenger.com',
       'facebook.com', 'www.facebook.com', 'instagram.com', 'www.instagram.com',
-      'discord.com', 'x.com', 'twitter.com', 'chat.google.com', 'vk.com',
-      'www.tiktok.com', 'slack.com', 'messages.google.com', 'linkedin.com',
-      'www.linkedin.com'
+      'discord.com', 'x.com', 'twitter.com', 'chat.google.com', 'vk.com', 'tiktok.com',
+      'slack.com', 'messages.google.com', 'linkedin.com', 'www.linkedin.com',
+      'line.me', 'line.naver.jp', 'teams.microsoft.com', 'teams.live.com',
+      'snapchat.com', 'zalo.me'
     ];
     const url = new URL(current);
     return !trustedMessengerHosts.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`));
