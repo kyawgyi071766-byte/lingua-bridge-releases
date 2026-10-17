@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 const { execFileSync } = require('child_process');
 const { once } = require('events');
 
@@ -140,14 +141,25 @@ function createWindow() {
       preload: path.join(__dirname, 'host-preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
       webviewTag: true
     }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https:\/\//i.test(url)) shell.openExternal(url);
+    if (isSafeHttpsUrl(url)) void shell.openExternal(url);
     return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const devUrl = process.env.VITE_DEV_SERVER_URL;
+    const packagedUrl = pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).href;
+    let allowed = url === packagedUrl;
+    if (devUrl) {
+      try { allowed = allowed || new URL(url).origin === new URL(devUrl).origin; } catch (_) {}
+    }
+    if (!allowed) event.preventDefault();
   });
 
   // Host UI microphone permission is used only by the Voice Translator control.
@@ -164,10 +176,19 @@ function createWindow() {
   else mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
 }
 
+function isSafeHttpsUrl(raw) {
+  try {
+    const url = new URL(String(raw || ''));
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password;
+  } catch (_) {
+    return false;
+  }
+}
+
 function isTrustedMessengerUrl(raw) {
   try {
     const url = new URL(raw);
-    return url.protocol === 'https:' && TRUSTED_MESSENGER_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
+    return isSafeHttpsUrl(raw) && TRUSTED_MESSENGER_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
   } catch (_) {
     return false;
   }
@@ -192,17 +213,25 @@ function configureGuestWebContents(contents) {
   } catch (_) {}
   try {
     contents.setWindowOpenHandler(({ url }) => {
-      if (/^https:\/\//i.test(url)) {
-        contents.loadURL(url).catch(() => shell.openExternal(url));
-      }
+      // Popups never inherit the embedded site's privileged preload. Open only
+      // credential-free HTTPS links in the user's external browser.
+      if (isSafeHttpsUrl(url)) void shell.openExternal(url);
       return { action: 'deny' };
+    });
+    contents.on('will-navigate', (event, url) => {
+      if (!isSafeHttpsUrl(url)) event.preventDefault();
+    });
+    contents.on('will-redirect', (event, url) => {
+      if (!isSafeHttpsUrl(url)) event.preventDefault();
     });
   } catch (_) {}
   try {
     contents.session.setPermissionRequestHandler((webContents, permission, callback) => {
       const origin = webContents.getURL();
       const trusted = isTrustedMessengerUrl(origin);
-      const allowed = trusted && ['notifications', 'media', 'clipboard-read', 'clipboard-sanitized-write'].includes(permission);
+      // Clipboard reads are denied to embedded services. Sanitized clipboard
+      // writes, notifications and media remain available only on trusted hosts.
+      const allowed = trusted && ['notifications', 'media', 'clipboard-sanitized-write'].includes(permission);
       callback(Boolean(allowed));
     });
   } catch (_) {}
@@ -211,13 +240,17 @@ function configureGuestWebContents(contents) {
 app.on('web-contents-created', (_event, contents) => {
   contents.on('will-attach-webview', (event, webPreferences, params) => {
     const src = String(params.src || '');
-    if (!/^https:\/\//i.test(src)) {
+    if (!isSafeHttpsUrl(src)) {
       event.preventDefault();
       return;
     }
     webPreferences.nodeIntegration = false;
+    webPreferences.nodeIntegrationInSubFrames = false;
     webPreferences.contextIsolation = true;
-    webPreferences.sandbox = false;
+    webPreferences.sandbox = true;
+    webPreferences.webSecurity = true;
+    webPreferences.allowRunningInsecureContent = false;
+    webPreferences.allowpopups = false;
     webPreferences.preload = path.join(__dirname, 'service-preload.cjs');
     params.userAgent = CHROME_UA;
   });

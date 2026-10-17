@@ -46,6 +46,7 @@ jobs:
       - run: node desktop-bridge/scripts/copy-message-regression.cjs
       - run: node desktop-bridge/scripts/multi-app-adapter-regression.cjs
       - run: node desktop-bridge/scripts/webview-settings-regression.cjs
+      - run: node desktop-bridge/scripts/electron-security-regression.cjs
       - run: npm run build
 
   android:
@@ -104,7 +105,6 @@ jobs:
           if-no-files-found: error
 
   desktop-bridge-windows:
-    if: github.event_name != 'pull_request'
     name: Lingua Bridge desktop Windows installer
     needs: quality-gate
     runs-on: windows-latest
