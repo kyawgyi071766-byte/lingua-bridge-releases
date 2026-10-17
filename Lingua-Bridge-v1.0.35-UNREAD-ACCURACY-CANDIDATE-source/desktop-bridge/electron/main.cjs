@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 const { execFileSync } = require('child_process');
 const { once } = require('events');
 
@@ -153,7 +154,11 @@ function createWindow() {
   });
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const devUrl = process.env.VITE_DEV_SERVER_URL;
-    const allowed = url.startsWith('file://') || (devUrl && url.startsWith(devUrl));
+    const packagedUrl = pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).href;
+    let allowed = url === packagedUrl;
+    if (devUrl) {
+      try { allowed = allowed || new URL(url).origin === new URL(devUrl).origin; } catch (_) {}
+    }
     if (!allowed) event.preventDefault();
   });
 
