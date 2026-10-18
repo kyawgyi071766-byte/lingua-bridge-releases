@@ -34,7 +34,7 @@
     "audit:safe-send-payment": "node scripts/safe-send-payment-audit.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^7.10.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.6.3",
     "next": "15.5.27",
