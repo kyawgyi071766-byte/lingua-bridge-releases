@@ -226,4 +226,9 @@ jobs:
           test -s Lingua-Bridge-Setup-1.0.36.exe
           python3 -c "from pathlib import Path; p=Path('Lingua-Bridge-Setup-1.0.36.exe'); assert p.stat().st_size > 1000000; assert p.open('rb').read(2) == b'MZ'"
           sha256sum Lingua-Bridge-Setup-1.0.36.exe > SHA256SUMS.txt
-          gh release create v1.0.36 Lingua-Bridge-Setup-1.0.36.exe SHA256SUMS.txt --target "$RELEASE_COMMIT" --title "Lingua Bridge v1.0.36" --notes "Windows x64 installer. Multi-app outgoing translation updates and Electron WebView security hardening. Desktop source QA and web quality gate passed before publication."
+          if gh release view v1.0.36 >/dev/null 2>&1; then
+            gh release upload v1.0.36 Lingua-Bridge-Setup-1.0.36.exe SHA256SUMS.txt --clobber
+            gh release edit v1.0.36 --target "$RELEASE_COMMIT" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix, multi-app outgoing translation, and Electron WebView hardening. CI web audits and desktop QA passed before publication."
+          else
+            gh release create v1.0.36 Lingua-Bridge-Setup-1.0.36.exe SHA256SUMS.txt --target "$RELEASE_COMMIT" --title "Lingua Bridge v1.0.36" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix. CI audits and desktop QA passed."
+          fi
