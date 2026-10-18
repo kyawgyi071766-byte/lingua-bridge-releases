@@ -35,24 +35,28 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   }
 }
 
-export async function sendVerificationEmail(email: string, token: string) {
-  const url = `${getSiteUrl()}/verify-email#token=${encodeURIComponent(token)}`;
-  const safeUrl = escapeHtml(url);
+export async function sendVerificationEmail(email: string, code: string) {
+  const url = new URL(`${getSiteUrl()}/verify-email`);
+  url.searchParams.set('email', email);
+  const safeUrl = escapeHtml(url.toString());
+  const safeCode = escapeHtml(code);
   await sendEmail(
     email,
-    'Verify your Lingua email',
-    `Verify your email by opening this link: ${url}\n\nThis link expires in 24 hours.`,
-    `<p>Verify your email to activate your Lingua account.</p><p><a href="${safeUrl}">Verify email</a></p><p>This link expires in 24 hours.</p>`
+    'Your Lingua verification code',
+    `Your Lingua email verification code is: ${code}\n\nEnter this six-digit code at: ${url.toString()}\n\nIt expires in 15 minutes. If you did not request an account, ignore this email.`,
+    `<p>Enter this one-time code to activate your Lingua account:</p><p style="font-size:28px;font-weight:bold;letter-spacing:5px">${safeCode}</p><p><a href="${safeUrl}">Verify your email</a></p><p>Expires in 15 minutes. Never share this code.</p>`
   );
 }
 
-export async function sendPasswordResetEmail(email: string, token: string) {
-  const url = `${getSiteUrl()}/reset-password#token=${encodeURIComponent(token)}`;
-  const safeUrl = escapeHtml(url);
+export async function sendPasswordResetEmail(email: string, code: string) {
+  const url = new URL(`${getSiteUrl()}/reset-password`);
+  url.searchParams.set('email', email);
+  const safeUrl = escapeHtml(url.toString());
+  const safeCode = escapeHtml(code);
   await sendEmail(
     email,
-    'Reset your Lingua password',
-    `Reset your password by opening this link: ${url}\n\nThis link expires in 1 hour. If you did not request it, ignore this email.`,
-    `<p>Use the link below to reset your Lingua password.</p><p><a href="${safeUrl}">Reset password</a></p><p>This link expires in 1 hour. If you did not request it, ignore this email.</p>`
+    'Your Lingua password reset code',
+    `Your Lingua password reset code is: ${code}\n\nEnter this six-digit code at: ${url.toString()}\n\nIt expires in 15 minutes. If you did not request this, ignore the email. Never share this code.`,
+    `<p>Use this one-time code to reset your Lingua password:</p><p style="font-size:28px;font-weight:bold;letter-spacing:5px">${safeCode}</p><p><a href="${safeUrl}">Reset password</a></p><p>Expires in 15 minutes. Never share this code.</p>`
   );
 }
