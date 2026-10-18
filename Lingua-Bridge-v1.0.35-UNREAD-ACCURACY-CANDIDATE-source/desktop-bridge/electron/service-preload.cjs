@@ -1669,6 +1669,8 @@ function matchesSendTarget(target) {
 }
 
 function clickSend(buttonOverride = null) {
+  // An active confirmation profile is a strict translation-only mode.
+  if (settings.confirmBeforeSend) return false;
   bypassNextSendUntil = Date.now() + 2000;
   const found = buttonOverride && buttonOverride.isConnected !== false && isVisible(buttonOverride)
     ? buttonOverride
@@ -1841,7 +1843,7 @@ function requestOutgoingTranslation(event, trigger = 'send', composerOverride = 
     return true;
   }
   // bypassNextSendUntil is set only for Lingua's own verified translated send.
-  if (Date.now() < bypassNextSendUntil) return false;
+  if (!settings.confirmBeforeSend && Date.now() < bypassNextSendUntil) return false;
 
   const composer = composerOverride || findComposer();
   if (!composer || composer.isConnected === false || !isVisible(composer)) return false;
@@ -1877,6 +1879,7 @@ function requestOutgoingTranslation(event, trigger = 'send', composerOverride = 
   const id = `out_${Date.now()}_${++messageCounter}`;
   pendingOutgoing.set(id, {
     composer, original: text, trigger, cleared: true,
+    confirmOnly: Boolean(settings.confirmBeforeSend),
     sendButton: sendButtonOverride && sendButtonOverride.isConnected !== false ? sendButtonOverride : null,
     conversationKey: currentConversationCacheScope(),
     route: `${location.pathname || ''}${location.search || ''}${location.hash || ''}`
@@ -2055,8 +2058,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     if (!pending) return;
     pendingOutgoing.delete(result.id);
     outgoingBusy = false;
-    // The first native send gesture has completed. Allow a deliberate second
-    // press in confirm-before-send mode immediately after the translation arrives.
+    // The initial gesture is consumed; no automatic send in confirmation mode.
     suppressNativeUntil = 0;
     const composer = pending.composer;
     const currentConversationKey = currentConversationCacheScope();
@@ -2096,7 +2098,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       try { ipcRenderer.sendToHost('lingua-translation-error', { kind:'send', error:'composer replacement verification failed' }); } catch (_) {}
       return;
     }
-    if (settings.confirmBeforeSend) {
+    if (pending.confirmOnly || settings.confirmBeforeSend) {
       approvedOutgoingText = expectedText;
       approvedOutgoingCard = { sentText: expectedText, original: pending.original, detectedSource: result.detectedSource };
       ensureStatusChip('Lingua: translated only. No message sent. Turn off confirmation mode to send manually.', 'success', true);
@@ -2105,6 +2107,12 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       approvedOutgoingCard = null;
       ensureStatusChip('Lingua: translated and sending…', 'success');
       setTimeout(() => {
+        // A settings toggle while the async result was pending must not send.
+        if (settings.confirmBeforeSend || pending.confirmOnly) {
+          approvedOutgoingText = expectedText;
+          ensureStatusChip('Lingua: translated only. No message sent.', 'success', true);
+          return;
+        }
         const active = pending.composer;
         if (!active || active.isConnected === false || !isVisible(active) || composerText(active) !== expectedText) {
           if (active) setComposerText(active, pending.original || '');
@@ -2126,8 +2134,9 @@ ipcRenderer.on('lingua-insert-text', (_event, payload) => {
     return;
   }
   setComposerText(composer, String(payload.text || ''));
-  if (payload.sendNow) clickSend();
-  ipcRenderer.sendToHost('lingua-composer-result', { ok: true, sent: Boolean(payload.sendNow) });
+  const sendNow = Boolean(payload.sendNow) && !settings.confirmBeforeSend;
+  const sent = sendNow ? clickSend() : false;
+  ipcRenderer.sendToHost('lingua-composer-result', { ok: true, sent });
 });
 
 window.addEventListener('DOMContentLoaded', () => {
