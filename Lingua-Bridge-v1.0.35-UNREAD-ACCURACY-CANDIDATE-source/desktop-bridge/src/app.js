@@ -2055,6 +2055,7 @@ function render() {
         <label class="toggle-row"><span>Translate directly inside messenger</span><input id="nativeComposer" type="checkbox" ${settings.interceptNativeComposer?'checked':''}></label>
         <label class="toggle-row"><span>Auto-translate before Send / Enter</span><input id="translateBefore" type="checkbox" ${settings.translateBeforeSending?'checked':''}></label>
         <label class="toggle-row"><span>Confirm translated text before send</span><input id="confirmSend" type="checkbox" ${settings.confirmBeforeSend?'checked':''}></label>
+        <p class="field-note">When confirmed, Send / Enter only translates. No message is sent until confirmation mode is switched off.</p>
           </div>
         </details>
 
@@ -2063,6 +2064,7 @@ function render() {
           <div class="setting-section-body">
         <label class="toggle-row"><span>Auto translate incoming customer messages</span><input id="autoIncoming" type="checkbox" ${settings.autoTranslateIncoming?'checked':''}></label>
         <label class="toggle-row"><span>Auto translate visible history</span><input id="historicalMessages" type="checkbox" ${settings.autoTranslateHistorical?'checked':''}></label>
+        <p class="field-note">Turn this on to translate previous visible messages. Scroll up to load more older messages for translation.</p>
         <label class="toggle-row"><span>Show clean translation card under message</span><input id="inlineTranslations" type="checkbox" ${settings.showInlineTranslations?'checked':''}></label>
         <label class="toggle-row"><span>Also translate my own sent messages</span><input id="translateOwnMessages" type="checkbox" ${settings.translateOwnMessages?'checked':''}></label>
           </div>
