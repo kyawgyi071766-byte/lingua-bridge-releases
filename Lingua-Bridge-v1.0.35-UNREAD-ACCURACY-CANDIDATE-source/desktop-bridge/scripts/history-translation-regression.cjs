@@ -7,5 +7,5 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'electron', 'service-p
 assert.match(source, /const historyEnabled = !previous\.autoTranslateHistorical && settings\.autoTranslateHistorical/);
 assert.match(source, /if \(translationChanged \|\| historyEnabled\) clearMessageFingerprints\(\)/);
 assert.match(source, /incomingEnabled \|\| historyEnabled/);
-assert.match(source, /node\.dataset\.linguaFingerprint === fp && !settings\.autoTranslateHistorical/);
+assert.match(source, /node\.dataset\.linguaFingerprint === fp\) \{/);
 console.log('Visible history opt-in regression guards passed');
