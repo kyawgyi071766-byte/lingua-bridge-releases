@@ -41,11 +41,19 @@ const unauth = await probe('unauthenticated real translate', 'POST', '/api/trans
   body: { text: 'Good morning', sourceLang: 'en', targetLang: 'my' }
 });
 check(unauth, unauth.status === 401, 'real inference requires login (not called here)');
-const csrf = await probe('cross-origin translate', 'POST', '/api/translate', {
+// Origin-only requests without browser Fetch Metadata are still rejected by
+// authentication. Real cross-site browser fetches send sec-fetch-site: cross-site.
+const foreignOrigin = await probe('foreign-origin unauthenticated translate', 'POST', '/api/translate', {
   headers: { Origin: 'https://untrusted.example' },
   body: { text: 'Hello', sourceLang: 'en', targetLang: 'es' }
 });
-check(csrf, csrf.status === 403, 'cross-origin translation is rejected');
+check(foreignOrigin, foreignOrigin.status === 401 || foreignOrigin.status === 403,
+  'foreign-origin requests without a session cannot translate');
+const csrf = await probe('browser cross-site translate', 'POST', '/api/translate', {
+  headers: { Origin: 'https://untrusted.example', 'sec-fetch-site': 'cross-site' },
+  body: { text: 'Hello', sourceLang: 'en', targetLang: 'es' }
+});
+check(csrf, csrf.status === 403, 'browser cross-site translation is rejected before login');
 const downloads = await probe('public download metadata', 'GET', '/api/download/list');
 console.log('INFO public-download mode: ' + (downloads.json?.public === true ? 'public' : 'private or unavailable'));
 const updates = await probe('desktop update metadata', 'GET', '/api/desktop/update?platform=win32&arch=x64&current=1.0.35&channel=stable');
