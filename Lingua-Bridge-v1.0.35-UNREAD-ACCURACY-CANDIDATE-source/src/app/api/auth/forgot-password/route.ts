@@ -9,6 +9,13 @@ export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   if (!emailConfigured()) return NextResponse.json({ error: 'Password reset email is not configured yet.' }, { status: 503 });
 
+  // A rotating list of email addresses must not bypass per-IP email abuse limits.
+  const ipRate = await consumeRateLimit('forgot-password-ip', getClientAddress(req), 15, 60 * 60_000);
+  if (!ipRate.allowed) {
+    return NextResponse.json({ error: 'Too many email requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(ipRate.retryAfterSeconds) } });
+  }
+
   const body = await req.json().catch(() => ({}));
   const email = normalizeEmail(body.email);
   const key = email || getClientAddress(req);
