@@ -41,6 +41,24 @@ assert.notEqual(codes.hashEmailCode('verify-email', 'user@gmail.com', '012345'),
 assert.notEqual(codes.hashEmailCode('verify-email', 'user@gmail.com', '012345'), codes.hashEmailCode('verify-email', 'other@gmail.com', '012345'));
 assert.match(codes.generateEmailCode(), /^\d{6}$/);
 
+const serverSecurity = loadTS('src/lib/security.ts');
+const serverEmail = loadTS('src/lib/email.ts', { './security': { getSiteUrl: () => 'https://lingua.example.org' } });
+process.env.NODE_ENV = 'production';
+process.env.EMAIL_VERIFICATION_REQUIRED = 'false';
+process.env.RESEND_API_KEY = 're_mock-test-only';
+process.env.EMAIL_FROM = 'Lingua <onboarding@resend.dev>';
+assert.equal(serverSecurity.emailVerificationRequired(), true, 'production verification cannot be switched off');
+assert.equal(serverEmail.emailConfigured(), false, 'Resend shared testing sender must fail closed in production');
+process.env.EMAIL_FROM = 'Lingua <accounts@owner-verified-domain.org>';
+assert.equal(serverEmail.emailConfigured(), true, 'a configured production sender is allowed');
+process.env.NODE_ENV = 'test';
+delete process.env.RESEND_API_KEY;
+delete process.env.EMAIL_FROM;
+delete process.env.EMAIL_VERIFICATION_REQUIRED;
+assert.match(fs.readFileSync(path.join(ROOT, 'src/lib/auth.ts'), 'utf8'),
+  /emailVerificationRequired\(\) && !user\.emailVerifiedAt/, 'existing sessions must also require verified mailboxes');
+
+
 const users = [];
 const sends = [];
 const sessions = [];
