@@ -45,8 +45,25 @@ export function isUnsafeCrossOriginRequest(req: Request): boolean {
   if (!origin) return process.env.NODE_ENV === 'production' && req.headers.get('sec-fetch-site') !== 'same-origin';
 
   try {
-    const expected = getSiteUrl();
-    return new URL(origin).origin !== expected;
+    const actual = new URL(origin);
+    // Only canonical Origin header values are valid. Never trust suffix matching,
+    // a partial hostname, credentials, fragments or an arbitrary *.vercel.app.
+    if (actual.origin !== origin) return true;
+    if (actual.origin === getSiteUrl()) return false;
+
+    // Optional, exact additional HTTPS origins for an owner-controlled
+    // alternative production site alias. Keep the canonical origin unchanged.
+    const extras = (process.env.ADDITIONAL_SITE_ORIGINS || '').split(',');
+    return !extras.some((item) => {
+      const raw = item.trim().replace(/\/$/, '');
+      if (!raw) return false;
+      try {
+        const extra = new URL(raw);
+        return extra.protocol === 'https:' && extra.origin === raw && extra.origin === actual.origin;
+      } catch {
+        return false;
+      }
+    });
   } catch {
     return true;
   }
