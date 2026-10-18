@@ -1390,7 +1390,7 @@ function scanMessages(force = false) {
         removeManualTranslateAction(node);
         continue;
       }
-      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) {
+      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp && !settings.autoTranslateHistorical) {
         if (!node.closest?.('.lingua-inline-translation')) ensureManualTranslateAction(node);
         continue;
       }
@@ -1984,9 +1984,12 @@ ipcRenderer.on('lingua-settings', (_event, next) => {
     || previous.translateOwnMessages !== settings.translateOwnMessages
     || previous.showInlineTranslations !== settings.showInlineTranslations;
   const incomingEnabled = !previous.autoTranslateIncoming && settings.autoTranslateIncoming;
+  const historyEnabled = !previous.autoTranslateHistorical && settings.autoTranslateHistorical;
 
-  if (translationChanged) clearMessageFingerprints();
-  if (settings.autoTranslateIncoming && (becameActive || translationChanged || incomingEnabled)) {
+  // Previously visible bubbles were fingerprinted when history translation was off.
+  // Clear those markers when the user opts in so old messages can be queued.
+  if (translationChanged || historyEnabled) clearMessageFingerprints();
+  if (settings.autoTranslateIncoming && (becameActive || translationChanged || incomingEnabled || historyEnabled)) {
     // Normal scan preserves existing message fingerprints. Do not force a full
     // history retranslation merely because the host UI rendered again.
     scanTimer = setTimeout(() => scanMessages(false), 280);
