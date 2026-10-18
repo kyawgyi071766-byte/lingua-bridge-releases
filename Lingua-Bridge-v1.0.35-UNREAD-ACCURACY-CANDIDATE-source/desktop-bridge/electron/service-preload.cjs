@@ -1390,7 +1390,7 @@ function scanMessages(force = false) {
         removeManualTranslateAction(node);
         continue;
       }
-      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp && !settings.autoTranslateHistorical) {
+      if (!force && node.dataset.linguaSeenConversation === conversationKey && node.dataset.linguaFingerprint === fp) {
         if (!node.closest?.('.lingua-inline-translation')) ensureManualTranslateAction(node);
         continue;
       }
