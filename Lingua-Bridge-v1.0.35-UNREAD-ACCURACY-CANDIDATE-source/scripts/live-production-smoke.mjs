@@ -55,7 +55,12 @@ const csrf = await probe('browser cross-site translate', 'POST', '/api/translate
 });
 check(csrf, csrf.status === 403, 'browser cross-site translation is rejected before login');
 const downloads = await probe('public download metadata', 'GET', '/api/download/list');
-console.log('INFO public-download mode: ' + (downloads.json?.public === true ? 'public' : 'private or unavailable'));
+const windows = downloads.json?.downloads?.find?.(item => item.id === 'windows');
+check(downloads, downloads.status === 200 && downloads.json?.authorized && windows?.available && String(windows.href).endsWith('/Lingua-Bridge-Setup-1.0.36.exe'), 'published Windows EXE is available publicly');
 const updates = await probe('desktop update metadata', 'GET', '/api/desktop/update?platform=win32&arch=x64&current=1.0.35&channel=stable');
-console.log('INFO desktop update metadata HTTP ' + updates.status);
+const expectedSha = 'c7e83faf01c3a016351baa1cde50b8650378a569ef3c14873763789c9333ec8c';
+check(updates, updates.status === 200 && updates.json?.configured && updates.json?.version === '1.0.36'
+  && updates.json?.sha256 === expectedSha
+  && updates.json?.downloadUrl === windows?.href,
+  'stable update feed points to the SHA-256 of the newly published Windows EXE');
 console.log('NOTE: authenticated Gemini/DeepL output and live Telegram UI are NOT verified by this smoke test.');
