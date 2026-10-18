@@ -1716,7 +1716,9 @@ function ensureStatusChip(message, tone = 'info', sticky = false) {
 }
 
 function directSendEnabled() {
-  return Boolean(settings.isActive && settings.translateBeforeSending && settings.interceptNativeComposer);
+  // Confirmation mode must keep the native send shield active even if another
+  // outgoing translation toggle is disabled in the saved conversation profile.
+  return Boolean(settings.isActive && (settings.confirmBeforeSend || (settings.translateBeforeSending && settings.interceptNativeComposer)));
 }
 
 function reportDirectSendState() {
@@ -1895,7 +1897,7 @@ function requestOutgoingTranslation(event, trigger = 'send', composerOverride = 
 }
 
 function onNativeBeforeInput(event) {
-  if (!settings.translateBeforeSending || !settings.interceptNativeComposer) return;
+  if (!settings.confirmBeforeSend && (!settings.translateBeforeSending || !settings.interceptNativeComposer)) return;
   if (event.inputType !== 'insertParagraph' && event.inputType !== 'insertLineBreak') return;
   if (lastEnterHadShift) return;
   const composer = findComposer();
@@ -1930,7 +1932,7 @@ function onNativeKeypress(event) {
 }
 
 function onNativeBeforeInput(event) {
-  if (!settings.translateBeforeSending || !settings.interceptNativeComposer) return;
+  if (!settings.confirmBeforeSend && (!settings.translateBeforeSending || !settings.interceptNativeComposer)) return;
   if (event.inputType !== 'insertParagraph' && event.inputType !== 'insertLineBreak') return;
   if (lastEnterHadShift) return;
   const composer = findComposerForEventTarget(event.target);
