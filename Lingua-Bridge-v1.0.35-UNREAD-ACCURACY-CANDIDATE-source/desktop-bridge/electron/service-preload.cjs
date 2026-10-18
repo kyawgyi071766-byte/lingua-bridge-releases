@@ -1847,6 +1847,12 @@ function requestOutgoingTranslation(event, trigger = 'send', composerOverride = 
   if (!composer || composer.isConnected === false || !isVisible(composer)) return false;
   const text = composerText(composer);
   if (!text) return false;
+  // Confirmation mode is translation-only: never let Enter/Send deliver a draft.
+  if (settings.confirmBeforeSend && approvedOutgoingText && approvedOutgoingText === text) {
+    preventEvent(event);
+    ensureStatusChip('Lingua: translation ready. Confirmation mode does not send messages.', 'success', true);
+    return true;
+  }
   if (approvedOutgoingText && approvedOutgoingText === text) {
     approvedOutgoingText = '';
     if (approvedOutgoingCard?.sentText === text) {
@@ -2093,7 +2099,7 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     if (settings.confirmBeforeSend) {
       approvedOutgoingText = expectedText;
       approvedOutgoingCard = { sentText: expectedText, original: pending.original, detectedSource: result.detectedSource };
-      ensureStatusChip('Lingua: translated. Press Send/Enter again to send.', 'success', true);
+      ensureStatusChip('Lingua: translated only. No message sent. Turn off confirmation mode to send manually.', 'success', true);
     } else {
       approvedOutgoingText = '';
       approvedOutgoingCard = null;
