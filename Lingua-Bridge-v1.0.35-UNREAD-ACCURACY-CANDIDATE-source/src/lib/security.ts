@@ -67,6 +67,9 @@ export function getSiteUrl(): string {
 }
 
 export function emailVerificationRequired(): boolean {
+  // Public accounts must always prove inbox ownership before receiving a session.
+  // A stale EMAIL_VERIFICATION_REQUIRED=false must not bypass production verification.
+  if (process.env.NODE_ENV === 'production') return true;
   const configured = process.env.EMAIL_VERIFICATION_REQUIRED?.trim().toLowerCase();
   if (configured === 'true') return true;
   if (configured === 'false') return false;
