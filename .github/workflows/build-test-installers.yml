@@ -204,7 +204,8 @@ jobs:
 
   publish-desktop-1-0-36:
     name: Publish verified Windows 1.0.36 release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release: publish 1.0.36')
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release: publish 1.0.36')
     needs: desktop-bridge-windows
     runs-on: ubuntu-latest
     permissions:
