@@ -211,7 +211,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: lingua-bridge-desktop-windows-v1.0.36
           path: installer
