@@ -7,14 +7,10 @@ import { consumeRateLimit } from '@/lib/rateLimit';
 import {
   emailVerificationRequired,
   getClientAddress,
-  hashToken,
   isCrossSiteRequest,
   normalizeEmail,
-  randomToken,
   strongPasswordError,
 } from '@/lib/security';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
