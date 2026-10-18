@@ -21,7 +21,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:dev": "prisma migrate dev",
     "verify:config": "node scripts/preflight.js",
-    "audit:static": "node scripts/static-audit.js",
+    "audit:static": "node scripts/static-audit.js && node scripts/alternate-domain-origin-regression.cjs",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "check:distribution": "node scripts/distribution-check.js",
     "audit:update": "node scripts/update-feed-audit.js",
