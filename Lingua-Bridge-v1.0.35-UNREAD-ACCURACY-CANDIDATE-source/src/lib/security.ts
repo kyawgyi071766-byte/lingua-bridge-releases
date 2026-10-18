@@ -73,5 +73,5 @@ export function emailVerificationRequired(): boolean {
   const configured = process.env.EMAIL_VERIFICATION_REQUIRED?.trim().toLowerCase();
   if (configured === 'true') return true;
   if (configured === 'false') return false;
-  return process.env.NODE_ENV === 'production';
+  return false;
 }
