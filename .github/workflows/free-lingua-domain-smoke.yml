@@ -1,0 +1,45 @@
+name: Free Lingua Domain Smoke
+
+on:
+  push:
+    branches:
+      - test/free-lingua-vercel-domain-smoke
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-public-alias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test free HTTPS alias, original domain and health routes
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const urls = [
+            'https://lingua-bridge-sshk.vercel.app/',
+            'https://lingua-bridge-sshk.vercel.app/api/health',
+            'https://lingua-github-import.vercel.app/api/health',
+            'https://lingua-bridge-sshk.vercel.app/api/download/list',
+          ];
+          for (const url of urls) {
+            const response = await fetch(url, {redirect:'follow',signal:AbortSignal.timeout(25000)});
+            console.log(new URL(url).host, new URL(url).pathname, response.status, 'final',response.url);
+            if (!response.ok) throw new Error('Unhealthy public URL: ' + url + ' status ' + response.status);
+            if (url.endsWith('/api/health')) {
+              const data = await response.json();
+              if (data.status !== 'ok') throw new Error('Backend health check not ok at ' + url);
+            }
+            if (url.endsWith('/api/download/list')) {
+              const data = await response.json();
+              if (!data.downloads || !Array.isArray(data.downloads)) throw new Error('Download list missing on alias');
+            }
+          }
+          console.log('PASS free HTTPS alias and old domain both serve healthy Lingua Bridge');
+          NODE
