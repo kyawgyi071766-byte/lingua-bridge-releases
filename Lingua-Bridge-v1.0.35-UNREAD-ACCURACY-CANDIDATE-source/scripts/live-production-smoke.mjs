@@ -41,6 +41,13 @@ const unauth = await probe('unauthenticated real translate', 'POST', '/api/trans
   body: { text: 'Good morning', sourceLang: 'en', targetLang: 'my' }
 });
 check(unauth, unauth.status === 401, 'real inference requires login (not called here)');
+
+const sameOrigin = await probe('branded alias same-origin translate', 'POST', '/api/translate', {
+  headers: { Origin: new URL(base).origin, 'sec-fetch-site': 'same-origin' },
+  body: { text: 'Good morning', sourceLang: 'en', targetLang: 'my' },
+});
+check(sameOrigin, sameOrigin.status === 401, 'a browser on the branded alias reaches login boundary without CSRF failure');
+
 // Origin-only requests without browser Fetch Metadata are still rejected by
 // authentication. Real cross-site browser fetches send sec-fetch-site: cross-site.
 const foreignOrigin = await probe('foreign-origin unauthenticated translate', 'POST', '/api/translate', {
