@@ -1,0 +1,22 @@
+name: Live Lingua Translation API Smoke
+
+on:
+  push:
+    branches: [test/live-translation-api-check]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-server-boundary:
+    name: Verify production health and translation API boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe live production server without credentials
+        run: node Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/live-production-smoke.mjs

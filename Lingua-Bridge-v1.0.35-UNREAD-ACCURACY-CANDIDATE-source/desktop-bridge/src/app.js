@@ -2508,10 +2508,9 @@ async function translateCompose(sendRequested) {
     const result = s.translateBeforeSending
       ? await translateText(original, s.outgoingTarget, s.sourceLang)
       : { translatedText: original, provider: 'identity' };
-    let sendNow = sendRequested && !s.confirmBeforeSend;
-    if (sendRequested && s.confirmBeforeSend) {
-      sendNow = confirm(`Send this translated message?\n\n${result.translatedText}`);
-    }
+    // Confirmation mode is translation-only. Never offer a native confirmation
+    // dialog that can dispatch a message from the fallback composer.
+    const sendNow = Boolean(sendRequested && !s.confirmBeforeSend);
     activePersistentView()?.send('lingua-insert-text', { text: result.translatedText, sendNow });
     setNotice(sendNow
       ? `Translated by ${result.provider || 'provider'} and sent.`
