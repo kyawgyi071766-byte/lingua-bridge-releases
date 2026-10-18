@@ -29,7 +29,7 @@ export default function SignupPage() {
     const data = await res.json().catch(() => ({}));
     setLoading(false);
     if (res.ok && data.needsVerification) {
-      setMessage('Account created. Check your email and click the verification link before logging in.');
+      router.push('/verify-email?email=' + encodeURIComponent(data.email || email));
       return;
     }
     if (res.ok) {
@@ -43,7 +43,7 @@ export default function SignupPage() {
   return (
     <div className="max-w-md mx-auto px-6 py-16">
       <h1 className="text-2xl font-bold text-center">Create your account</h1>
-      <p className="text-center text-slate-500 text-sm mt-1">Start with a small free monthly translation allowance</p>
+      <p className="text-center text-slate-500 text-sm mt-1">Use an inbox you control. We'll email you a six-digit verification code before you can sign in.</p>
       <form onSubmit={submit} className="mt-8 space-y-4 bg-white border border-slate-200 rounded-2xl p-6">
         {error && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">{error}</div>}
         {message && <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg">{message}</div>}
