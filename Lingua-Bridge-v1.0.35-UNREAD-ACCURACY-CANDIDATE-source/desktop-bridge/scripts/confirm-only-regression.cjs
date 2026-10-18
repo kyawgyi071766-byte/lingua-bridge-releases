@@ -40,7 +40,7 @@ const context = vm.createContext({
   findMessageNodes: () => [],
   watchSentTranslationCard: () => assert.fail('must not create sent card in confirm-only mode'),
 });
-vm.runInContext(functionSource('function requestOutgoingTranslation(', '\\nfunction onNativeBeforeInput('), context);
+vm.runInContext(functionSource('function requestOutgoingTranslation(', '\nfunction onNativeBeforeInput('), context);
 const evt = { prevented: false };
 assert.equal(context.requestOutgoingTranslation(evt, 'keydown'), true);
 assert.equal(evt.prevented, true, 'second Enter must be cancelled');
@@ -67,7 +67,7 @@ context.pendingIncomingFingerprints = new Set();
 context.findComposer = () => composer;
 context.rule = () => ({ id: 'telegram' });
 context.setTimeout = () => assert.fail('a confirmed translation must not schedule an automatic send');
-vm.runInContext(functionSource("ipcRenderer.on('lingua-translation-result'", "\\nipcRenderer.on('lingua-insert-text'"), context);
+vm.runInContext(functionSource("ipcRenderer.on('lingua-translation-result'", "\nipcRenderer.on('lingua-insert-text'"), context);
 assert.equal(typeof resultHandler, 'function');
 (async () => {
   await resultHandler(null, { id: 'out_test', ok: true, translatedText: 'Bonjour', detectedSource: 'en' });
@@ -77,5 +77,5 @@ assert.equal(typeof resultHandler, 'function');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 // All sending paths must enforce the current confirmation setting.
-assert.match(source, /function clickSend\\(buttonOverride = null\\) \\{[\\s\\S]*?if \\(settings\\.confirmBeforeSend\\) return false/);
-assert.match(source, /const sendNow = Boolean\\(payload\\.sendNow\\) && !settings\\.confirmBeforeSend/);
+assert.match(source, /function clickSend\(buttonOverride = null\) \{[\s\S]*?if \(settings\.confirmBeforeSend\) return false/);
+assert.match(source, /const sendNow = Boolean\(payload\.sendNow\) && !settings\.confirmBeforeSend/);
