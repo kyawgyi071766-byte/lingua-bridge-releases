@@ -25,3 +25,12 @@
 - Historical translation is opt-in per current conversation/Global profile; existing users must enable the checkbox for chats they want scanned. Provider usage can increase when this option is enabled.
 - The same version number (1.0.36) is retained; existing installations may require manually downloading and reinstalling the refreshed setup EXE because version-only update checks cannot distinguish a same-version hotfix.
 - A real signed-in Telegram session and delivery-blocking end-to-end test still require manual validation on Windows; automated CI cannot certify every messenger UI revision.
+
+## Live server and confirmation safety verification (October 18)
+
+- Production /api/health returned HTTP 200 with database status ok from GitHub-hosted runner.
+- Production /api/translate/status and POST /api/translate returned HTTP 401 for unsigned-in clients; cross-site browser metadata was blocked with 403.
+- Public downloads and stable update metadata returned HTTP 200.
+- Closing a fallback-composer safety gap: enabling Confirm Before Send now strictly translates and inserts the text without a send dialog or message delivery.
+- Dynamic regression tests cover both confirmation-only mode and ordinary sending when confirmation is disabled.
+- Automated tests do not exercise provider inference without a logged-in test user, nor actual Telegram chat DOM on a signed-in Windows desktop; those require manual real-account verification.
