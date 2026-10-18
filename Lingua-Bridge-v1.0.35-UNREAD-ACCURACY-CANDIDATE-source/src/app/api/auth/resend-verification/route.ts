@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { emailConfigured, sendVerificationEmail } from '@/lib/email';
+import { EMAIL_CODE_TTL_MS, generateEmailCode, hashEmailCode } from '@/lib/emailCodes';
 import { consumeRateLimit } from '@/lib/rateLimit';
-import { getClientAddress, hashToken, isCrossSiteRequest, normalizeEmail, randomToken } from '@/lib/security';
+import { getClientAddress, isCrossSiteRequest, normalizeEmail } from '@/lib/security';
 
 export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
@@ -21,12 +22,12 @@ export async function POST(req: Request) {
 
   const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
   if (user && !user.emailVerifiedAt) {
-    const token = randomToken();
+    const token = generateEmailCode();
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        verificationTokenHash: hashToken(token),
-        verificationExpiresAt: new Date(Date.now() + 24 * 60 * 60_000),
+        verificationTokenHash: hashEmailCode('verify-email', user.email, token),
+        verificationExpiresAt: new Date(Date.now() + EMAIL_CODE_TTL_MS),
       },
     });
     try {
