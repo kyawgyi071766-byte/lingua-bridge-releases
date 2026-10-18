@@ -5,7 +5,13 @@ function configured(value?: string): boolean {
 }
 
 export function emailConfigured(): boolean {
-  return configured(process.env.RESEND_API_KEY) && configured(process.env.EMAIL_FROM);
+  const sender = process.env.EMAIL_FROM?.trim() || '';
+  if (!configured(process.env.RESEND_API_KEY) || !configured(sender)) return false;
+  // Resend's shared testing sender cannot serve arbitrary customer inboxes.
+  // Fail before creating a user or reset token rather than leave orphaned
+  // unverified accounts when production DNS/domain setup is incomplete.
+  if (process.env.NODE_ENV === 'production' && /@resend\.dev(?:\s*>|\s*$)/i.test(sender)) return false;
+  return true;
 }
 
 function escapeHtml(value: string): string {
