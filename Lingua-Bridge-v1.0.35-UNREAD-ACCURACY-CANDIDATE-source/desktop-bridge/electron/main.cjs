@@ -296,8 +296,9 @@ ipcMain.handle('lingua:login', async (_event, { email, password }) => {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return { ok: false, status: response.status, error: data.error || 'Login failed.' };
     const cookie = parseSetCookie(response.headers);
-    if (cookie) authCookie = cookie;
-    signedInEmail = email;
+    if (!cookie) return { ok: false, error: 'The login server did not return a session. Please try logging in again.' };
+    authCookie = cookie;
+    signedInEmail = data.email || email;
     saveAuthState();
     return { ok: true, email };
   } catch (error) {

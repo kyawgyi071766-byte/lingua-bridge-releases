@@ -660,7 +660,7 @@ function bindPersistentWebview(view, instance) {
           ok:false,
           error:error.message || String(error)
         });
-        setNotice('Translation failed.');
+        setNotice(error.message || 'Translation failed.', true);
       }
       return;
     }
@@ -711,7 +711,7 @@ function bindPersistentWebview(view, instance) {
 
     if (event.channel === 'lingua-translation-error' && isActive) {
       const result = event.args[0] || {};
-      setNotice(result.kind === 'send' ? 'Message sending failed.' : 'Translation failed.');
+      setNotice(result.error || (result.kind === 'send' ? 'Message sending failed.' : 'Translation failed.'), true);
     }
   });
 }
@@ -1385,6 +1385,10 @@ async function refreshAccountStatus() {
     if (state.accountStatus?.ok && state.accountStatus.email) {
       state.signedInEmail = state.accountStatus.email;
     }
+    if (state.accountStatus?.status === 401) {
+      state.signedInEmail = '';
+      state.voiceUsage = null;
+    }
     enforceCustomerMode();
   } catch (_) {
     state.accountStatus = { ok:false };
@@ -1990,7 +1994,7 @@ function render() {
         ` : ''}
         <div id="noticeSlot">${noticeHtml()}</div>
 
-        <details class="setting-section">
+        <details class="setting-section" ${!state.signedInEmail && state.translationMode === 'live' ? 'open' : ''}>
           <summary>Lingua account</summary>
           <div class="setting-section-body auth-card">
           <strong>Lingua account ${state.translationMode==='test' ? '<span class="subtle">(not required in test mode)</span>' : ''}</strong>
@@ -2492,7 +2496,15 @@ async function translateText(text, targetLang, sourceLang) {
     targetLang,
     testMode: state.translationMode === 'test'
   });
-  if (!result.ok) throw new Error(result.error || 'Translation failed.');
+  if (!result.ok) {
+    if (result.status === 401) {
+      state.signedInEmail = '';
+      state.accountStatus = null;
+      state.voiceUsage = null;
+      render();
+    }
+    throw new Error(result.error || 'Translation failed.');
+  }
   return result;
 }
 
