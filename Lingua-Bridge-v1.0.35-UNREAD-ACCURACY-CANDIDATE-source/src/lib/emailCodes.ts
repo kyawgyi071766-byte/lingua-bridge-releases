@@ -19,12 +19,17 @@ const DISPOSABLE_DOMAINS = new Set([
   'mintemail.com', 'mohmal.com', 'fakeinbox.com',
 ]);
 
-export function isAcceptableRegistrationEmail(value: string): boolean {
+export function isValidEmailAddress(value: string): boolean {
   const email = normalizeEmail(value);
   if (email.length < 3 || email.length > 254 || !EMAIL_RE.test(email)) return false;
   const at = email.lastIndexOf('@');
-  const domain = email.slice(at + 1);
-  if (email.slice(0, at).length > 64 || domain.length > 253) return false;
+  return email.slice(0, at).length <= 64 && email.slice(at + 1).length <= 253;
+}
+
+export function isAcceptableRegistrationEmail(value: string): boolean {
+  if (!isValidEmailAddress(value)) return false;
+  const email = normalizeEmail(value);
+  const domain = email.slice(email.lastIndexOf('@') + 1);
   if (domain === 'example.com' || domain.endsWith('.example') ||
       domain.endsWith('.invalid') || domain.endsWith('.test') ||
       domain.endsWith('.localhost') || domain.endsWith('.local')) return false;
@@ -49,7 +54,7 @@ function otpSecret(): string {
 }
 
 export function hashEmailCode(purpose: EmailCodePurpose, email: string, code: string): string {
-  if (!isEmailCode(code) || !isAcceptableRegistrationEmail(email)) {
+  if (!isEmailCode(code) || !isValidEmailAddress(email)) {
     throw new Error('Invalid email verification code input.');
   }
   // Purpose, recipient and an HMAC secret isolate short OTPs from each other.
