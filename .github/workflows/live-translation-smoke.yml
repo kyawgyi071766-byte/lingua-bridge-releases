@@ -18,5 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Probe live production server without credentials
+      - name: Probe new free Vercel alias without credentials
+        env:
+          LINGUA_BASE_URL: https://lingua-bridge-sshk.vercel.app
         run: node Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/live-production-smoke.mjs
