@@ -1,0 +1,96 @@
+name: Android share translation preview
+on:
+  push:
+    branches: [feat/android-share-translation]
+    paths:
+      - '.github/workflows/android-share-preview.yml'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-share-preview-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  SERVER_URL: https://lingua-github-import.vercel.app
+  LINGUA_MOBILE_PREVIEW: 'true'
+jobs:
+  android:
+    name: Android preview APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npm run audit:static
+      - run: node scripts/mobile-share-regression.cjs
+      - run: test -d android || npx cap add android
+      - run: npx cap sync android
+      - run: node scripts/configure-android-share.cjs
+      - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
+      - name: Prepare downloadable Android preview
+        run: |
+          mkdir -p preview-downloads
+          cp android/app/build/outputs/apk/debug/app-debug.apk preview-downloads/Lingua-Mobile-Preview-Android.apk
+          cd preview-downloads
+          aapt_path=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
+          "$aapt_path" dump xmltree Lingua-Mobile-Preview-Android.apk AndroidManifest.xml > native-manifest.txt
+          grep -F 'android.intent.action.SEND' native-manifest.txt
+          grep -F 'android.intent.action.PROCESS_TEXT' native-manifest.txt
+          rm native-manifest.txt
+          "$aapt_path" dump badging Lingua-Mobile-Preview-Android.apk | grep -F "package: name='com.lingua.translate.preview'"
+          unzip -p Lingua-Mobile-Preview-Android.apk assets/capacitor.config.json > packaged-config.json
+          node -e "const a=require('node:assert/strict'),c=require('./packaged-config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
+          rm packaged-config.json
+          sha256sum *.apk > SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+          printf '%s\n' 'Debug-signed Android share/selected-text preview. Uses hosted /share-target with login required. Enhanced history UI requires this branch web deployment. No background app reading or automatic sending. Physical-device testing required. Production email recovery remains blocked. Not a Play Store release.' > README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-preview-android
+          retention-days: 30
+          if-no-files-found: error
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/preview-downloads/*
+
+  native-smoke:
+    name: Android emulator share smoke
+    needs: android
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: lingua-preview-android
+          path: apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/android-share-smoke.sh apk/Lingua-Mobile-Preview-Android.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-share-smoke-evidence
+          retention-days: 14
+          if-no-files-found: warn
+          path: smoke-results/*
