@@ -42,5 +42,12 @@
     "category": "Network",
     "maintainer": "Lingua Bridge <kyawgyi071766@gmail.com>"
   },
-  "publish": null
+  "publish": null,
+  "extraMetadata": {
+    "homepage": "https://lingua-github-import.vercel.app",
+    "author": {
+      "name": "Lingua Bridge",
+      "email": "kyawgyi071766@gmail.com"
+    }
+  }
 }
