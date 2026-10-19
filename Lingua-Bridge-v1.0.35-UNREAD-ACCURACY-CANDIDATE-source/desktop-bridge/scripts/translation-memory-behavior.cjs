@@ -14,6 +14,22 @@ vm.runInContext(source.slice(source.indexOf('function currentConversationCacheSc
 const start=source.indexOf("ipcRenderer.on('lingua-translation-result'");
 vm.runInContext(source.slice(start,source.indexOf("  if (String(result.id || '').startsWith('out_'))",start))+'});',c);
 function pending(id,text){const n={innerText:text,dataset:{linguaFingerprint:text},isConnected:true};c.pendingIncoming.set(id,{node:n,fp:text,targetLang:'en',pendingKey:id,conversationKey:'chat:A'});c.pendingIncomingFingerprints.add(id);return n;}
+
+const paints={label:0,body:0};
+const meta={get textContent(){return this.value||''},set textContent(v){this.value=v;paints.label++}};
+const body={get textContent(){return this.value||''},set textContent(v){this.value=v;paints.body++}};
+const paintContext=vm.createContext({
+settings:{incomingTarget:'en',incomingTargetLabel:'English'},
+fingerprint:x=>x,cleanText:x=>x,currentConversationCacheScope:()=> 'chat:A',
+ensureTranslationRefreshButton:()=>{}
+});
+vm.runInContext(source.slice(source.indexOf('function setInlineTranslation('),source.indexOf('function currentConversationCacheScope()')),paintContext);
+const host={dataset:{},querySelector:s=>s.includes('meta')?meta:body};
+paintContext.setInlineTranslation(host,'translated','mock',{innerText:'source'});
+paintContext.setInlineTranslation(host,'translated','mock',{innerText:'source'});
+assert.equal(paints.label,1,'unchanged cached label must not trigger repeated mutations');
+assert.equal(paints.body,1,'unchanged cached body must not trigger repeated mutations');
+
 async function run(){
 assert.notEqual(c.fingerprint('costarring'),c.fingerprint('liquid'));
 for(let i=0;i<30;i++)c.rememberTranslation('text '+i,'translation '+i,'mock','en','chat:A');
