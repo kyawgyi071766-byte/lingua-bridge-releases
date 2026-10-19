@@ -44,6 +44,8 @@
   },
   "publish": null,
   "extraMetadata": {
+    "name": "lingua-bridge-translation-memory-preview",
+    "productName": "Lingua Bridge Translation Memory Preview",
     "homepage": "https://lingua-github-import.vercel.app",
     "author": {
       "name": "Lingua Bridge",
