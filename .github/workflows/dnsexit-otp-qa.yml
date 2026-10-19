@@ -28,5 +28,7 @@ jobs:
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
       - run: npm ci
+      - name: Confirm the published Nodemailer package integrity from npm registry
+        run: npm view nodemailer@10.1.7 dist.integrity --json
       - run: npm run audit:static
       - run: npm run build
