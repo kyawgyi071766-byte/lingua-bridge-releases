@@ -1,0 +1,44 @@
+package __PACKAGE__;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Toast;
+import com.getcapacitor.BridgeActivity;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class MainActivity extends BridgeActivity {
+    private static final String SHARE_ENDPOINT = __ENDPOINT__;
+
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        if (state == null) acceptSharedText(getIntent());
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        acceptSharedText(intent);
+    }
+
+    private void acceptSharedText(Intent intent) {
+        if (intent == null || !"text/plain".equals(intent.getType())) return;
+        String key;
+        if (Intent.ACTION_SEND.equals(intent.getAction())) key = Intent.EXTRA_TEXT;
+        else if (Intent.ACTION_PROCESS_TEXT.equals(intent.getAction())) key = Intent.EXTRA_PROCESS_TEXT;
+        else return;
+        CharSequence shared = intent.getCharSequenceExtra(key);
+        intent.removeExtra(key);
+        if (shared == null || shared.toString().trim().isEmpty()) return;
+        String text = shared.toString();
+        int length = text.codePointCount(0, text.length());
+        if (length > 5000) {
+            text = text.substring(0, text.offsetByCodePoints(0, 5000));
+            Toast.makeText(this, "Only the first 5000 characters were shared.", Toast.LENGTH_LONG).show();
+        }
+        // Form body only: never put private messages in navigation URLs or logs.
+        final byte[] body = ("text=" + URLEncoder.encode(text, StandardCharsets.UTF_8))
+                .getBytes(StandardCharsets.UTF_8);
+        getBridge().getWebView().post(() -> getBridge().getWebView().postUrl(SHARE_ENDPOINT, body));
+    }
+}
