@@ -201,6 +201,48 @@ async function run() {
   users[0].resetExpiresAt = new Date(Date.now()+3600000);
   await expectStatus('reset-password',{token:oldToken,password:'LegacyPassword234'},200);
   assert.equal(users[0].passwordHash,'bcrypt-test:LegacyPassword234');
-  console.log('PASS DNSExit SMTP fail-closed, STARTTLS mock send, disposable domain check, OTP signup/resend/verify, expiry, one-time use, password recovery, session rotation and legacy reset link');
+
+  // Failed sends must not strand users by replacing the last delivered code.
+  // Fixed candidates make these failure/race cases independent of random collisions.
+  let sendFailure = async () => { throw new Error('simulated provider failure'); };
+  const failedHandler = loadTS('src/app/api/auth/forgot-password/route.ts', {
+    ...modules,
+    '@/lib/emailCodes': { ...codes, generateEmailCode: () => '123456' },
+    '@/lib/email': { ...email, sendPasswordResetEmail: (...args) => sendFailure(...args) },
+    '@/lib/rateLimit': { consumeRateLimit: async () => ({ allowed: true }) },
+  }).POST;
+  users[0].resetTokenHash = 'previous-delivered-hash';
+  const previousExpiry = new Date(Date.now() + 600000);
+  users[0].resetExpiresAt = previousExpiry;
+  assert.equal((await failedHandler(request({email:username}))).status, 503);
+  assert.equal(users[0].resetTokenHash, 'previous-delivered-hash');
+  assert.equal(users[0].resetExpiresAt, previousExpiry);
+  users[0].resetTokenHash = null;
+  users[0].resetExpiresAt = null;
+  assert.equal((await failedHandler(request({email:username}))).status, 503);
+  assert.equal(users[0].resetTokenHash, null, 'undelivered first code must be cleared');
+  assert.equal(users[0].resetExpiresAt, null);
+  sendFailure = async () => {
+    users[0].resetTokenHash = 'newer-request-hash';
+    throw new Error('earlier request failed after a newer issuance');
+  };
+  await failedHandler(request({email:username}));
+  assert.equal(users[0].resetTokenHash, 'newer-request-hash', 'rollback must preserve newer issuance');
+  // Even an equal random code in a newer issuance is protected by its expiry.
+  sendFailure = async () => {
+    users[0].resetExpiresAt = new Date(users[0].resetExpiresAt.getTime() + 1000);
+    throw new Error('earlier request failed after equal-code issuance');
+  };
+  await failedHandler(request({email:username}));
+  assert.equal(users[0].resetTokenHash, codes.hashEmailCode('reset-password',username,'123456'));
+  sendFailure = async () => {
+    users[0].resetTokenHash = null;
+    users[0].resetExpiresAt = null;
+    throw new Error('code was consumed before the send failure');
+  };
+  await failedHandler(request({email:username}));
+  assert.equal(users[0].resetTokenHash, null, 'rollback must not resurrect a consumed code');
+
+  console.log('PASS reset send-failure rollback and concurrency; DNSExit SMTP fail-closed, STARTTLS mock send, disposable domain check, OTP signup/resend/verify, expiry, one-time use, password recovery, session rotation and legacy reset link');
 }
 run().catch(error => { console.error(error); process.exitCode=1; });
