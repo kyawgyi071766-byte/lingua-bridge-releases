@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     const verifyRequired = emailVerificationRequired();
     if (verifyRequired && !emailConfigured()) {
-      console.error('Email verification is required but RESEND_API_KEY/EMAIL_FROM are not configured.');
+      console.error('Email verification is required but a verified transactional sender is not configured.');
       return NextResponse.json({ error: 'Account email service is not configured yet.' }, { status: 503 });
     }
 
