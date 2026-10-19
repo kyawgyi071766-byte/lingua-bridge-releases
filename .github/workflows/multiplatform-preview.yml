@@ -14,6 +14,7 @@ concurrency:
 env:
   SERVER_URL: https://lingua-github-import.vercel.app
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  LINGUA_MOBILE_PREVIEW: 'true'
 jobs:
   desktop:
     name: Desktop ${{ matrix.platform }} ${{ matrix.arch }}
@@ -43,9 +44,8 @@ jobs:
       - run: npm run build:web
       - name: Build isolated preview application
         run: npx electron-builder --config electron-builder.multiplatform-preview.json --${{ matrix.platform }} --${{ matrix.arch }} --publish never
-      - name: Add checksums and preview notice
-        run: |
-          node -e "const fs=require('fs'),c=require('crypto'),p='release-multiplatform-preview/';const files=fs.readdirSync(p).filter(n=>/\\.(exe|zip|dmg|deb|AppImage|gz)$/.test(n));if(!files.length)throw Error('No installers');fs.writeFileSync(p+'SHA256SUMS.txt',files.map(n=>c.createHash('sha256').update(fs.readFileSync(p+n)).digest('hex')+'  '+n).join('\\n')+'\\n');fs.writeFileSync(p+'README.txt','Unsigned translation-memory preview, separate application identity. Not a stable auto-update. Real messenger smoke testing remains required. Production email recovery is still blocked by DNSExit relay policy.');"
+      - name: Verify packaged application and downloads
+        run: node scripts/verify-preview-package.cjs ${{ matrix.platform }} ${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: lingua-preview-${{ matrix.platform }}-${{ matrix.arch }}
@@ -59,6 +59,7 @@ jobs:
             Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.AppImage
             Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.gz
             Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.txt
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.json
   android:
     name: Android preview APK
     runs-on: ubuntu-24.04
@@ -87,7 +88,11 @@ jobs:
           mkdir -p preview-downloads
           cp android/app/build/outputs/apk/debug/app-debug.apk preview-downloads/Lingua-Mobile-Preview-Android.apk
           cd preview-downloads
+          unzip -p Lingua-Mobile-Preview-Android.apk assets/capacitor.config.json > packaged-config.json
+          node -e "const a=require('node:assert/strict'),c=require('./packaged-config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
+          rm packaged-config.json
           sha256sum *.apk > SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
           printf '%s\n' 'Debug-signed Android website shell. Desktop messenger injection is not included. Production email recovery remains blocked. Not a Play Store release.' > README.txt
       - uses: actions/upload-artifact@v4
         with:
@@ -117,9 +122,11 @@ jobs:
       - name: Prepare simulator-only download
         run: |
           mkdir -p preview-downloads
+          node -e "const a=require('node:assert/strict'),c=require('./ios-build/Build/Products/Debug-iphonesimulator/App.app/capacitor.config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
           ditto -c -k --sequesterRsrc --keepParent ios-build/Build/Products/Debug-iphonesimulator/App.app preview-downloads/Lingua-Mobile-Preview-iOS-Simulator.zip
           cd preview-downloads
           shasum -a 256 *.zip > SHA256SUMS.txt
+          shasum -a 256 -c SHA256SUMS.txt
           printf '%s\n' 'Simulator only: cannot install on an iPhone. Apple developer signing/TestFlight is required for physical devices. Website shell, not desktop messenger injection. Production email recovery remains blocked.' > README.txt
       - uses: actions/upload-artifact@v4
         with:
