@@ -43,6 +43,19 @@ assert.match(codes.generateEmailCode(), /^\d{6}$/);
 
 const serverSecurity = loadTS('src/lib/security.ts');
 const serverEmail = loadTS('src/lib/email.ts', { './security': { getSiteUrl: () => 'https://lingua.example.org' } });
+
+const smtpCalls = [];
+const smtpEmail = loadTS('src/lib/email.ts', {
+  './security': { getSiteUrl: () => 'https://lingua.example.org' },
+  nodemailer: { createTransport: options => {
+    smtpCalls.push({ kind: 'transport', options });
+    return {
+      sendMail: async message => { smtpCalls.push({ kind: 'mail', message }); return { accepted: [message.to] }; },
+      close: () => { smtpCalls.push({ kind: 'close' }); },
+    };
+  }},
+});
+
 process.env.NODE_ENV = 'production';
 process.env.EMAIL_VERIFICATION_REQUIRED = 'false';
 process.env.RESEND_API_KEY = 're_mock-test-only';
@@ -120,6 +133,36 @@ async function expectStatus(name,body,status) {
   return response;
 }
 async function run() {
+  // An explicitly selected DNSExit transport must fail closed without
+  // authenticated SMTP settings and a verified, exact sender domain.
+  process.env.NODE_ENV = 'production';
+  process.env.EMAIL_TRANSPORT = 'dnsexit-smtp';
+  process.env.EMAIL_FROM = 'Lingua Bridge <verify@lingua-bridge-sshk.publicvm.com>';
+  process.env.SMTP_USER = 'regression-relay-only';
+  process.env.SMTP_PASSWORD = 'regression-relay-secret-only';
+  delete process.env.DNSEXIT_SENDER_VERIFIED;
+  assert.equal(smtpEmail.emailConfigured(), false, 'SMTP must fail closed before SPF/DKIM/inbox verification');
+  process.env.DNSEXIT_SENDER_VERIFIED = 'true';
+  assert.equal(smtpEmail.emailConfigured(), true, 'SMTP config is allowed after explicit operator verification');
+  process.env.EMAIL_FROM = 'Lingua Bridge <onboarding@resend.dev>';
+  assert.equal(smtpEmail.emailConfigured(), false, 'DNSExit cannot send from Resend test sender');
+  process.env.EMAIL_FROM = 'Lingua Bridge <verify@lingua-bridge-sshk.publicvm.com>';
+  await smtpEmail.sendVerificationEmail('valid-recipient@gmail.com', '012345');
+  assert.equal(smtpCalls[0].options.host, 'relay.dnsexit.com');
+  assert.equal(smtpCalls[0].options.port, 587);
+  assert.equal(smtpCalls[0].options.requireTLS, true);
+  assert.equal(smtpCalls[0].options.tls.servername, 'relay.dnsexit.com');
+  assert.equal(smtpCalls[1].message.to, 'valid-recipient@gmail.com');
+  assert.equal(smtpCalls[1].message.subject, 'Your Lingua verification code');
+  assert(smtpCalls[1].message.text.includes('012345'));
+  assert.equal(smtpCalls[2].kind, 'close', 'SMTP transport must close after a send');
+  delete process.env.EMAIL_TRANSPORT;
+  delete process.env.EMAIL_FROM;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASSWORD;
+  delete process.env.DNSEXIT_SENDER_VERIFIED;
+  process.env.NODE_ENV = 'test';
+
   await expectStatus('signup',{email:'temp@guerrillamail.com',password:'Password12345'},400);
   assert.equal(users.length,0,'disposable signup must not create a database row');
   const username = 'real.user+test@gmail.com';
@@ -158,6 +201,6 @@ async function run() {
   users[0].resetExpiresAt = new Date(Date.now()+3600000);
   await expectStatus('reset-password',{token:oldToken,password:'LegacyPassword234'},200);
   assert.equal(users[0].passwordHash,'bcrypt-test:LegacyPassword234');
-  console.log('PASS disposable domain check, OTP signup/resend/verify, expiry, one-time use, password recovery, session rotation and legacy reset link');
+  console.log('PASS DNSExit SMTP fail-closed, STARTTLS mock send, disposable domain check, OTP signup/resend/verify, expiry, one-time use, password recovery, session rotation and legacy reset link');
 }
 run().catch(error => { console.error(error); process.exitCode=1; });
