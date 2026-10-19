@@ -88,6 +88,8 @@ jobs:
           mkdir -p preview-downloads
           cp android/app/build/outputs/apk/debug/app-debug.apk preview-downloads/Lingua-Mobile-Preview-Android.apk
           cd preview-downloads
+          aapt_path=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
+          "$aapt_path" dump badging Lingua-Mobile-Preview-Android.apk | grep -F "package: name='com.lingua.translate.preview'"
           unzip -p Lingua-Mobile-Preview-Android.apk assets/capacitor.config.json > packaged-config.json
           node -e "const a=require('node:assert/strict'),c=require('./packaged-config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
           rm packaged-config.json
@@ -123,6 +125,7 @@ jobs:
         run: |
           mkdir -p preview-downloads
           node -e "const a=require('node:assert/strict'),c=require('./ios-build/Build/Products/Debug-iphonesimulator/App.app/capacitor.config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' ios-build/Build/Products/Debug-iphonesimulator/App.app/Info.plist)" = "com.lingua.translate.preview"
           ditto -c -k --sequesterRsrc --keepParent ios-build/Build/Products/Debug-iphonesimulator/App.app preview-downloads/Lingua-Mobile-Preview-iOS-Simulator.zip
           cd preview-downloads
           shasum -a 256 *.zip > SHA256SUMS.txt
