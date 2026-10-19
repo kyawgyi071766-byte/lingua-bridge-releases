@@ -1,15 +1,41 @@
 import { getSiteUrl } from './security';
 
+const DNSEXIT_HOST = 'relay.dnsexit.com';
+const DNSEXIT_DOMAIN = 'lingua-bridge-sshk.publicvm.com';
+
 function configured(value?: string): boolean {
   return Boolean(value && !value.startsWith('replace-') && !value.includes('example.com'));
 }
 
+function senderAddress(value: string): string {
+  const match = value.match(/<([^<>]+)>$/);
+  return (match ? match[1] : value).trim().toLowerCase();
+}
+
+function usingDnsExit(): boolean {
+  return process.env.EMAIL_TRANSPORT?.trim().toLowerCase() === 'dnsexit-smtp';
+}
+
 export function emailConfigured(): boolean {
   const sender = process.env.EMAIL_FROM?.trim() || '';
-  if (!configured(process.env.RESEND_API_KEY) || !configured(sender)) return false;
-  // Resend's shared testing sender cannot serve arbitrary customer inboxes.
-  // Fail before creating a user or reset token rather than leave orphaned
-  // unverified accounts when production DNS/domain setup is incomplete.
+  if (!configured(sender)) return false;
+
+  if (usingDnsExit()) {
+    // Use only DNSExit SMTP with this explicitly delegated free subdomain.
+    if (!configured(process.env.SMTP_USER) || !configured(process.env.SMTP_PASSWORD)) return false;
+    const addr = senderAddress(sender);
+    const parts = addr.split('@');
+    if (parts.length !== 2 || !parts[0] || parts[1] !== DNSEXIT_DOMAIN || /\s/.test(addr)) return false;
+    // Operator rollout gate. Set this only after DNSExit SPF/DKIM verification
+    // AND controlled Gmail delivery; avoids orphaned unverified accounts.
+    if (process.env.NODE_ENV === 'production' && process.env.DNSEXIT_SENDER_VERIFIED !== 'true') return false;
+    return true;
+  }
+
+  if (process.env.EMAIL_TRANSPORT && process.env.EMAIL_TRANSPORT.trim().toLowerCase() !== 'resend') {
+    return false;
+  }
+  if (!configured(process.env.RESEND_API_KEY)) return false;
   if (process.env.NODE_ENV === 'production' && /@resend\.dev(?:\s*>|\s*$)/i.test(sender)) return false;
   return true;
 }
@@ -21,14 +47,46 @@ function escapeHtml(value: string): string {
 }
 
 async function sendEmail(to: string, subject: string, text: string, html: string) {
-  const key = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
-  if (!emailConfigured() || !key || !from) throw new Error('Transactional email is not configured.');
+  if (!emailConfigured() || !from) throw new Error('Transactional email is not configured.');
 
+  if (usingDnsExit()) {
+    try {
+      // Port 587 with authenticated STARTTLS; never allow a client-supplied
+      // SMTP hostname, disabled certificate checks, or insecure auth.
+      const { createTransport } = await import('nodemailer');
+      const transport = createTransport({
+        host: DNSEXIT_HOST,
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASSWORD! },
+        tls: { servername: DNSEXIT_HOST, minVersion: 'TLSv1.2' },
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 15_000,
+      });
+      try {
+        await transport.sendMail({
+          from, to, subject, text, html,
+          disableFileAccess: true, disableUrlAccess: true,
+        });
+      } finally {
+        transport.close();
+      }
+      return;
+    } catch {
+      console.error('DNSExit SMTP delivery failed.');
+      throw new Error('Could not send email right now.');
+    }
+  }
+
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) throw new Error('Transactional email is not configured.');
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: 'Bearer ' + key,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ from, to: [to], subject, text, html }),
