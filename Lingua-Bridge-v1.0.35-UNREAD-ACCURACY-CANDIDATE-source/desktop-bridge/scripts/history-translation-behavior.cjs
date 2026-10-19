@@ -25,6 +25,7 @@ const context = vm.createContext({
   cleanText: value => String(value || '').trim(),
   fingerprint: value => 'fp:' + value,
   restoreCachedTranslation: () => false,
+  invalidateStaleTranslation: () => {},
   isAudioLikeMessage: () => false,
   isOutgoingMessage: () => false,
   ensureManualTranslateAction: () => {},
