@@ -3,9 +3,12 @@ export interface MobileTranslation {
 }
 const PREFIX = 'lingua-mobile-memory-v1:';
 const MAX_BYTES = 500_000;
-export function loadMobileMemory(storage: Storage, owner: string): MobileTranslation[] {
+export function getMobileStorage(): Storage | null {
+  try { return window.localStorage; } catch { return null; }
+}
+export function loadMobileMemory(storage: Storage | null, owner: string): MobileTranslation[] {
   try {
-    const raw = storage.getItem(PREFIX + owner);
+    const raw = storage?.getItem(PREFIX + owner);
     if (!raw || raw.length * 2 > MAX_BYTES) return [];
     const data: unknown = JSON.parse(raw);
     if (!Array.isArray(data)) return [];
@@ -15,14 +18,15 @@ export function loadMobileMemory(storage: Storage, owner: string): MobileTransla
       r.translated.length <= 30000 && Number.isFinite(r.at)).slice(-100);
   } catch { return []; }
 }
-export function saveMobileMemory(storage: Storage, owner: string, item: MobileTranslation): boolean {
-  if (!owner || !item.text.trim() || !item.translated.trim()) return false;
+export function saveMobileMemory(storage: Storage | null, owner: string, item: MobileTranslation): boolean {
+  if (!storage || !owner || !item.text.trim() || !item.translated.trim()) return false;
   const rows = loadMobileMemory(storage, owner).filter(r => r.text !== item.text || r.target !== item.target);
   rows.push(item);
   while (rows.length > 100 || JSON.stringify(rows).length * 2 > MAX_BYTES) rows.shift();
   try { storage.setItem(PREFIX + owner, JSON.stringify(rows)); return true; } catch { return false; }
 }
-export function clearMobileMemory(storage: Storage, owner: string): boolean {
+export function clearMobileMemory(storage: Storage | null, owner: string): boolean {
+  if (!storage) return false;
   try { storage.removeItem(PREFIX + owner); return true; } catch { return false; }
 }
 export class LatestMobileRequest {
