@@ -1,0 +1,46 @@
+{
+  "appId": "com.lingua.bridge.translation.memory.preview",
+  "productName": "Lingua Bridge Translation Memory Preview",
+  "artifactName": "Lingua-Bridge-Preview-${version}-${os}-${arch}.${ext}",
+  "directories": {
+    "output": "release-multiplatform-preview"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      "nsis",
+      "zip"
+    ],
+    "icon": "build/lingua.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": false,
+    "shortcutName": "Lingua Bridge Translation Memory Preview"
+  },
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "category": "public.app-category.social-networking"
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb",
+      "tar.gz"
+    ],
+    "category": "Network",
+    "maintainer": "Lingua Bridge <kyawgyi071766@gmail.com>"
+  },
+  "publish": null
+}
