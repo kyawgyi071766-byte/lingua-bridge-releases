@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, createSession } from '@/lib/auth';
 import { emailConfigured, sendVerificationEmail } from '@/lib/email';
+import { EMAIL_CODE_TTL_MS, generateEmailCode, hashEmailCode, isAcceptableRegistrationEmail } from '@/lib/emailCodes';
 import { consumeRateLimit } from '@/lib/rateLimit';
 import {
   emailVerificationRequired,
   getClientAddress,
-  hashToken,
   isCrossSiteRequest,
   normalizeEmail,
-  randomToken,
   strongPasswordError,
 } from '@/lib/security';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
@@ -32,7 +29,7 @@ export async function POST(req: Request) {
     const password = typeof body.password === 'string' ? body.password : '';
     const name = typeof body.name === 'string' ? body.name.trim().slice(0, 100) : undefined;
 
-    if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Enter a valid email address.' }, { status: 400 });
+    if (!isAcceptableRegistrationEmail(email)) return NextResponse.json({ error: 'Use a real email inbox. Temporary or invalid email domains are not supported.' }, { status: 400 });
     const passwordError = strongPasswordError(password);
     if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
@@ -49,12 +46,12 @@ export async function POST(req: Request) {
 
     const verifyRequired = emailVerificationRequired();
     if (verifyRequired && !emailConfigured()) {
-      console.error('Email verification is required but RESEND_API_KEY/EMAIL_FROM are not configured.');
+      console.error('Email verification is required but a verified transactional sender is not configured.');
       return NextResponse.json({ error: 'Account email service is not configured yet.' }, { status: 503 });
     }
 
     const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL || '');
-    const token = verifyRequired ? randomToken() : '';
+    const token = verifyRequired ? generateEmailCode() : '';
     const now = new Date();
     const user = await prisma.user.create({
       data: {
@@ -63,8 +60,8 @@ export async function POST(req: Request) {
         passwordHash: await hashPassword(password),
         role: adminEmail && email === adminEmail ? 'admin' : 'user',
         emailVerifiedAt: verifyRequired ? null : now,
-        verificationTokenHash: verifyRequired ? hashToken(token) : null,
-        verificationExpiresAt: verifyRequired ? new Date(now.getTime() + 24 * 60 * 60_000) : null,
+        verificationTokenHash: verifyRequired ? hashEmailCode('verify-email', email, token) : null,
+        verificationExpiresAt: verifyRequired ? new Date(now.getTime() + EMAIL_CODE_TTL_MS) : null,
       },
     });
 
