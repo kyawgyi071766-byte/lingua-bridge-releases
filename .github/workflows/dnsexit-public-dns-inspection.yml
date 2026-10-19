@@ -1,0 +1,38 @@
+name: DNSExit public SPF and DKIM inspection
+on:
+  push:
+    paths:
+      - .github/workflows/dnsexit-public-dns-inspection.yml
+    branches:
+      - feat/dnsexit-smtp-otp
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect TXT and CNAME using public DNS
+        shell: bash
+        run: |
+          node <<'NODE'
+          const dns = require('node:dns').promises;
+          const domain='lingua-bridge-sshk.publicvm.com';
+          async function query(kind,name){
+            try{return await (kind==='TXT'?dns.resolveTxt(name):dns.resolveCname(name))}
+            catch(error) {return {error:error.code,detail:error.message}}
+          }
+          (async()=>{
+            const txt=await query('TXT',domain);
+            const dkim=await query('CNAME','relay._domainkey.'+domain);
+            const strings=Array.isArray(txt)?txt.map(chunks=>chunks.join('')):[];
+            const spf=strings.filter(value=>/^v=spf1\b/i.test(value));
+            const spfOK=spf.length===1 && spf[0].includes('include:dnsexit.com');
+            const dkimOK=Array.isArray(dkim)&&dkim.some(v=>v.replace(/\.$/,'').toLowerCase()==='dkim.dnsexit.com');
+            console.log(JSON.stringify({
+              domain,spfTXT:spf,otherTXTCount:strings.length-spf.length,
+              DKIM_CNAME:dkim,spfOK,dkimOK,
+              message:spfOK&&dkimOK?'PUBLIC DNS PRESENT: Still must verify DNSExit dashboard, quota, and Gmail inbox before production.':'PUBLIC DNS NOT READY: Add SPF TXT and/or DKIM CNAME in DNSExit, then recheck.'
+            },null,2));
+          })().catch(err=>{console.error(err);process.exitCode=1})
+          NODE
