@@ -37,8 +37,12 @@ public class MainActivity extends BridgeActivity {
             Toast.makeText(this, "Only the first 5000 characters were shared.", Toast.LENGTH_LONG).show();
         }
         // Form body only: never put private messages in navigation URLs or logs.
-        final byte[] body = ("text=" + URLEncoder.encode(text, StandardCharsets.UTF_8))
-                .getBytes(StandardCharsets.UTF_8);
+        final byte[] body;
+        try {
+            body = ("text=" + URLEncoder.encode(text, "UTF-8")).getBytes(StandardCharsets.UTF_8);
+        } catch (java.io.UnsupportedEncodingException impossible) {
+            throw new AssertionError(impossible);
+        }
         getBridge().getWebView().post(() -> getBridge().getWebView().postUrl(SHARE_ENDPOINT, body));
     }
 }
