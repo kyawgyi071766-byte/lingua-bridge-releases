@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { LANGUAGES } from '@/lib/languages';
 import { loadSettings } from '@/lib/settings';
-import { clearMobileMemory, LatestMobileRequest, loadMobileMemory, saveMobileMemory, type MobileTranslation } from '@/lib/mobile-translation-memory';
+import { clearMobileMemory, getMobileStorage, LatestMobileRequest, loadMobileMemory, saveMobileMemory, type MobileTranslation } from '@/lib/mobile-translation-memory';
 
 const targetLangs = LANGUAGES.filter(language => language.code !== 'auto');
 export default function SharePage() {
@@ -58,7 +58,7 @@ export default function SharePage() {
     const request = requests.current.begin();
     setOutput(''); setError(''); setNotice('');
     if (remember) {
-      const cached = loadMobileMemory(localStorage,email).find(r => r.text === original && r.target === language);
+      const cached = loadMobileMemory(getMobileStorage(),email).find(r => r.text === original && r.target === language);
       if (cached) { setOutput(cached.translated); setLoading(false); setNotice('Restored from this device.'); return; }
     }
     setLoading(true);
@@ -80,10 +80,10 @@ export default function SharePage() {
       if (typeof data.translated !== 'string' || !data.translated.trim()) throw new Error('No translation returned. Please retry.');
       setOutput(data.translated);
       if (remember) {
-        if (!saveMobileMemory(localStorage,email,{text:original,target:language,translated:data.translated,at:Date.now()})) {
+        if (!saveMobileMemory(getMobileStorage(),email,{text:original,target:language,translated:data.translated,at:Date.now()})) {
           setNotice('Translation succeeded, but this device could not save history.');
         }
-        setHistory(loadMobileMemory(localStorage,email).reverse());
+        setHistory(loadMobileMemory(getMobileStorage(),email).reverse());
       }
     } catch (error) {
       if (request.current()) setError(error instanceof Error ? error.message : 'Network error. Please retry.');
@@ -134,14 +134,14 @@ export default function SharePage() {
       <label className="block mt-8 text-sm">
         <input type="checkbox" checked={remember} disabled={!ready} onChange={event=>{
           changed();setRemember(event.target.checked);
-          setHistory(event.target.checked ? loadMobileMemory(localStorage,email).reverse() : []);
+          setHistory(event.target.checked ? loadMobileMemory(getMobileStorage(),email).reverse() : []);
         }} /> Remember translations on this device for this account
       </label>
       <p className="text-xs text-slate-500 mt-2">Off by default. Saved messages remain on this device until cleared. Only exact text and language matches are reused; edited text gets a new translation.</p>
       {remember && <section className="mt-4" aria-label="Translation history">
         <button onClick={()=>{
           changed();
-          if (clearMobileMemory(localStorage,email)) setHistory([]);
+          if (clearMobileMemory(getMobileStorage(),email)) setHistory([]);
           else setError('Could not clear history. Check browser storage settings.');
         }} className="text-sm underline">Clear saved history for this account</button>
         <ul className="mt-3 space-y-2">{history.map((item,index)=><li key={item.at+':'+index}>
