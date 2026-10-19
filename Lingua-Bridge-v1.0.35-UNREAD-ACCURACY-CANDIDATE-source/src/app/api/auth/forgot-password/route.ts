@@ -29,14 +29,24 @@ export async function POST(req: Request) {
 
   const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
   if (user) {
+    const previousHash = user.resetTokenHash;
+    const previousExpiry = user.resetExpiresAt;
     const token = generateEmailCode();
+    const pendingHash = hashEmailCode('reset-password', user.email, token);
+    const pendingExpiry = new Date(Date.now() + EMAIL_CODE_TTL_MS);
     await prisma.user.update({
       where: { id: user.id },
-      data: { resetTokenHash: hashEmailCode('reset-password', user.email, token), resetExpiresAt: new Date(Date.now() + EMAIL_CODE_TTL_MS) },
+      data: { resetTokenHash: pendingHash, resetExpiresAt: pendingExpiry },
     });
     try {
       await sendPasswordResetEmail(user.email, token);
     } catch (error) {
+      // Restore only this undelivered issuance. A newer request or a consumed
+      // code must never be overwritten by an earlier failed send.
+      await prisma.user.updateMany({
+        where: { id: user.id, resetTokenHash: pendingHash, resetExpiresAt: pendingExpiry },
+        data: { resetTokenHash: previousHash, resetExpiresAt: previousExpiry },
+      });
       console.error('Password reset email error:', error);
       return NextResponse.json({ error: 'Could not send reset email right now.' }, { status: 503 });
     }
