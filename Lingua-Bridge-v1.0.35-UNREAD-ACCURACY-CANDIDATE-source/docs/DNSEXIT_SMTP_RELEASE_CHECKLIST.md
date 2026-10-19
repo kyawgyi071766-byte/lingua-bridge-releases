@@ -3,9 +3,13 @@
 ## Current state
 
 - DNSExit delegated free sender domain: lingua-bridge-sshk.publicvm.com.
-- DNSExit Relay Account was reported OK and sender domain has been added; SPF/DKIM and real Gmail delivery are NOT yet verified.
+- On 2026-10-19, DNSExit sender settings showed both SPF and DKIM Verified; Google public DNS independently returned the SPF TXT and relay._domainkey CNAME. Real Gmail delivery is still NOT verified.
+- Relay control panel shows Active/OK and free 25 relays/day, but activity shows Pay As You Go with $0 balance and zero relays. Account entitlement remains unresolved; do not assume the free quota is usable.
+- The owner changed the SMTP relay password and entered it into DNSExit's test form. Earlier tests returned 454 4.7.1 DATA rejected; subsequent tests on ports 587 and 2525 returned an incomplete page without a result. Debug console returned Permission Denied. Support and a follow-up were submitted; no delivery success was reported.
 - Resend explicitly rejected the free public subdomain. Do not use Resend for this DNSExit domain.
-- Production currently uses shared Resend testing sender @resend.dev; OTP branch is unmerged. No production config has been modified.
+- Production uses EMAIL_FROM=onboarding@resend.dev and RESEND_API_KEY; no SMTP_USER, SMTP_PASSWORD, EMAIL_TRANSPORT or DNSEXIT_SENDER_VERIFIED are configured. The OTP/SMTP branch remains unmerged. No production config has been modified.
+- Confirmed production runtime evidence: POST /api/auth/forgot-password at 2026-10-19T07:11:12.292Z logged `Transactional email provider returned HTTP 403` on main deployment dpl_68gnnnQWB9EH7qLoA8EARRod3FsN. Production main sends through Resend, so DNSExit password changes cannot repair this deployed path. The response body was not logged, so the precise 403 subtype is unconfirmed. The configured shared test sender is unsuitable for general public recipients (https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+- The currently signed-in Resend account showed no domains. A verified Resend domain and correctly scoped credentials, or verified DNSExit SMTP delivery plus this branch's transport, are required. Do not change only EMAIL_FROM to the DNSExit domain while leaving production on Resend.
 - This branch contains no relay usernames/passwords and performs no real sending during automated tests.
 
 ## DNSExit DNS setup
