@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default function DownloadsPage() {
-  const version = (process.env.DESKTOP_STABLE_VERSION || '1.0.22').trim();
+  const version = (process.env.DESKTOP_STABLE_VERSION || '1.0.36').trim();
   const checksum = (process.env.DESKTOP_STABLE_WINDOWS_SHA256 || '').trim().toLowerCase();
   const checksumOk = /^[a-f0-9]{64}$/.test(checksum);
   return (
