@@ -158,7 +158,7 @@ export default function ChatPage() {
             <option value="deepl">DeepL</option>
             <option value="google">Google Translate (API required)</option>
             <option value="microsoft">Microsoft Translator (API required)</option>
-            <option disabled>GPT — OpenAI (coming soon)</option>
+            <option value="openai">GPT — OpenAI</option>
             <option disabled>Youdao (coming soon)</option>
             <option disabled>Professional American English (coming soon)</option>
             <option disabled>Professional Middle Eastern (coming soon)</option>
