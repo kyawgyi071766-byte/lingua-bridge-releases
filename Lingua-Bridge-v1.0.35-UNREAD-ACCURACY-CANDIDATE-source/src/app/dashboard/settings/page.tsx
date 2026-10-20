@@ -78,7 +78,7 @@ export default function SettingsPage() {
             <option value="deepl">DeepL</option>
             <option value="google">Google Translate (requires API configuration)</option>
             <option value="microsoft">Microsoft Translator (requires API configuration)</option>
-            <option disabled>GPT — OpenAI (coming soon)</option>
+            <option value="openai">GPT — OpenAI</option>
             <option disabled>Youdao (coming soon)</option>
             <option disabled>Professional American English (coming soon)</option>
             <option disabled>Professional Middle Eastern (coming soon)</option>
