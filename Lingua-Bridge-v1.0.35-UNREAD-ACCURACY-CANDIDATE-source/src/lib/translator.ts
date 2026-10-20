@@ -461,7 +461,7 @@ async function runProvider(provider: Exclude<TranslationProvider, 'identity'>, t
   return translateGoogle(text, target, source);
 }
 
-export async function translateText(text: string, targetLang: string, sourceLang?: string): Promise<TranslationResult> {
+export async function translateText(text: string, targetLang: string, sourceLang?: string, requestedProvider: string = 'auto'): Promise<TranslationResult> {
   const target = canonicalLanguage(targetLang);
   const source = canonicalLanguage(sourceLang);
 
@@ -475,7 +475,13 @@ export async function translateText(text: string, targetLang: string, sourceLang
     return { text, provider: 'identity', detectedSource: source };
   }
 
-  const order = providerOrder(target, source);
+  const allowedChoices = ['auto', 'deepl', 'gemini', 'google', 'microsoft'];
+  if (!allowedChoices.includes(requestedProvider)) throw new TranslationInputError('This translation engine is not available yet.');
+  const selected = requestedProvider as 'auto' | Exclude<TranslationProvider, 'identity'>;
+  if (selected !== 'auto' && (!providerIsConfigured(selected) || !providerSupportsPair(selected, target, source))) {
+    throw new TranslationInputError('The selected translation engine is not configured or does not support this language pair.');
+  }
+  const order = selected === 'auto' ? providerOrder(target, source) : [selected];
   if (order.length === 0) {
     const broadPair = !DEEPL_SUPPORTED[target] || Boolean(source && source !== 'auto' && !DEEPL_SUPPORTED[source]);
     if (broadPair && hasDeepL() && !hasGemini() && !hasMicrosoft() && !hasGoogle()) {
