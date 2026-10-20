@@ -70,6 +70,22 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        <div className="border-t border-slate-100 pt-5">
+          <label htmlFor="translation-engine" className="block text-sm font-semibold text-slate-700 mb-2">Translation Engine</label>
+          <select id="translation-engine" value={s.translationEngine || "auto"} onChange={(e) => update({ translationEngine: e.target.value as ChatSettings["translationEngine"] })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
+            <option value="auto">Auto — Best available engine</option>
+            <option value="gemini">Gemini — Google AI</option>
+            <option value="deepl">DeepL</option>
+            <option value="google">Google Translate (requires API configuration)</option>
+            <option value="microsoft">Microsoft Translator (requires API configuration)</option>
+            <option disabled>GPT — OpenAI (coming soon)</option>
+            <option disabled>Youdao (coming soon)</option>
+            <option disabled>Professional American English (coming soon)</option>
+            <option disabled>Professional Middle Eastern (coming soon)</option>
+          </select>
+          <p className="mt-2 text-xs text-slate-500">Saved for this browser. Unconfigured engines will show an error instead of silently switching engines. Auto mode retains fallback.</p>
+        </div>
+
         {/* Toggles */}
         <div className="space-y-3 border-t border-slate-100 pt-5">
           <div className="text-sm font-semibold text-slate-700 mb-1">Behavior</div>
@@ -123,7 +139,7 @@ export default function SettingsPage() {
       <DeviceManager />
 
       <p className="mt-6 text-xs text-slate-400">
-        Settings are saved in your browser. Translation engine (DeepL / Google Translate), monthly quotas and device limits are enforced by the Lingua server.
+        Settings are saved in your browser. The chosen translation engine is used when supported and configured. Monthly quotas and device limits are enforced by the Lingua server.
       </p>
     </div>
   );
