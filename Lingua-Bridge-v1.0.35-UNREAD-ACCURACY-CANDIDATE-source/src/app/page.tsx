@@ -31,7 +31,7 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Lingua Bridge',
-    softwareVersion: '1.0.35',
+    softwareVersion: '1.0.36',
     applicationCategory: 'CommunicationApplication',
     operatingSystem: 'Windows 10, Windows 11',
     offers: [
@@ -45,7 +45,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <span className="inline-block bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-6">
-          v1.0.35 Global Release · Windows 10/11 · English + Simplified Chinese · multilingual provider fallback
+          v1.0.36 Windows Release · Windows 10/11 · English + Simplified Chinese · multilingual provider fallback
         </span>
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
           Translate anything,<br />
