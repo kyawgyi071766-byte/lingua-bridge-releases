@@ -11,12 +11,14 @@ export interface ChatSettings {
   fontSize: FontSize;
   translateColor: string;   // hex color for translated text
   providerNote?: string;
+  translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft';
 }
 
 const KEY = "lingua_chat_settings";
 
 export const DEFAULT_SETTINGS: ChatSettings = {
   autoTranslate: true,
+  translationEngine: "auto",
   confirmSend: false,
   myLang: "my",
   theirLang: "en",
