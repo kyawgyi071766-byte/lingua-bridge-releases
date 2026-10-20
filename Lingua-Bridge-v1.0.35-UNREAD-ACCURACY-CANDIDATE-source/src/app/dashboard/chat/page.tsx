@@ -149,6 +149,21 @@ export default function ChatPage() {
             {targetLangs.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label htmlFor="chat-translation-engine" className="text-xs text-slate-500">Translation Engine</label>
+          <select id="chat-translation-engine" value={settings.translationEngine || "auto"} onChange={(e) => updateSetting({ translationEngine: e.target.value as ChatSettings["translationEngine"] })}
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 flex-1 min-w-[180px] bg-white">
+            <option value="auto">Auto — Best available engine</option>
+            <option value="gemini">Gemini — Google AI</option>
+            <option value="deepl">DeepL</option>
+            <option value="google">Google Translate (API required)</option>
+            <option value="microsoft">Microsoft Translator (API required)</option>
+            <option disabled>GPT — OpenAI (coming soon)</option>
+            <option disabled>Youdao (coming soon)</option>
+            <option disabled>Professional American English (coming soon)</option>
+            <option disabled>Professional Middle Eastern (coming soon)</option>
+          </select>
+        </div>
         <div className="flex items-center gap-5 text-sm flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={settings.autoTranslate} onChange={(e) => updateSetting({ autoTranslate: e.target.checked })}
