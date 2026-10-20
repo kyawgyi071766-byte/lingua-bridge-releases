@@ -11,7 +11,7 @@ export interface ChatSettings {
   fontSize: FontSize;
   translateColor: string;   // hex color for translated text
   providerNote?: string;
-  translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft';
+  translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft' | 'openai';
 }
 
 const KEY = "lingua_chat_settings";
