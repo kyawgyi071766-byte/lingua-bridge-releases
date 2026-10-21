@@ -30,6 +30,7 @@ const checks = [
   ['AI message context requires opt-in', settings.includes('includeSmartReplyContext: false') && chat.includes('settings.includeSmartReplyContext') && chat.includes('sent to AI provider')],
   ['all chat preferences are account-scoped', settings.includes('settingsKey(accountEmail)') && chat.includes('loadSettings(data.email)') && chat.includes('saveSettings(next, accountEmail)')],
   ['settings page requires auth for preferences', read('src/app/dashboard/settings/page.tsx').includes('loadSettings(data.email)')],
+  ['clipboard and share use account preferences', ['clipboard', 'share'].every((page) => read('src/app/dashboard/' + page + '/page.tsx').includes('loadSettings(data.email)'))],
   ['preview recovery emails use validated hostname', accountSecurity.includes("process.env.VERCEL_ENV === 'preview'") && accountSecurity.includes('Invalid Vercel Preview hostname')],
   ['selected GPT provider implemented', translator.includes('translateOpenAI') && translator.includes("provider === 'openai'")],
 ];
