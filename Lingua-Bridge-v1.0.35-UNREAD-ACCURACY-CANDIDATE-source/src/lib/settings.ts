@@ -2,6 +2,8 @@
 // Mirrors the toggles from the screenshot: Auto Translate, Confirm-and-send,
 // default languages, translation font size + color.
 export type FontSize = "small" | "medium" | "large" | "maximum";
+export type SmartReplyTone = "warm" | "caring" | "playful" | "romantic" | "respectful";
+export type SmartReplyWarmth = "natural" | "extra";
 
 export interface ChatSettings {
   autoTranslate: boolean;   // auto-translate every message immediately
@@ -11,6 +13,8 @@ export interface ChatSettings {
   fontSize: FontSize;
   translateColor: string;   // hex color for translated text
   providerNote?: string;
+  smartReplyTone?: SmartReplyTone;
+  smartReplyWarmth?: SmartReplyWarmth;
   translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft' | 'openai';
 }
 
@@ -19,6 +23,8 @@ const KEY = "lingua_chat_settings";
 export const DEFAULT_SETTINGS: ChatSettings = {
   autoTranslate: true,
   translationEngine: "auto",
+  smartReplyTone: "warm",
+  smartReplyWarmth: "natural",
   confirmSend: false,
   myLang: "my",
   theirLang: "en",
