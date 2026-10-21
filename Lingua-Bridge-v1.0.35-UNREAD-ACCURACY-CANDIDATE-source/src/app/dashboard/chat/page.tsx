@@ -23,6 +23,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [collapsedTranslations, setCollapsedTranslations] = useState<number[]>([]);
   const [smartReplyLoading, setSmartReplyLoading] = useState<number | null>(null);
+  const [replyLanguageMode, setReplyLanguageMode] = useState<"theirs" | "mine">("theirs");
+  const [draftInTheirLanguage, setDraftInTheirLanguage] = useState(false);
   const [smartReplies, setSmartReplies] = useState<{ messageId: number; replies: string[] } | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState("");
@@ -80,6 +82,12 @@ export default function ChatPage() {
     const text = input.trim();
     const target = side === "me" ? settings.theirLang : settings.myLang;
     setError("");
+    if (side === "me" && draftInTheirLanguage) {
+      if (settings.confirmSend) setPending({ text, side, translated: text });
+      else { persist([...msgs, { id: Date.now(), side, original: text, translated: text, ts: Date.now() }]); setInput(""); }
+      setDraftInTheirLanguage(false);
+      return;
+    }
     if (!settings.autoTranslate) {
       persist([...msgs, { id: Date.now(), side, original: text, ts: Date.now() }]);
       setInput("");
@@ -139,7 +147,7 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           incomingText: msgs[index].original,
-          replyLanguage: settings.myLang,
+          replyLanguage: replyLanguageMode === "theirs" ? settings.theirLang : settings.myLang,
           context,
         }),
       });
@@ -160,6 +168,7 @@ export default function ChatPage() {
     if (pending || loading) return;
     if (input.trim() && input !== text && !window.confirm("Replace the current unsent draft with this reply?")) return;
     setInput(text);
+    setDraftInTheirLanguage(replyLanguageMode === "theirs");
     setSmartReplies(null);
     composerRef.current?.focus();
   }
@@ -243,7 +252,9 @@ export default function ChatPage() {
               m.side === "me" ? "bg-brand-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-800 rounded-bl-sm"
             }`}>
               <div className="text-sm whitespace-pre-wrap">{m.original}</div>
-              {m.translated ? (
+              {m.translated === m.original ? (
+                <div className="mt-1 text-xs opacity-70">Already in their language</div>
+              ) : m.translated ? (
                 <div className="mt-2 pt-2 border-t border-current/20">
                   {!collapsedTranslations.includes(m.id) && <div className="whitespace-pre-wrap" style={tStyle}>{m.translated}</div>}
                   <div className="flex items-center gap-3 mt-1 text-xs">
@@ -257,13 +268,19 @@ export default function ChatPage() {
               )}
               {m.side === "them" && (
                 <div className="mt-2 pt-2 border-t border-slate-200">
+                  <label className="flex items-center gap-2 text-xs text-slate-600 mb-2">Reply in
+                    <select aria-label="Smart Reply language" value={replyLanguageMode} onChange={(e) => { setReplyLanguageMode(e.target.value as "theirs" | "mine"); setSmartReplies(null); }} className="border border-slate-300 rounded p-1 bg-white text-slate-700">
+                      <option value="theirs">Their language</option>
+                      <option value="mine">My language</option>
+                    </select>
+                  </label>
                   <button type="button" disabled={smartReplyLoading !== null || !!pending} onClick={() => generateSmartReplies(m.id)}
                     className="rounded-md bg-white border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50">
                     {smartReplyLoading === m.id ? "Generating replies…" : "✦ Smart Reply"}
                   </button>
                   {smartReplies?.messageId === m.id && (
                     <div className="mt-2 space-y-2" aria-live="polite">
-                      <p className="text-xs text-slate-500">Draft replies in your language. Choose one to edit before sending.</p>
+                      <p className="text-xs text-slate-500">AI drafts only — review before using. Nothing is sent automatically.</p>
                       {smartReplies.replies.map((reply, i) => (
                         <div key={i} className="rounded-lg border border-slate-200 bg-white p-2.5">
                           <div className="text-xs font-semibold text-slate-500 mb-1">{["Friendly", "Caring", "Brief"][i]}</div>
@@ -306,13 +323,14 @@ export default function ChatPage() {
         <textarea
           ref={composerRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => { setInput(e.target.value); if (!e.target.value.trim()) setDraftInTheirLanguage(false); }}
           placeholder={pending ? "Confirm or cancel the preview above…" : `Type in ${LANGUAGES.find(l=>l.code===settings.myLang)?.name || "your language"}, or paste their message…`}
           disabled={!!pending || loading}
           rows={2}
           className="w-full resize-none p-2 focus:outline-none text-sm"
           maxLength={5000}
         />
+        {draftInTheirLanguage && <p className="text-xs text-slate-500 mb-2">Smart Reply is already in their language. It will not be translated again.</p>}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <span className="text-xs text-slate-400">{input.length}/5000</span>
           <div className="flex gap-2">
