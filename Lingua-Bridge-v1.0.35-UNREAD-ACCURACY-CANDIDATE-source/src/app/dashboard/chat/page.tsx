@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState<{ text: string; side: "me" | "them"; translated: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [collapsedTranslations, setCollapsedTranslations] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [storageKey, setStorageKey] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -197,7 +198,13 @@ export default function ChatPage() {
             }`}>
               <div className="text-sm whitespace-pre-wrap">{m.original}</div>
               {m.translated ? (
-                <div className="mt-1 pt-1 border-t border-white/20 whitespace-pre-wrap" style={tStyle}>{m.translated}</div>
+                <div className="mt-2 pt-2 border-t border-current/20">
+                  {!collapsedTranslations.includes(m.id) && <div className="whitespace-pre-wrap" style={tStyle}>{m.translated}</div>}
+                  <div className="flex items-center gap-3 mt-1 text-xs">
+                    <button type="button" aria-expanded={!collapsedTranslations.includes(m.id)} onClick={() => setCollapsedTranslations(ids => ids.includes(m.id) ? ids.filter(id => id !== m.id) : [...ids, m.id])} className="underline opacity-80">{collapsedTranslations.includes(m.id) ? "Show translation ▾" : "Hide translation ▴"}</button>
+                    <button type="button" onClick={() => navigator.clipboard.writeText(m.translated || "").catch(() => setError("Could not copy translation."))} className="underline opacity-80">Copy translation</button>
+                  </div>
+                </div>
               ) : (
                 <button onClick={() => translateBubble(m.id)}
                   className="mt-1 text-xs underline opacity-70 hover:opacity-100">Translate</button>
