@@ -15,6 +15,7 @@ export interface ChatSettings {
   providerNote?: string;
   smartReplyTone?: SmartReplyTone;
   smartReplyWarmth?: SmartReplyWarmth;
+  includeSmartReplyContext?: boolean;
   translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft' | 'openai';
 }
 
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   translationEngine: "auto",
   smartReplyTone: "warm",
   smartReplyWarmth: "natural",
+  includeSmartReplyContext: false,
   confirmSend: false,
   myLang: "my",
   theirLang: "en",
