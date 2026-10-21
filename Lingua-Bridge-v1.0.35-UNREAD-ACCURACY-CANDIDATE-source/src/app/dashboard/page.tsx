@@ -67,6 +67,28 @@ export default function DashboardPage() {
     }
   }
 
+  async function playTranslation() {
+    if (!output.trim()) return;
+    setAudioBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/voice/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: output }) });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Speech generation failed.");
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Speech playback failed.");
+    } finally {
+      setAudioBusy(false);
+    }
+  }
+
   function swap() {
     if (source === "auto") return;
     const s = source;
@@ -89,6 +111,7 @@ export default function DashboardPage() {
         }} />
         <p className="text-xs mt-2 text-slate-500">{audioBusy ? "Transcribing audio…" : "Up to 10 MB. Transcript appears in the text box; review it before selecting Translate."}</p>
       </div>
+      <button type="button" disabled={!output || audioBusy} onClick={() => void playTranslation()} className="mb-4 rounded-lg border border-slate-500 px-4 py-2 text-sm disabled:opacity-40">🔊 Play translated audio</button>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Translate</h1>
