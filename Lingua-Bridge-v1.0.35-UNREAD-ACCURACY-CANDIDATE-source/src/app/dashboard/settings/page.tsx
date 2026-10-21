@@ -104,6 +104,11 @@ export default function SettingsPage() {
             <option value="natural">Natural and thoughtful</option>
             <option value="extra">Extra warm and heartfelt</option>
           </select>
+          <label className="flex items-center gap-2 text-xs text-slate-600">
+            <input type="checkbox" checked={!!s.includeSmartReplyContext} onChange={(ev) => update({ includeSmartReplyContext: ev.target.checked })} className="w-4 h-4 accent-brand-600" />
+            Include up to 8 prior chat messages as context when requesting AI drafts (optional)
+          </label>
+          <p className="text-xs text-slate-500">Selected messages are sent to the AI provider for Smart Reply. Earlier messages stay local unless you opt in.</p>
         </div>
 
         {/* Toggles */}
