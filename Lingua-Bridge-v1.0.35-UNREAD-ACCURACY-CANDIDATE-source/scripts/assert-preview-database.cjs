@@ -10,6 +10,11 @@ if (process.env.VERCEL_ENV === 'preview') {
   }
   try {
     const host = new URL(databaseUrl).hostname;
+    const parsed = new URL(databaseUrl);
+    if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || !parsed.username || !parsed.pathname || parsed.pathname === '/' || !parsed.hostname.endsWith('.neon.tech')) {
+      console.error('Preview database URL must be a valid Neon Postgres endpoint.');
+      process.exit(1);
+    }
     if (!host || host !== expectedHost) {
       console.error('Preview database isolation mismatch; migration is blocked.');
       process.exit(1);
