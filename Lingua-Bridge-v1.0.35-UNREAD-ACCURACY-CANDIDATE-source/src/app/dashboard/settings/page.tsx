@@ -18,18 +18,27 @@ const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#9333ea", "#ea580c", "#0891b2"
 export default function SettingsPage() {
   const router = useRouter();
   const [s, setS] = useState<ChatSettings | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me").then((r) => { if (!r.ok) router.push("/login"); });
-    setS(loadSettings());
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) { if (active) router.push("/login"); return; }
+      const data = await response.json();
+      if (active && typeof data.email === "string") {
+        setAccountEmail(data.email);
+        setS(loadSettings(data.email));
+      }
+    }).catch(() => { if (active) router.push("/login"); });
+    return () => { active = false; };
   }, [router]);
 
   function update(patch: Partial<ChatSettings>) {
-    if (!s) return;
+    if (!s || !accountEmail) return;
     const next = { ...s, ...patch };
     setS(next);
-    saveSettings(next);
+    saveSettings(next, accountEmail);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   }
@@ -156,7 +165,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="border-t border-slate-100 pt-5">
-          <button onClick={() => { setS(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS); setSaved(true); setTimeout(() => setSaved(false), 1500); }}
+          <button onClick={() => { if (!accountEmail) return; setS(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS, accountEmail); setSaved(true); setTimeout(() => setSaved(false), 1500); }}
             className="text-sm text-slate-400 hover:text-red-500">Reset to defaults</button>
         </div>
       </div>
