@@ -2016,7 +2016,8 @@ function render() {
             <strong>🎙 Voice translator · owner beta</strong>
             <span class="voice-quota">${esc(voiceUsageSummary())}</span>
           </div>
-          <div class="subtle">The dedicated speech backend is not live yet. Typed/pasted transcripts can use the normal text translator as a fallback. Microphone and messenger voice-message transcription stay owner-only until the speech backend is enabled.</div>
+          <div class="subtle">Audio file upload and translated speech playback are available in the web dashboard on the configured server when its preview deployment is enabled. Desktop microphone and messenger voice capture are separate beta features.</div>
+          <div class="voice-actions"><button class="secondary" id="openAudioStudio">🎧 Open audio file translator</button></div>
           <textarea id="voiceTranscript" class="voice-textarea" placeholder="Speak, or type/paste the speech transcript here…">${esc(state.voiceTranscript)}</textarea>
           <div class="voice-actions">
             <button class="secondary" id="voiceMic">${state.voiceListening ? '■ Stop' : '🎙 Start mic'}</button>
@@ -2220,6 +2221,12 @@ function bindEvents() {
     if (view) { view.send('lingua-rescan', { force:true }); setNotice('Scanning visible messages for translation…'); }
   });
 
+  document.querySelector('#openAudioStudio')?.addEventListener('click', async () => {
+    const info = await window.linguaDesktop.getServerInfo();
+    const url = new URL('/dashboard', info.serverUrl);
+    if (url.protocol !== 'https:') throw new Error('HTTPS required');
+    await window.linguaDesktop.openExternal(url.toString());
+  });
   document.querySelector('#voiceMic')?.addEventListener('click', startVoiceRecognition);
   document.querySelector('#voiceTranslate')?.addEventListener('click', translateVoice);
   document.querySelector('#voiceSpeak')?.addEventListener('click', speakVoiceResult);
