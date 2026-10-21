@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [usage, setUsage] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [provider, setProvider] = useState("");
+  const [audioBusy, setAudioBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => {
@@ -48,6 +49,24 @@ export default function DashboardPage() {
     }
   }
 
+  async function uploadAudio(file: File) {
+    setAudioBusy(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const response = await fetch("/api/voice/transcribe", { method: "POST", body: form });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Audio transcription failed.");
+      setInput(data.text);
+      setOutput("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Audio upload failed.");
+    } finally {
+      setAudioBusy(false);
+    }
+  }
+
   function swap() {
     if (source === "auto") return;
     const s = source;
@@ -61,6 +80,15 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="mb-5 rounded-lg border border-slate-700 p-4">
+        <label className="block text-sm font-semibold mb-2" htmlFor="audio-file">Audio file to text</label>
+        <input id="audio-file" type="file" accept=".mp3,.mp4,.m4a,.wav,.webm,.ogg,audio/*" disabled={audioBusy} onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          if (file) void uploadAudio(file);
+          event.currentTarget.value = "";
+        }} />
+        <p className="text-xs mt-2 text-slate-500">{audioBusy ? "Transcribing audio…" : "Up to 10 MB. Transcript appears in the text box; review it before selecting Translate."}</p>
+      </div>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Translate</h1>
