@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      const result = await translateText(text, targetLang, sourceLang);
+      const result = await translateText(text, targetLang, sourceLang, engine);
       const refreshed = await prisma.user.findUnique({ where: { id: user.id }, select: { usageChars: true } });
       const used = refreshed?.usageChars ?? usageChars + charCount;
       return NextResponse.json({ ok: true, translated: result.text, provider: result.provider, detectedSource: result.detectedSource, used, limit });
