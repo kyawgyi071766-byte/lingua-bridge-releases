@@ -17,9 +17,13 @@ export default function ClipboardPage() {
   const [autoCopied, setAutoCopied] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me").then((r) => { if (!r.ok) router.push("/login?next=/dashboard/clipboard"); });
-    const s = loadSettings();
-    setTarget(s.theirLang || "en");
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) { if (active) router.push("/login?next=/dashboard/clipboard"); return; }
+      const data = await response.json();
+      if (active && typeof data.email === "string") setTarget(loadSettings(data.email).theirLang || "en");
+    }).catch(() => { if (active) router.push("/login?next=/dashboard/clipboard"); });
+    return () => { active = false; };
   }, [router]);
 
   async function readAndTranslate() {
