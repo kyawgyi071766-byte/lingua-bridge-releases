@@ -80,7 +80,7 @@ export async function POST(req: Request) {
   const context = parseContext(body?.context);
   const requestedTone = typeof body?.tone === 'string' ? body.tone : 'warm';
   const requestedWarmth = typeof body?.warmth === 'string' ? body.warmth : 'natural';
-  if (!(requestedTone in REPLY_TONES) || !(requestedWarmth in WARMTH_LEVELS)) {
+  if (!Object.prototype.hasOwnProperty.call(REPLY_TONES, requestedTone) || !Object.prototype.hasOwnProperty.call(WARMTH_LEVELS, requestedWarmth)) {
     return NextResponse.json({ error: 'Unsupported Smart Reply style.' }, { status: 400 });
   }
   const tone = requestedTone as keyof typeof REPLY_TONES;
