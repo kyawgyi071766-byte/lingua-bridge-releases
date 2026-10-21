@@ -22,6 +22,9 @@ export default function ChatPage() {
   const [pending, setPending] = useState<{ text: string; side: "me" | "them"; translated: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [collapsedTranslations, setCollapsedTranslations] = useState<number[]>([]);
+  const [smartReplyLoading, setSmartReplyLoading] = useState<number | null>(null);
+  const [smartReplies, setSmartReplies] = useState<{ messageId: number; replies: string[] } | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState("");
   const [storageKey, setStorageKey] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -118,6 +121,49 @@ export default function ChatPage() {
     }
   }
 
+
+  async function generateSmartReplies(messageId: number) {
+    if (!settings || smartReplyLoading !== null) return;
+    const index = msgs.findIndex((message) => message.id === messageId && message.side === "them");
+    if (index < 0) return;
+    setSmartReplies(null);
+    setError("");
+    setSmartReplyLoading(messageId);
+    try {
+      const context = msgs.slice(Math.max(0, index - 8), index).map((message) => ({
+        side: message.side,
+        text: message.original.slice(0, 500),
+      }));
+      const response = await fetch("/api/smart-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          incomingText: msgs[index].original,
+          replyLanguage: settings.myLang,
+          context,
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || "Could not generate replies.");
+      if (!Array.isArray(body.replies) || body.replies.length !== 3 || body.replies.some((reply: unknown) => typeof reply !== "string")) {
+        throw new Error("Unexpected Smart Reply response.");
+      }
+      setSmartReplies({ messageId, replies: body.replies });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Smart Reply is unavailable.");
+    } finally {
+      setSmartReplyLoading(null);
+    }
+  }
+
+  function useSmartReply(text: string) {
+    if (pending || loading) return;
+    if (input.trim() && input !== text && !window.confirm("Replace the current unsent draft with this reply?")) return;
+    setInput(text);
+    setSmartReplies(null);
+    composerRef.current?.focus();
+  }
+
   if (!settings || !storageKey) return <div className="max-w-3xl mx-auto px-6 py-16 text-center text-slate-400">Loading…</div>;
 
   const tStyle = { fontSize: FONT_SIZE_PX[settings.fontSize], color: settings.translateColor };
@@ -176,7 +222,7 @@ export default function ChatPage() {
               className="w-4 h-4 accent-brand-600" />
             Confirm &amp; send (preview before sending)
           </label>
-          <button onClick={() => { persist([]); setError(""); }} className="text-xs text-slate-400 hover:text-red-500 ml-auto">
+          <button onClick={() => { persist([]); setError(""); setSmartReplies(null); }} className="text-xs text-slate-400 hover:text-red-500 ml-auto">
             Clear history
           </button>
         </div>
@@ -193,7 +239,7 @@ export default function ChatPage() {
         )}
         {msgs.map((m) => (
           <div key={m.id} className={`flex ${m.side === "me" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+            <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 ${
               m.side === "me" ? "bg-brand-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-800 rounded-bl-sm"
             }`}>
               <div className="text-sm whitespace-pre-wrap">{m.original}</div>
@@ -208,6 +254,31 @@ export default function ChatPage() {
               ) : (
                 <button onClick={() => translateBubble(m.id)}
                   className="mt-1 text-xs underline opacity-70 hover:opacity-100">Translate</button>
+              )}
+              {m.side === "them" && (
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <button type="button" disabled={smartReplyLoading !== null || !!pending} onClick={() => generateSmartReplies(m.id)}
+                    className="rounded-md bg-white border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50">
+                    {smartReplyLoading === m.id ? "Generating replies…" : "✦ Smart Reply"}
+                  </button>
+                  {smartReplies?.messageId === m.id && (
+                    <div className="mt-2 space-y-2" aria-live="polite">
+                      <p className="text-xs text-slate-500">Draft replies in your language. Choose one to edit before sending.</p>
+                      {smartReplies.replies.map((reply, i) => (
+                        <div key={i} className="rounded-lg border border-slate-200 bg-white p-2.5">
+                          <div className="text-xs font-semibold text-slate-500 mb-1">{["Friendly", "Caring", "Brief"][i]}</div>
+                          <p className="text-sm whitespace-pre-wrap break-words">{reply}</p>
+                          <div className="flex gap-3 mt-2 text-xs">
+                            <button type="button" onClick={() => useSmartReply(reply)} disabled={!!pending || loading}
+                              className="text-brand-700 font-semibold underline disabled:opacity-50">Use &amp; edit</button>
+                            <button type="button" onClick={() => navigator.clipboard.writeText(reply).catch(() => setError("Could not copy reply."))}
+                              className="text-slate-600 underline">Copy</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -233,6 +304,7 @@ export default function ChatPage() {
       {/* Input */}
       <div className="bg-white border border-slate-200 rounded-2xl p-3">
         <textarea
+          ref={composerRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={pending ? "Confirm or cancel the preview above…" : `Type in ${LANGUAGES.find(l=>l.code===settings.myLang)?.name || "your language"}, or paste their message…`}
