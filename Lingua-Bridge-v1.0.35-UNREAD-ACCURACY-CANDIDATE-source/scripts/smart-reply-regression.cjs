@@ -5,6 +5,7 @@ const read = (name) => fs.readFileSync(name, 'utf8');
 const server = read('src/app/api/smart-reply/route.ts');
 const chat = read('src/app/dashboard/chat/page.tsx');
 const settings = read('src/lib/settings.ts');
+const accountSecurity = read('src/lib/security.ts');
 const translator = read('src/lib/translator.ts');
 const translateRoute = read('src/app/api/translate/route.ts');
 
@@ -26,6 +27,8 @@ const checks = [
   ['language state reset for incoming messages', chat.includes('side === "them" && draftInTheirLanguage')],
   ['translation still honors chosen engine', translateRoute.includes('translateText(text, targetLang, sourceLang, engine)')],
   ['site preferences include warm style', settings.includes('smartReplyTone: "warm"') && settings.includes('smartReplyWarmth: "natural"')],
+  ['AI message context requires opt-in', settings.includes('includeSmartReplyContext: false') && chat.includes('settings.includeSmartReplyContext') && chat.includes('sent to AI provider')],
+  ['preview recovery emails use validated hostname', accountSecurity.includes("process.env.VERCEL_ENV === 'preview'") && accountSecurity.includes('Invalid Vercel Preview hostname')],
   ['selected GPT provider implemented', translator.includes('translateOpenAI') && translator.includes("provider === 'openai'")],
 ];
 
