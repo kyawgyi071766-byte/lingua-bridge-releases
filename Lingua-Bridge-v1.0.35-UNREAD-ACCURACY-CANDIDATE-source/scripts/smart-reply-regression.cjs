@@ -40,3 +40,20 @@ for (const [label, passes] of checks) {
   if (!passes) failures++;
 }
 assert.equal(failures, 0, failures + ' Smart Reply regression check(s) failed');
+const { spawnSync } = require('node:child_process');
+const previewPreflight = 'scripts/assert-preview-database.cjs';
+const testEnv = (extra) => ({
+  ...process.env,
+  VERCEL_ENV: 'preview',
+  DATABASE_URL: 'postgresql://tester:placeholder@staging-db.neon.tech:5432/neondb',
+  LINGUA_PREVIEW_NEON_HOST: 'staging-db.neon.tech',
+  ...extra,
+});
+const testGuard = (env) => spawnSync(process.execPath, [previewPreflight], { encoding: 'utf8', env }).status;
+assert.equal(testGuard(testEnv({})), 0, 'Isolated preview DB should pass build preflight');
+assert.notEqual(testGuard(testEnv({ LINGUA_PREVIEW_NEON_HOST: 'production-db.neon.tech' })), 0,
+  'Preview must reject production database endpoint');
+assert.notEqual(testGuard(testEnv({ LINGUA_PREVIEW_NEON_HOST: '' })), 0,
+  'Preview must fail closed when expected DB host is missing');
+console.log('PASS preview database guard behavioral tests');
+
