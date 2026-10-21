@@ -82,6 +82,7 @@ export default function ChatPage() {
     const text = input.trim();
     const target = side === "me" ? settings.theirLang : settings.myLang;
     setError("");
+    if (side === "them" && draftInTheirLanguage) setDraftInTheirLanguage(false);
     if (side === "me" && draftInTheirLanguage) {
       if (settings.confirmSend) setPending({ text, side, translated: text });
       else { persist([...msgs, { id: Date.now(), side, original: text, translated: text, ts: Date.now() }]); setInput(""); }
@@ -111,6 +112,7 @@ export default function ChatPage() {
 
   function confirmPending() {
     if (!pending) return;
+    setDraftInTheirLanguage(false);
     persist([...msgs, { id: Date.now(), side: pending.side, original: pending.text, translated: pending.translated, ts: Date.now() }]);
     setPending(null);
     setInput("");
@@ -196,13 +198,13 @@ export default function ChatPage() {
       <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-slate-500 w-16">I speak</span>
-          <select value={settings.myLang} onChange={(e) => updateSetting({ myLang: e.target.value })}
+          <select value={settings.myLang} onChange={(e) => { updateSetting({ myLang: e.target.value }); setDraftInTheirLanguage(false); setSmartReplies(null); }}
             className="text-sm border border-slate-200 rounded-lg px-2 py-1.5 flex-1 min-w-[120px] bg-white">
             {targetLangs.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
           <span className="text-slate-400">⇄</span>
           <span className="text-xs text-slate-500 w-16">They speak</span>
-          <select value={settings.theirLang} onChange={(e) => updateSetting({ theirLang: e.target.value })}
+          <select value={settings.theirLang} onChange={(e) => { updateSetting({ theirLang: e.target.value }); setDraftInTheirLanguage(false); setSmartReplies(null); }}
             className="text-sm border border-slate-200 rounded-lg px-2 py-1.5 flex-1 min-w-[120px] bg-white">
             {targetLangs.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
@@ -332,7 +334,7 @@ export default function ChatPage() {
               <div className="mt-1 pt-1 border-t border-amber-200" style={tStyle}>{pending.translated}</div>
               <div className="flex gap-2 mt-2">
                 <button onClick={confirmPending} className="bg-brand-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">Confirm send</button>
-                <button onClick={() => setPending(null)} className="bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg">Cancel</button>
+                <button onClick={() => { setPending(null); setDraftInTheirLanguage(false); }} className="bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg">Cancel</button>
               </div>
             </div>
           </div>
