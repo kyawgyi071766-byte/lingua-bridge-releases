@@ -140,10 +140,9 @@ export default function ChatPage() {
     setError("");
     setSmartReplyLoading(messageId);
     try {
-      const context = msgs.slice(Math.max(0, index - 8), index).map((message) => ({
-        side: message.side,
-        text: message.original.slice(0, 500),
-      }));
+      const context = settings.includeSmartReplyContext
+        ? msgs.slice(Math.max(0, index - 8), index).map((message) => ({ side: message.side, text: message.original.slice(0, 500) }))
+        : [];
       const response = await fetch("/api/smart-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -244,6 +243,13 @@ export default function ChatPage() {
           </select>
         </div>
         <p className="text-xs text-slate-500">Keeps replies warm without making up feelings or pushing the conversation. You always review before using.</p>
+        <label className="flex items-center gap-2 text-xs text-slate-600">
+          <input type="checkbox" checked={!!settings.includeSmartReplyContext}
+            onChange={(e) => { updateSetting({ includeSmartReplyContext: e.target.checked }); setSmartReplies(null); }}
+            className="w-4 h-4 accent-brand-600" />
+          Include up to 8 earlier messages for context (optional; sent to AI provider)
+        </label>
+        <p className="text-xs text-slate-500">Smart Reply sends the selected incoming message to OpenAI. Prior messages are only included when this option is enabled.</p>
         <div className="flex items-center gap-5 text-sm flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={settings.autoTranslate} onChange={(e) => updateSetting({ autoTranslate: e.target.checked })}
