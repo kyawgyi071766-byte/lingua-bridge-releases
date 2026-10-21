@@ -148,6 +148,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           incomingText: msgs[index].original,
           replyLanguage: replyLanguageMode === "theirs" ? settings.theirLang : settings.myLang,
+          tone: settings.smartReplyTone || "warm",
+          warmth: settings.smartReplyWarmth || "natural",
           context,
         }),
       });
@@ -220,6 +222,26 @@ export default function ChatPage() {
             <option disabled>Professional Middle Eastern (coming soon)</option>
           </select>
         </div>
+        <div className="flex items-center gap-3 flex-wrap border-t border-slate-100 pt-3">
+          <label htmlFor="chat-smart-tone" className="text-xs text-slate-600">Smart Reply style</label>
+          <select id="chat-smart-tone" value={settings.smartReplyTone || "warm"}
+            onChange={(e) => { updateSetting({ smartReplyTone: e.target.value as ChatSettings["smartReplyTone"] }); setSmartReplies(null); }}
+            className="text-sm border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800 flex-1 min-w-[135px]">
+            <option value="warm">Warm &amp; natural</option>
+            <option value="caring">Caring &amp; gentle</option>
+            <option value="playful">Playful &amp; charming</option>
+            <option value="romantic">Romantic (when appropriate)</option>
+            <option value="respectful">Respectful &amp; sincere</option>
+          </select>
+          <label htmlFor="chat-smart-warmth" className="text-xs text-slate-600">Warmth</label>
+          <select id="chat-smart-warmth" value={settings.smartReplyWarmth || "natural"}
+            onChange={(e) => { updateSetting({ smartReplyWarmth: e.target.value as ChatSettings["smartReplyWarmth"] }); setSmartReplies(null); }}
+            className="text-sm border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800">
+            <option value="natural">Natural</option>
+            <option value="extra">Extra warm</option>
+          </select>
+        </div>
+        <p className="text-xs text-slate-500">Keeps replies warm without making up feelings or pushing the conversation. You always review before using.</p>
         <div className="flex items-center gap-5 text-sm flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={settings.autoTranslate} onChange={(e) => updateSetting({ autoTranslate: e.target.checked })}
@@ -283,7 +305,7 @@ export default function ChatPage() {
                       <p className="text-xs text-slate-500">AI drafts only — review before using. Nothing is sent automatically.</p>
                       {smartReplies.replies.map((reply, i) => (
                         <div key={i} className="rounded-lg border border-slate-200 bg-white p-2.5">
-                          <div className="text-xs font-semibold text-slate-500 mb-1">{["Friendly", "Caring", "Brief"][i]}</div>
+                          <div className="text-xs font-semibold text-slate-500 mb-1">{["Warm & direct", "Thoughtful", "Easygoing"][i]}</div>
                           <p className="text-sm whitespace-pre-wrap break-words">{reply}</p>
                           <div className="flex gap-3 mt-2 text-xs">
                             <button type="button" onClick={() => useSmartReply(reply)} disabled={!!pending || loading}
