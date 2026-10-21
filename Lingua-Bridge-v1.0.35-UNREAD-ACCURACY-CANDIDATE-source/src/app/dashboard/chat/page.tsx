@@ -29,16 +29,18 @@ export default function ChatPage() {
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState("");
   const [storageKey, setStorageKey] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSettings(loadSettings());
     let active = true;
     fetch("/api/auth/me", { cache: "no-store" }).then(async (response) => {
       if (!response.ok || !active) return;
       const data = await response.json();
       if (!active || typeof data.email !== "string") return;
       const key = `${MSG_KEY_PREFIX}:${encodeURIComponent(data.email.toLowerCase())}`;
+      setAccountEmail(data.email);
+      setSettings(loadSettings(data.email));
       setStorageKey(key);
       try {
         const raw = localStorage.getItem(key);
@@ -58,10 +60,10 @@ export default function ChatPage() {
   }
 
   function updateSetting(patch: Partial<ChatSettings>) {
-    if (!settings) return;
+    if (!settings || !accountEmail) return;
     const next = { ...settings, ...patch };
     setSettings(next);
-    saveSettings(next);
+    saveSettings(next, accountEmail);
   }
 
   async function callTranslate(text: string, target: string, source?: string): Promise<string> {
