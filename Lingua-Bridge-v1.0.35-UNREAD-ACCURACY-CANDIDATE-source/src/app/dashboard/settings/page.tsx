@@ -86,6 +86,26 @@ export default function SettingsPage() {
           <p className="mt-2 text-xs text-slate-500">Saved for this browser. Unconfigured engines will show an error instead of silently switching engines. Auto mode retains fallback.</p>
         </div>
 
+        <div className="border-t border-slate-100 pt-5 space-y-3">
+          <div className="text-sm font-semibold text-slate-700">Smart Reply — warm and natural replies</div>
+          <p className="text-xs text-slate-500">Choose a tone for AI reply suggestions. Romantic language is used only when the conversation makes it appropriate. Messages are never sent automatically.</p>
+          <label className="block text-xs text-slate-600" htmlFor="settings-smart-tone">Reply style</label>
+          <select id="settings-smart-tone" value={s.smartReplyTone || "warm"} onChange={(e) => update({ smartReplyTone: e.target.value as ChatSettings["smartReplyTone"] })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-800">
+            <option value="warm">Warm &amp; natural</option>
+            <option value="caring">Caring &amp; gentle</option>
+            <option value="playful">Playful &amp; charming</option>
+            <option value="romantic">Romantic (when appropriate)</option>
+            <option value="respectful">Respectful &amp; sincere</option>
+          </select>
+          <label className="block text-xs text-slate-600" htmlFor="settings-smart-warmth">Warmth level</label>
+          <select id="settings-smart-warmth" value={s.smartReplyWarmth || "natural"} onChange={(e) => update({ smartReplyWarmth: e.target.value as ChatSettings["smartReplyWarmth"] })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-800">
+            <option value="natural">Natural and thoughtful</option>
+            <option value="extra">Extra warm and heartfelt</option>
+          </select>
+        </div>
+
         {/* Toggles */}
         <div className="space-y-3 border-t border-slate-100 pt-5">
           <div className="text-sm font-semibold text-slate-700 mb-1">Behavior</div>
