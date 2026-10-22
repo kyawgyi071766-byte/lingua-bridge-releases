@@ -1498,6 +1498,7 @@ async function translateVoice() {
       if (!state.signedInEmail) throw new Error('Log in to your Lingua account first.');
       result = await window.linguaDesktop.voiceTranslate({
         text: transcript,
+        engine: sessionStorage.getItem('lingua-voice-engine') || 'auto',
         sourceLang: s.sourceLang || 'auto',
         targetLang: s.outgoingTarget || 'en'
       });
