@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [usage, setUsage] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [provider, setProvider] = useState("");
+  const [engine, setEngine] = useState("auto");
   const [audioBusy, setAudioBusy] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function DashboardPage() {
     const res = await fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: input, targetLang: target, sourceLang: source }),
+      body: JSON.stringify({ text: input, targetLang: target, sourceLang: source, engine }),
     });
     setLoading(false);
     const data = await res.json().catch(() => ({}));
@@ -156,6 +157,18 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+        <label htmlFor="translation-engine" className="block text-sm font-semibold text-slate-800 mb-2">Translation engine / Channel</label>
+        <select id="translation-engine" value={engine} onChange={(e) => setEngine(e.target.value)} className="w-full sm:w-80 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="auto">Auto · best available engine</option>
+          <option value="openai">GPT · OpenAI</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="google">Google Translate</option>
+          <option value="deepl">DeepL</option>
+          <option value="microsoft">Microsoft Translator</option>
+        </select>
+        <p className="mt-2 text-xs text-slate-500">Only configured engines and supported language pairs can translate. If a selected engine is unavailable, you will see an error; switch to Auto. Youdao and regional writing styles are not enabled yet.</p>
+      </div>
       <div className="mt-6 grid md:grid-cols-2 gap-4">
         {/* Input */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
