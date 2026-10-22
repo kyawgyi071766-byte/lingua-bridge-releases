@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import SupportWidget from "@/components/SupportWidget";
 
 const publicUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lingua-github-import.vercel.app';
-const googleVerification = (process.env.GOOGLE_SITE_VERIFICATION || '').trim();
+const googleVerification = (process.env.GOOGLE_SITE_VERIFICATION || 'i87dYeU026R6kTMWRdT7dVxNgbJR4DWSdTCMbKohBRM').trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicUrl),
