@@ -52,6 +52,7 @@ export async function POST(req: Request) {
   const text = typeof body.text === 'string' ? body.text : '';
   const targetLang = typeof body.targetLang === 'string' ? body.targetLang : '';
   const sourceLang = typeof body.sourceLang === 'string' ? body.sourceLang : undefined;
+  const engine = typeof body.engine === 'string' ? body.engine : 'auto';
   const charCount = countCharacters(text);
 
   if (!text.trim() || !targetLang) return NextResponse.json({ error: 'Text and target language are required.' }, { status: 400 });
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
   try {
     const preview = sourceLang && sourceLang !== 'auto' && sourceLang.toLowerCase() === targetLang.toLowerCase();
     if (preview) {
-      const result = await translateText(text, targetLang, sourceLang);
+      const result = await translateText(text, targetLang, sourceLang, engine);
       return NextResponse.json({ ok: true, translated: result.text, provider: result.provider, detectedSource: result.detectedSource, used: usageChars, limit });
     }
 
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      const result = await translateText(text, targetLang, sourceLang);
+      const result = await translateText(text, targetLang, sourceLang, engine);
       const refreshed = await prisma.user.findUnique({ where: { id: user.id }, select: { usageChars: true } });
       const used = refreshed?.usageChars ?? usageChars + charCount;
       return NextResponse.json({ ok: true, translated: result.text, provider: result.provider, detectedSource: result.detectedSource, used, limit });

@@ -1491,12 +1491,14 @@ async function translateVoice() {
         text: transcript,
         sourceLang: s.sourceLang || 'auto',
         targetLang: s.outgoingTarget || 'en',
+        engine: sessionStorage.getItem('lingua-voice-engine') || 'auto',
         testMode: true
       });
     } else {
       if (!state.signedInEmail) throw new Error('Log in to your Lingua account first.');
       result = await window.linguaDesktop.voiceTranslate({
         text: transcript,
+        engine: sessionStorage.getItem('lingua-voice-engine') || 'auto',
         sourceLang: s.sourceLang || 'auto',
         targetLang: s.outgoingTarget || 'en'
       });
@@ -1507,6 +1509,7 @@ async function translateVoice() {
           text: transcript,
           sourceLang: s.sourceLang || 'auto',
           targetLang: s.outgoingTarget || 'en',
+          engine: sessionStorage.getItem('lingua-voice-engine') || 'auto',
           testMode: false
         });
         if (result?.ok) result.transcriptFallback = true;
@@ -2016,7 +2019,17 @@ function render() {
             <strong>🎙 Voice translator · owner beta</strong>
             <span class="voice-quota">${esc(voiceUsageSummary())}</span>
           </div>
-          <div class="subtle">The dedicated speech backend is not live yet. Typed/pasted transcripts can use the normal text translator as a fallback. Microphone and messenger voice-message transcription stay owner-only until the speech backend is enabled.</div>
+          <div class="subtle">Audio file upload and translated speech playback are available in the web dashboard on the configured server when its preview deployment is enabled. Desktop microphone and messenger voice capture are separate beta features.</div>
+          <div class="voice-actions"><button class="secondary" id="openAudioStudio">🎧 Open audio file translator</button></div>
+          <label class="subtle" for="voiceEngine">Translation engine</label>
+          <select id="voiceEngine" aria-label="Translation engine">
+            <option value="auto">Auto - best available</option>
+            <option value="openai">GPT - OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="google">Google Translate</option>
+            <option value="deepl">DeepL</option>
+            <option value="microsoft">Microsoft Translator</option>
+          </select>
           <textarea id="voiceTranscript" class="voice-textarea" placeholder="Speak, or type/paste the speech transcript here…">${esc(state.voiceTranscript)}</textarea>
           <div class="voice-actions">
             <button class="secondary" id="voiceMic">${state.voiceListening ? '■ Stop' : '🎙 Start mic'}</button>
@@ -2220,6 +2233,15 @@ function bindEvents() {
     if (view) { view.send('lingua-rescan', { force:true }); setNotice('Scanning visible messages for translation…'); }
   });
 
+  document.querySelector('#openAudioStudio')?.addEventListener('click', async () => {
+    const info = await window.linguaDesktop.getServerInfo();
+    const url = new URL('/dashboard', info.serverUrl);
+    if (url.protocol !== 'https:') throw new Error('HTTPS required');
+    await window.linguaDesktop.openExternal(url.toString());
+  });
+  const voiceEngine = document.querySelector('#voiceEngine');
+  if (voiceEngine) voiceEngine.value = sessionStorage.getItem('lingua-voice-engine') || 'auto';
+  voiceEngine?.addEventListener('change', e => sessionStorage.setItem('lingua-voice-engine', e.target.value));
   document.querySelector('#voiceMic')?.addEventListener('click', startVoiceRecognition);
   document.querySelector('#voiceTranslate')?.addEventListener('click', translateVoice);
   document.querySelector('#voiceSpeak')?.addEventListener('click', speakVoiceResult);

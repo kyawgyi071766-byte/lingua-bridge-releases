@@ -15,13 +15,20 @@ export default function SharePage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const settings = loadSettings();
-    setTarget(settings.theirLang || 'en');
-    const stored = sessionStorage.getItem('lingua_shared_text') || '';
-    if (stored) {
-      setSharedText(stored);
-      sessionStorage.removeItem('lingua_shared_text');
-    }
+    let active = true;
+    fetch('/api/auth/me', { cache: 'no-store' }).then(async (response) => {
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!active || typeof data.email !== 'string') return;
+      const settings = loadSettings(data.email);
+      setTarget(settings.theirLang || 'en');
+      const stored = sessionStorage.getItem('lingua_shared_text') || '';
+      if (stored) {
+        setSharedText(stored);
+        sessionStorage.removeItem('lingua_shared_text');
+      }
+    }).catch(() => {});
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {

@@ -17,6 +17,8 @@ export default function DashboardPage() {
   const [usage, setUsage] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [provider, setProvider] = useState("");
+  const [engine, setEngine] = useState("auto");
+  const [audioBusy, setAudioBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => {
@@ -34,7 +36,7 @@ export default function DashboardPage() {
     const res = await fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: input, targetLang: target, sourceLang: source }),
+      body: JSON.stringify({ text: input, targetLang: target, sourceLang: source, engine }),
     });
     setLoading(false);
     const data = await res.json().catch(() => ({}));
@@ -45,6 +47,46 @@ export default function DashboardPage() {
     } else {
       setError(data.error || "Translation failed.");
       if (data.upgrade) setOutput("");
+    }
+  }
+
+  async function uploadAudio(file: File) {
+    setAudioBusy(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const response = await fetch("/api/voice/transcribe", { method: "POST", body: form });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Audio transcription failed.");
+      setInput(data.text);
+      setOutput("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Audio upload failed.");
+    } finally {
+      setAudioBusy(false);
+    }
+  }
+
+  async function playTranslation() {
+    if (!output.trim()) return;
+    setAudioBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/voice/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: output }) });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Speech generation failed.");
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Speech playback failed.");
+    } finally {
+      setAudioBusy(false);
     }
   }
 
@@ -61,6 +103,16 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="mb-5 rounded-lg border border-slate-700 p-4">
+        <label className="block text-sm font-semibold mb-2" htmlFor="audio-file">Audio file to text</label>
+        <input id="audio-file" type="file" accept=".mp3,.mp4,.m4a,.wav,.webm,.ogg,audio/*" disabled={audioBusy} onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          if (file) void uploadAudio(file);
+          event.currentTarget.value = "";
+        }} />
+        <p className="text-xs mt-2 text-slate-500">{audioBusy ? "Transcribing audio…" : "Up to 10 MB. Transcript appears in the text box; review it before selecting Translate."}</p>
+      </div>
+      <button type="button" disabled={!output || audioBusy} onClick={() => void playTranslation()} className="mb-4 rounded-lg border border-slate-500 px-4 py-2 text-sm disabled:opacity-40">🔊 Play translated audio</button>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Translate</h1>
@@ -105,6 +157,18 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+        <label htmlFor="translation-engine" className="block text-sm font-semibold text-slate-800 mb-2">Translation engine / Channel</label>
+        <select id="translation-engine" value={engine} onChange={(e) => setEngine(e.target.value)} className="w-full sm:w-80 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="auto">Auto · best available engine</option>
+          <option value="openai">GPT · OpenAI</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="google">Google Translate</option>
+          <option value="deepl">DeepL</option>
+          <option value="microsoft">Microsoft Translator</option>
+        </select>
+        <p className="mt-2 text-xs text-slate-500">Only configured engines and supported language pairs can translate. If a selected engine is unavailable, you will see an error; switch to Auto. Youdao and regional writing styles are not enabled yet.</p>
+      </div>
       <div className="mt-6 grid md:grid-cols-2 gap-4">
         {/* Input */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">

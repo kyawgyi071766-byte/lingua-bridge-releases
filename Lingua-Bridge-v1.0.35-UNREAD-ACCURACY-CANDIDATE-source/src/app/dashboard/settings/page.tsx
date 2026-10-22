@@ -18,18 +18,27 @@ const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#9333ea", "#ea580c", "#0891b2"
 export default function SettingsPage() {
   const router = useRouter();
   const [s, setS] = useState<ChatSettings | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me").then((r) => { if (!r.ok) router.push("/login"); });
-    setS(loadSettings());
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) { if (active) router.push("/login"); return; }
+      const data = await response.json();
+      if (active && typeof data.email === "string") {
+        setAccountEmail(data.email);
+        setS(loadSettings(data.email));
+      }
+    }).catch(() => { if (active) router.push("/login"); });
+    return () => { active = false; };
   }, [router]);
 
   function update(patch: Partial<ChatSettings>) {
-    if (!s) return;
+    if (!s || !accountEmail) return;
     const next = { ...s, ...patch };
     setS(next);
-    saveSettings(next);
+    saveSettings(next, accountEmail);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   }
@@ -68,6 +77,47 @@ export default function SettingsPage() {
               </select>
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-slate-100 pt-5">
+          <label htmlFor="translation-engine" className="block text-sm font-semibold text-slate-700 mb-2">Translation Engine</label>
+          <select id="translation-engine" value={s.translationEngine || "auto"} onChange={(e) => update({ translationEngine: e.target.value as ChatSettings["translationEngine"] })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
+            <option value="auto">Auto — Best available engine</option>
+            <option value="gemini">Gemini — Google AI</option>
+            <option value="deepl">DeepL</option>
+            <option value="google">Google Translate (requires API configuration)</option>
+            <option value="microsoft">Microsoft Translator (requires API configuration)</option>
+            <option value="openai">GPT — OpenAI</option>
+            <option disabled>Youdao (coming soon)</option>
+            <option disabled>Professional American English (coming soon)</option>
+            <option disabled>Professional Middle Eastern (coming soon)</option>
+          </select>
+          <p className="mt-2 text-xs text-slate-500">Saved for this browser. Unconfigured engines will show an error instead of silently switching engines. Auto mode retains fallback.</p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-5 space-y-3">
+          <div className="text-sm font-semibold text-slate-700">Smart Reply — warm and natural replies</div>
+          <p className="text-xs text-slate-500">Choose a tone for AI reply suggestions. Romantic language is used only when the conversation makes it appropriate. Messages are never sent automatically.</p>
+          <label className="block text-xs text-slate-600" htmlFor="settings-smart-tone">Reply style</label>
+          <select id="settings-smart-tone" value={s.smartReplyTone || "warm"} onChange={(e) => update({ smartReplyTone: e.target.value as ChatSettings["smartReplyTone"] })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-800">
+            <option value="warm">Warm &amp; natural</option>
+            <option value="caring">Caring &amp; gentle</option>
+            <option value="playful">Playful &amp; charming</option>
+            <option value="romantic">Romantic (when appropriate)</option>
+            <option value="respectful">Respectful &amp; sincere</option>
+          </select>
+          <label className="block text-xs text-slate-600" htmlFor="settings-smart-warmth">Warmth level</label>
+          <select id="settings-smart-warmth" value={s.smartReplyWarmth || "natural"} onChange={(e) => update({ smartReplyWarmth: e.target.value as ChatSettings["smartReplyWarmth"] })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-800">
+            <option value="natural">Natural and thoughtful</option>
+            <option value="extra">Extra warm and heartfelt</option>
+          </select>
+          <label className="flex items-center gap-2 text-xs text-slate-600">
+            <input type="checkbox" checked={!!s.includeSmartReplyContext} onChange={(ev) => update({ includeSmartReplyContext: ev.target.checked })} className="w-4 h-4 accent-brand-600" />
+            Include up to 8 prior chat messages as context when requesting AI drafts (optional)
+          </label>
+          <p className="text-xs text-slate-500">Selected messages are sent to the AI provider for Smart Reply. Earlier messages stay local unless you opt in.</p>
         </div>
 
         {/* Toggles */}
@@ -115,7 +165,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="border-t border-slate-100 pt-5">
-          <button onClick={() => { setS(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS); setSaved(true); setTimeout(() => setSaved(false), 1500); }}
+          <button onClick={() => { if (!accountEmail) return; setS(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS, accountEmail); setSaved(true); setTimeout(() => setSaved(false), 1500); }}
             className="text-sm text-slate-400 hover:text-red-500">Reset to defaults</button>
         </div>
       </div>
@@ -123,7 +173,7 @@ export default function SettingsPage() {
       <DeviceManager />
 
       <p className="mt-6 text-xs text-slate-400">
-        Settings are saved in your browser. Translation engine (DeepL / Google Translate), monthly quotas and device limits are enforced by the Lingua server.
+        Settings are saved in your browser. The chosen translation engine is used when supported and configured. Monthly quotas and device limits are enforced by the Lingua server.
       </p>
     </div>
   );

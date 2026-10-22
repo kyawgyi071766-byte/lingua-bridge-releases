@@ -36,7 +36,10 @@ export function hashAccessCode(value: string): string {
 
 export function generateAccessCode(level: AccessLevel): string {
   let random = '';
-  for (let i = 0; i < 24; i += 1) random += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  // 32 independently sampled symbols (~160 bits) resist guessing at scale.
+  // Existing 24-symbol codes remain redeemable: normalization/hash is unchanged.
+  // The database's unique code-hash constraint and create retry enforce uniqueness.
+  for (let i = 0; i < 32; i += 1) random += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   const groups = random.match(/.{1,4}/g)?.join('-') || random;
   return `LINGUA-${level.toUpperCase()}-${groups}`;
 }

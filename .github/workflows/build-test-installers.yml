@@ -42,6 +42,7 @@ jobs:
       - run: npm ci
       - run: npm run audit:static
       - run: npm run audit:gemini
+      - run: node scripts/smart-reply-regression.cjs
       - run: npm run audit:public-release
       - run: node desktop-bridge/scripts/copy-message-regression.cjs
       - run: node desktop-bridge/scripts/multi-app-adapter-regression.cjs

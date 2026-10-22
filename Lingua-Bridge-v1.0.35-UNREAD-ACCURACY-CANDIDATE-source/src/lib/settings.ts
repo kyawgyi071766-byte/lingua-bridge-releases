@@ -2,6 +2,8 @@
 // Mirrors the toggles from the screenshot: Auto Translate, Confirm-and-send,
 // default languages, translation font size + color.
 export type FontSize = "small" | "medium" | "large" | "maximum";
+export type SmartReplyTone = "warm" | "caring" | "playful" | "romantic" | "respectful";
+export type SmartReplyWarmth = "natural" | "extra";
 
 export interface ChatSettings {
   autoTranslate: boolean;   // auto-translate every message immediately
@@ -11,12 +13,23 @@ export interface ChatSettings {
   fontSize: FontSize;
   translateColor: string;   // hex color for translated text
   providerNote?: string;
+  smartReplyTone?: SmartReplyTone;
+  smartReplyWarmth?: SmartReplyWarmth;
+  includeSmartReplyContext?: boolean;
+  translationEngine?: 'auto' | 'gemini' | 'deepl' | 'google' | 'microsoft' | 'openai';
 }
 
-const KEY = "lingua_chat_settings";
+const KEY_PREFIX = "lingua_chat_settings";
+function settingsKey(accountEmail: string): string {
+  return `${KEY_PREFIX}:${encodeURIComponent(accountEmail.trim().toLowerCase())}`;
+}
 
 export const DEFAULT_SETTINGS: ChatSettings = {
   autoTranslate: true,
+  translationEngine: "auto",
+  smartReplyTone: "warm",
+  smartReplyWarmth: "natural",
+  includeSmartReplyContext: false,
   confirmSend: false,
   myLang: "my",
   theirLang: "en",
@@ -24,10 +37,10 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   translateColor: "#2563eb",
 };
 
-export function loadSettings(): ChatSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
+export function loadSettings(accountEmail: string): ChatSettings {
+  if (typeof window === "undefined" || !accountEmail.trim()) return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(settingsKey(accountEmail));
     if (!raw) return DEFAULT_SETTINGS;
     return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch {
@@ -35,9 +48,9 @@ export function loadSettings(): ChatSettings {
   }
 }
 
-export function saveSettings(s: ChatSettings) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(s));
+export function saveSettings(s: ChatSettings, accountEmail: string) {
+  if (typeof window === "undefined" || !accountEmail.trim()) return;
+  localStorage.setItem(settingsKey(accountEmail), JSON.stringify(s));
 }
 
 export const FONT_SIZE_PX: Record<FontSize, string> = {

@@ -70,7 +70,13 @@ export function isUnsafeCrossOriginRequest(req: Request): boolean {
 }
 
 export function getSiteUrl(): string {
-  const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').trim();
+  // Preview recovery / verification emails must point at the actual preview
+  // deployment, never production or localhost. Reject unexpected hostnames.
+  const previewHost = process.env.VERCEL_ENV === 'preview' ? process.env.VERCEL_URL?.trim() : undefined;
+  if (previewHost && !/^[a-z0-9-]+\.vercel\.app$/i.test(previewHost)) {
+    throw new Error('Invalid Vercel Preview hostname.');
+  }
+  const raw = (previewHost ? `https://${previewHost}` : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').trim();
   let parsed: URL;
   try {
     parsed = new URL(raw);
