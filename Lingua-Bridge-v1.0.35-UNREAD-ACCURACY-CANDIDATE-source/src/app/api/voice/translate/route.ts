@@ -54,6 +54,7 @@ export async function POST(req: Request) {
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const targetLang = typeof body.targetLang === 'string' ? body.targetLang : '';
   const sourceLang = typeof body.sourceLang === 'string' ? body.sourceLang : undefined;
+  const engine = typeof body.engine === 'string' ? body.engine : 'auto';
 
   if (!text || !targetLang) {
     return NextResponse.json({ error: 'Voice transcript and target language are required.' }, { status: 400 });
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await translateText(text, targetLang, sourceLang);
+    const result = await translateText(text, targetLang, sourceLang, engine);
     const refreshed = await prisma.user.findUnique({
       where: { id: user.id },
       select: { voiceUses: true, plan: true },
