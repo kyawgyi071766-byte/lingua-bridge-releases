@@ -531,20 +531,21 @@ function mockTranslate(text, sourceLang, targetLang) {
   };
 }
 
-ipcMain.handle('lingua:translate', async (_event, { text, sourceLang = 'auto', targetLang, testMode = false }) => {
+ipcMain.handle('lingua:translate', async (_event, { text, sourceLang = 'auto', targetLang, testMode = false, engine = 'auto' }) => {
   const clean = String(text || '').trim();
   if (!clean) return { ok: false, error: 'Nothing to translate.' };
   if (!targetLang) return { ok: false, error: 'Choose a target language.' };
   if (testMode) return { ok: true, ...mockTranslate(clean, sourceLang, targetLang) };
   if (!authCookie) return { ok: false, status: 401, error: 'Log in to your Lingua account first.' };
 
-  const key = `${sourceLang || 'auto'}\u0000${targetLang}\u0000${clean}`;
+  const selectedEngine = ['auto', 'openai', 'gemini', 'google', 'deepl', 'microsoft'].includes(engine) ? engine : 'auto';
+  const key = `${selectedEngine}\u0000${sourceLang || 'auto'}\u0000${targetLang}\u0000${clean}`;
   if (translationCache.has(key)) return { ok: true, ...translationCache.get(key), cached: true };
 
   try {
     const response = await apiFetch('/api/translate', {
       method: 'POST',
-      body: JSON.stringify({ text: clean, sourceLang: sourceLang || 'auto', targetLang })
+      body: JSON.stringify({ text: clean, sourceLang: sourceLang || 'auto', targetLang, engine: selectedEngine })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
