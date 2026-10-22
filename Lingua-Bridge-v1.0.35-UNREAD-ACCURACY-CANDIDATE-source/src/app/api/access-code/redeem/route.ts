@@ -70,7 +70,18 @@ export async function POST(req: Request) {
       if (current.grantType === 'purchase' && current.plan !== 'free') throw new Error('PURCHASE_ACTIVE');
       if (current.grantType === 'gift_code' && current.plan !== 'free') throw new Error('GIFT_ACTIVE');
 
-      await db.accessCode.update({ where: { id: code.id }, data: { usedCount: { increment: 1 } } });
+      // Atomic conditional increment: concurrent redemptions cannot exceed maxUses
+      // or redeem a code revoked after the initial lookup.
+      const reserved = await db.accessCode.updateMany({
+        where: {
+          id: code.id,
+          isActive: true,
+          usedCount: { lt: code.maxUses },
+          ...(code.expiresAt ? { expiresAt: { gt: now } } : {}),
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+      if (reserved.count !== 1) throw new Error('CODE_LIMIT');
       await db.accessCodeRedemption.create({
         data: {
           accessCodeId: code.id,
