@@ -587,7 +587,7 @@ ipcMain.handle('lingua:voice-usage', async () => {
   }
 });
 
-ipcMain.handle('lingua:voice-translate', async (_event, { text, sourceLang='auto', targetLang }) => {
+ipcMain.handle('lingua:voice-translate', async (_event, { text, sourceLang='auto', targetLang, engine='auto' }) => {
   const clean = String(text || '').trim();
   if (!clean) return { ok:false, error:'Nothing to translate.' };
   if (!targetLang) return { ok:false, error:'Choose a target language.' };
@@ -596,7 +596,7 @@ ipcMain.handle('lingua:voice-translate', async (_event, { text, sourceLang='auto
   try {
     const response = await apiFetch('/api/voice/translate', {
       method:'POST',
-      body:JSON.stringify({ text:clean, sourceLang:sourceLang || 'auto', targetLang })
+      body:JSON.stringify({ text:clean, sourceLang:sourceLang || 'auto', targetLang, engine })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
