@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import SupportWidget from "@/components/SupportWidget";
 
 const publicUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lingua-github-import.vercel.app';
-const googleVerification = (process.env.GOOGLE_SITE_VERIFICATION || 'VtL9kkKD08t5tSar1UKgsXgahECFj1LxKlvNS7NFTRc').trim();
+const googleVerification = 'i87dYeU026R6kTMWRdT7dVxNgbJR4DWSdTCMbKohBRM';
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicUrl),
@@ -52,7 +52,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <meta name="google-site-verification" content="i87dYeU026R6kTMWRdT7dVxNgbJR4DWSdTCMbKohBRM" />
         <link rel="preconnect" href="https://github.com" />
         <link rel="dns-prefetch" href="https://release-assets.githubusercontent.com" />
       </head>
