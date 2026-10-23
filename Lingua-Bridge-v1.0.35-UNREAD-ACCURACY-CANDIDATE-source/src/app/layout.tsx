@@ -52,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="google-site-verification" content="i87dYeU026R6kTMWRdT7dVxNgbJR4DWSdTCMbKohBRM" />
         <link rel="preconnect" href="https://github.com" />
         <link rel="dns-prefetch" href="https://release-assets.githubusercontent.com" />
       </head>
