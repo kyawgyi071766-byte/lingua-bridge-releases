@@ -22,6 +22,11 @@ export default function DownloadsPage() {
         <p className="mt-3 text-xs text-slate-500">Current Windows release: v{version}</p>
         {checksumOk && <p className="mt-1 break-all text-xs text-slate-500">SHA-256: {checksum}</p>}
       </div>
+      <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950" role="note">
+        <p className="font-semibold">Before you install</p>
+        <p className="mt-2">The Windows installer is available publicly without a download access code. Translation currently requires a Lingua account and sign-in. Email verification or password reset may be temporarily unavailable, so downloading the installer does not guarantee you can start translating immediately.</p>
+        <p className="mt-2">If you cannot sign in, please contact support instead of creating multiple accounts with unverified email addresses.</p>
+      </div>
       <DownloadPortal />
     </section>
   );
