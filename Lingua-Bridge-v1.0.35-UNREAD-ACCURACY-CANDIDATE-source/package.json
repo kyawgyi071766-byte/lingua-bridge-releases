@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "jose": "^5.6.3",
     "next": "^15.5.27",
     "react": "^19.0.0",
@@ -47,7 +47,7 @@
     "@capacitor/cli": "^6.1.2",
     "@capacitor/core": "^6.1.2",
     "@capacitor/ios": "^6.1.2",
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20.14.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
