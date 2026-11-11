@@ -40,7 +40,7 @@
     "next": "^15.5.27",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "stripe": "^16.8.0"
+    "stripe": "^23.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^6.1.2",
