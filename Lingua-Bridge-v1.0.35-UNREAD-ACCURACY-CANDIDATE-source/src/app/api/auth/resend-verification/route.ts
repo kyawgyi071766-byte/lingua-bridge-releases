@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { emailConfigured, sendVerificationEmail } from '@/lib/email';
+import { EMAIL_CODE_TTL_MS, generateEmailCode, hashEmailCode } from '@/lib/emailCodes';
 import { consumeRateLimit } from '@/lib/rateLimit';
-import { getClientAddress, hashToken, isCrossSiteRequest, normalizeEmail, randomToken } from '@/lib/security';
+import { getClientAddress, isCrossSiteRequest, normalizeEmail } from '@/lib/security';
 
 export async function POST(req: Request) {
   if (isCrossSiteRequest(req)) return NextResponse.json({ error: 'Cross-site request blocked.' }, { status: 403 });
   if (!emailConfigured()) return NextResponse.json({ error: 'Email service is not configured yet.' }, { status: 503 });
+
+  // A rotating list of email addresses must not bypass per-IP email abuse limits.
+  const ipRate = await consumeRateLimit('resend-verification-ip', getClientAddress(req), 15, 60 * 60_000);
+  if (!ipRate.allowed) {
+    return NextResponse.json({ error: 'Too many email requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(ipRate.retryAfterSeconds) } });
+  }
 
   const body = await req.json().catch(() => ({}));
   const email = normalizeEmail(body.email);
@@ -21,12 +29,12 @@ export async function POST(req: Request) {
 
   const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
   if (user && !user.emailVerifiedAt) {
-    const token = randomToken();
+    const token = generateEmailCode();
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        verificationTokenHash: hashToken(token),
-        verificationExpiresAt: new Date(Date.now() + 24 * 60 * 60_000),
+        verificationTokenHash: hashEmailCode('verify-email', user.email, token),
+        verificationExpiresAt: new Date(Date.now() + EMAIL_CODE_TTL_MS),
       },
     });
     try {

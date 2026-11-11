@@ -2004,7 +2004,8 @@ function render() {
                <div class="auth-actions wrap"><button class="small-btn" id="logout">Log out</button><button class="small-btn" id="billing">Billing</button><button class="small-btn gift-btn" id="redeemCode">Redeem Gift Code</button>${state.accountStatus?.ok && state.accountStatus.role === 'admin' ? '<button class="small-btn owner-action" id="openAdmin">Owner Admin</button>' : ''}<button class="small-btn" id="refreshAccount">Refresh plan</button></div>`
             : `<input id="loginEmail" type="email" placeholder="Email" />
                <input id="loginPassword" type="password" placeholder="Password" />
-               <div class="auth-actions"><button class="primary" id="loginBtn">Log in</button><button class="small-btn" id="billing">Billing</button></div>`}
+               <div class="auth-actions"><button class="primary" id="loginBtn">Log in</button><button class="small-btn" id="billing">Billing</button></div>
+               <div class="auth-actions wrap"><button class="small-btn" id="linguaSignUp">Create account</button><button class="small-btn" id="linguaVerifyEmail">Verify email</button><button class="small-btn" id="linguaForgotPassword">Forgot password?</button></div>`}
           </div>
         </details>
 
@@ -2242,6 +2243,14 @@ function bindEvents() {
     void removeAccountDevice(btn.dataset.removeDevice, btn.dataset.currentDevice === '1');
   }));
 
+  // Use the official HTTPS server without reloading any connected messenger session.
+  const openAccountPage = (route) => {
+    const base = /^https:\/\//i.test(state.serverUrl || '') ? state.serverUrl.replace(/\/$/, '') : 'https://lingua-github-import.vercel.app';
+    void window.linguaDesktop.openExternal(base + route);
+  };
+  document.querySelector('#linguaSignUp')?.addEventListener('click', () => openAccountPage('/signup'));
+  document.querySelector('#linguaVerifyEmail')?.addEventListener('click', () => openAccountPage('/verify-email'));
+  document.querySelector('#linguaForgotPassword')?.addEventListener('click', () => openAccountPage('/forgot-password'));
   document.querySelector('#loginBtn')?.addEventListener('click', doLogin);
   document.querySelector('#logout')?.addEventListener('click', doLogout);
   document.querySelector('#billing')?.addEventListener('click', () => window.linguaDesktop.openBilling());

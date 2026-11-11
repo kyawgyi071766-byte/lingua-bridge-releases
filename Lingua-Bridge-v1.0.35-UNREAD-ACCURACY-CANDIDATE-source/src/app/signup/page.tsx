@@ -9,6 +9,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [failedDelivery, setFailedDelivery] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +20,7 @@ export default function SignupPage() {
       return;
     }
     setError('');
+    setFailedDelivery(false);
     setMessage('');
     setLoading(true);
     const res = await fetch('/api/auth/signup', {
@@ -29,7 +31,7 @@ export default function SignupPage() {
     const data = await res.json().catch(() => ({}));
     setLoading(false);
     if (res.ok && data.needsVerification) {
-      setMessage('Account created. Check your email and click the verification link before logging in.');
+      router.push('/verify-email?email=' + encodeURIComponent(data.email || email));
       return;
     }
     if (res.ok) {
@@ -38,14 +40,15 @@ export default function SignupPage() {
       return;
     }
     setError(data.error || 'Signup failed. Please try again.');
+    setFailedDelivery(Boolean(data.needsVerification));
   }
 
   return (
     <div className="max-w-md mx-auto px-6 py-16">
       <h1 className="text-2xl font-bold text-center">Create your account</h1>
-      <p className="text-center text-slate-500 text-sm mt-1">Start with a small free monthly translation allowance</p>
+      <p className="text-center text-slate-500 text-sm mt-1">Use an inbox you control. We'll email you a six-digit verification code before you can sign in.</p>
       <form onSubmit={submit} className="mt-8 space-y-4 bg-white border border-slate-200 rounded-2xl p-6">
-        {error && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">{error}</div>}
+        {error && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">{error}{failedDelivery && <p className="mt-2"><Link href={"/verify-email?email=" + encodeURIComponent(email)} className="font-semibold underline">Resend verification code</Link></p>}</div>}
         {message && <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg">{message}</div>}
         <div>
           <label className="text-sm font-medium text-slate-700">Name</label>

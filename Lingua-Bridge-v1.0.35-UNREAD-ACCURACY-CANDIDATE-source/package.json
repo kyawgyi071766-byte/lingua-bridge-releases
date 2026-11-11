@@ -21,7 +21,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:dev": "prisma migrate dev",
     "verify:config": "node scripts/preflight.js",
-    "audit:static": "node scripts/static-audit.js && node scripts/alternate-domain-origin-regression.cjs",
+    "audit:static": "node scripts/static-audit.js && node scripts/alternate-domain-origin-regression.cjs && node scripts/email-auth-regression.cjs",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "check:distribution": "node scripts/distribution-check.js",
     "audit:update": "node scripts/update-feed-audit.js",
@@ -40,7 +40,8 @@
     "next": "^15.5.27",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "stripe": "^16.8.0"
+    "stripe": "^16.8.0",
+    "nodemailer": "10.1.7"
   },
   "devDependencies": {
     "@capacitor/android": "^6.1.2",

@@ -16,15 +16,16 @@ export default function ForgotPasswordPage() {
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (res.ok) setMessage(data.message || 'If the account exists, a reset link has been sent.');
+    if (res.ok) setMessage(data.message || 'If the account exists, a six-digit reset code has been sent.');
     else setError(data.error || 'Could not request a reset link.');
   }
 
   return (
     <div className="max-w-md mx-auto px-6 py-16">
       <h1 className="text-2xl font-bold text-center">Reset your password</h1>
+      <p className="mt-2 text-center text-sm text-slate-500">Enter your account email to receive a six-digit, 15-minute reset code.</p>
       <form onSubmit={submit} className="mt-8 space-y-4 bg-white border border-slate-200 rounded-2xl p-6">
-        {message && <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg">{message}</div>}
+        {message && <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg">{message}<p className="mt-2"><Link className="font-semibold underline" href={'/reset-password?email=' + encodeURIComponent(email)}>Enter reset code</Link></p></div>}
         {error && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">{error}</div>}
         <div>
           <label className="text-sm font-medium text-slate-700">Email</label>
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
             className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <button disabled={loading} className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold">
-          {loading ? 'Sending…' : 'Send reset link'}
+          {loading ? 'Sending…' : 'Send reset code'}
         </button>
         <p className="text-center text-sm"><Link href="/login" className="text-brand-600 font-medium">Back to login</Link></p>
       </form>

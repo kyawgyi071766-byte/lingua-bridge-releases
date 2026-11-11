@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import { emailVerificationRequired } from './security';
 
 const COOKIE = 'lingua_session';
 const DEV_SECRET = 'dev-only-lingua-session-secret-change-before-production';
@@ -75,8 +76,10 @@ async function getSessionPayload(): Promise<{ uid: string; sv: number } | null> 
 export async function getUserId(): Promise<string | null> {
   const session = await getSessionPayload();
   if (!session) return null;
-  const user = await prisma.user.findUnique({ where: { id: session.uid }, select: { sessionVersion: true } });
-  return user?.sessionVersion === session.sv ? session.uid : null;
+  const user = await prisma.user.findUnique({ where: { id: session.uid }, select: { sessionVersion: true, emailVerifiedAt: true } });
+  if (!user || user.sessionVersion !== session.sv) return null;
+  if (emailVerificationRequired() && !user.emailVerifiedAt) return null;
+  return session.uid;
 }
 
 export async function getCurrentUser() {
@@ -84,6 +87,8 @@ export async function getCurrentUser() {
   if (!session) return null;
   let user = await prisma.user.findUnique({ where: { id: session.uid } });
   if (!user || user.sessionVersion !== session.sv) return null;
+  // A legacy cookie cannot bypass the email-ownership requirement.
+  if (emailVerificationRequired() && !user.emailVerifiedAt) return null;
 
   // Bootstrap the one owner account from the backend-only ADMIN_EMAIL value.
   // Even if an older production row was created with role=user, the exact owner

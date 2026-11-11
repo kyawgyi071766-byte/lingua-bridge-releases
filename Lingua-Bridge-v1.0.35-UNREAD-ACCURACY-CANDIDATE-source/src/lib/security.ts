@@ -84,8 +84,11 @@ export function getSiteUrl(): string {
 }
 
 export function emailVerificationRequired(): boolean {
+  // Production signups and sessions must require email ownership verification.
+  // A legacy EMAIL_VERIFICATION_REQUIRED=false cannot bypass this check.
+  if (process.env.NODE_ENV === 'production') return true;
   const configured = process.env.EMAIL_VERIFICATION_REQUIRED?.trim().toLowerCase();
   if (configured === 'true') return true;
   if (configured === 'false') return false;
-  return process.env.NODE_ENV === 'production';
+  return false;
 }
