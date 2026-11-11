@@ -1,0 +1,139 @@
+name: Multi-platform preview downloads
+on:
+  push:
+    branches: [fix/translation-memory-edited-messages]
+    paths:
+      - '.github/workflows/multiplatform-preview.yml'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: multiplatform-preview-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  SERVER_URL: https://lingua-github-import.vercel.app
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  LINGUA_MOBILE_PREVIEW: 'true'
+jobs:
+  desktop:
+    name: Desktop ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: windows-latest, platform: win, arch: x64 }
+          - { runner: ubuntu-24.04, platform: linux, arch: x64 }
+          - { runner: macos-15, platform: mac, arch: x64 }
+          - { runner: macos-15, platform: mac, arch: arm64 }
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/package-lock.json
+      - run: npm ci
+      - run: npm run qa
+      - run: npm run build:web
+      - name: Build isolated preview application
+        run: npx electron-builder --config electron-builder.multiplatform-preview.json --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Verify packaged application and downloads
+        run: node scripts/verify-preview-package.cjs ${{ matrix.platform }} ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-preview-${{ matrix.platform }}-${{ matrix.arch }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.exe
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.zip
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.dmg
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.deb
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.AppImage
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.gz
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.txt
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-multiplatform-preview/*.json
+  android:
+    name: Android preview APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npm run audit:static
+      - run: test -d android || npx cap add android
+      - run: npx cap sync android
+      - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
+      - name: Prepare downloadable Android preview
+        run: |
+          mkdir -p preview-downloads
+          cp android/app/build/outputs/apk/debug/app-debug.apk preview-downloads/Lingua-Mobile-Preview-Android.apk
+          cd preview-downloads
+          aapt_path=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
+          "$aapt_path" dump badging Lingua-Mobile-Preview-Android.apk | grep -F "package: name='com.lingua.translate.preview'"
+          unzip -p Lingua-Mobile-Preview-Android.apk assets/capacitor.config.json > packaged-config.json
+          node -e "const a=require('node:assert/strict'),c=require('./packaged-config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
+          rm packaged-config.json
+          sha256sum *.apk > SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+          printf '%s\n' 'Debug-signed Android website shell. Desktop messenger injection is not included. Production email recovery remains blocked. Not a Play Store release.' > README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-preview-android
+          retention-days: 30
+          if-no-files-found: error
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/preview-downloads/*
+  ios:
+    name: iOS simulator preview
+    runs-on: macos-15
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm ci
+      - run: npm run audit:static
+      - run: test -d ios || npx cap add ios
+      - run: npx cap sync ios
+      - run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Prepare simulator-only download
+        run: |
+          mkdir -p preview-downloads
+          node -e "const a=require('node:assert/strict'),c=require('./ios-build/Build/Products/Debug-iphonesimulator/App.app/capacitor.config.json');a.equal(c.appId,'com.lingua.translate.preview');a.equal(c.server.url,process.env.SERVER_URL);a.equal(c.server.cleartext,false);"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' ios-build/Build/Products/Debug-iphonesimulator/App.app/Info.plist)" = "com.lingua.translate.preview"
+          ditto -c -k --sequesterRsrc --keepParent ios-build/Build/Products/Debug-iphonesimulator/App.app preview-downloads/Lingua-Mobile-Preview-iOS-Simulator.zip
+          cd preview-downloads
+          shasum -a 256 *.zip > SHA256SUMS.txt
+          shasum -a 256 -c SHA256SUMS.txt
+          printf '%s\n' 'Simulator only: cannot install on an iPhone. Apple developer signing/TestFlight is required for physical devices. Website shell, not desktop messenger injection. Production email recovery remains blocked.' > README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingua-preview-ios-simulator
+          retention-days: 30
+          if-no-files-found: error
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/preview-downloads/*

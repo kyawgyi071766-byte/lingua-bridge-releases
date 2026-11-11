@@ -39,7 +39,9 @@ let unreadTimer = null;
 const translationCache = new Map();
 // Keep a durable local history so reopening/switching conversations restores already-translated messages without sending them to the provider again.
 const TRANSLATION_CACHE_LIMIT = 5000;
-const TRANSLATION_CACHE_STORAGE_KEY = 'lingua.translationCache.v2';
+const TRANSLATION_CACHE_STORAGE_KEY = 'lingua.translationCache.v3';
+const TRANSLATION_CACHE_MAX_BYTES = 2 * 1024 * 1024;
+let translationCacheSaveTimer = null;
 const primedConversationKeys = new Set();
 let lastScanConversationKey = '';
 const translationFailureBackoff = new Map();
@@ -1106,8 +1108,13 @@ function ensureTranslationHost(node) {
 function setInlineTranslation(host, text, provider, node) {
   const meta = host.querySelector('.lingua-inline-meta');
   const body = host.querySelector('.lingua-inline-body');
-  if (meta) meta.textContent = `Lingua · ${settings.incomingTargetLabel || String(settings.incomingTarget || '').toUpperCase()}`;
-  if (body) body.textContent = String(text || '').trim();
+  const label = `Lingua · ${settings.incomingTargetLabel || String(settings.incomingTarget || '').toUpperCase()}`;
+  if (meta && meta.textContent !== label) meta.textContent = label;
+  const translated = String(text || '').trim();
+  if (body && body.textContent !== translated) body.textContent = translated;
+  host.dataset.linguaSourceFingerprint = fingerprint(cleanText(node.innerText || node.textContent));
+  host.dataset.linguaConversation = currentConversationCacheScope();
+  host.dataset.linguaTarget = settings.incomingTarget || 'en';
   if (provider) host.title = `Translated by ${provider}`;
   ensureTranslationRefreshButton(host, node);
 }
@@ -1125,12 +1132,28 @@ function translationCacheKey(fp, targetLang = settings.incomingTarget || 'en', c
   return `${conversationKey || 'conversation:unknown'}\u0000${targetLang || 'en'}\u0000${fp}`;
 }
 
-function persistTranslationCache() {
+function flushTranslationCache() {
+  if (translationCacheSaveTimer !== null) clearTimeout(translationCacheSaveTimer);
+  translationCacheSaveTimer = null;
   try {
     const entries = [...translationCache.entries()].slice(-TRANSLATION_CACHE_LIMIT);
-    localStorage.setItem(TRANSLATION_CACHE_STORAGE_KEY, JSON.stringify(entries));
+    let serialized = JSON.stringify(entries);
+    // Bound disk usage as well as entry count; preserve the newest records.
+    while (serialized.length * 2 > TRANSLATION_CACHE_MAX_BYTES && entries.length) {
+      entries.splice(0, Math.max(1, Math.ceil(entries.length / 8)));
+      serialized = JSON.stringify(entries);
+    }
+    localStorage.setItem(TRANSLATION_CACHE_STORAGE_KEY, serialized);
   } catch (_) {}
 }
+
+function persistTranslationCache() {
+  // Coalesce history batches instead of serializing thousands of records for
+  // every message. Flush again on pagehide so reopening restores recent cards.
+  if (translationCacheSaveTimer !== null) return;
+  translationCacheSaveTimer = setTimeout(flushTranslationCache, 250);
+}
+window.addEventListener('pagehide', flushTranslationCache);
 
 function loadTranslationCache() {
   try {
@@ -1171,12 +1194,19 @@ function restoreCachedTranslation(node, fp, targetLang = settings.incomingTarget
   return true;
 }
 function fingerprint(text) {
-  let hash = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+  // A 32-bit hash can collide and attach another message's translation.
+  // Exact text is bounded to 5000 characters by the request path.
+  return String(text);
+}
+
+function invalidateStaleTranslation(node, fp, conversationKey) {
+  const host = findBubble(node)?.querySelector(':scope > .lingua-inline-translation');
+  if (!host) return;
+  if (host.dataset.linguaSourceFingerprint !== fp
+      || host.dataset.linguaConversation !== conversationKey
+      || host.dataset.linguaTarget !== (settings.incomingTarget || 'en')) {
+    host.remove();
   }
-  return String(hash >>> 0);
 }
 
 function requestIncomingTranslation(node, priority = 'realtime', forceRetry = false, forceFresh = false) {
@@ -1192,6 +1222,7 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
   const conversationKey = currentConversationCacheScope();
   const fp = fingerprint(text);
   const pendingKey = translationCacheKey(fp, targetLang, conversationKey);
+  invalidateStaleTranslation(node, fp, conversationKey);
 
   if (pendingIncomingFingerprints.has(pendingKey)) return false;
 
@@ -1227,7 +1258,7 @@ function requestIncomingTranslation(node, priority = 'realtime', forceRetry = fa
 
   node.dataset.linguaFingerprint = fp;
   const id = `in_${Date.now()}_${++messageCounter}`;
-  pendingIncoming.set(id, { node, fp, targetLang, pendingKey, conversationKey });
+  pendingIncoming.set(id, { node, text, fp, targetLang, pendingKey, conversationKey });
   pendingIncomingFingerprints.add(pendingKey);
   ipcRenderer.sendToHost('lingua-translate-request', {
     id,
@@ -1340,6 +1371,7 @@ function scanMessages(force = false) {
       const text = cleanText(node.innerText || node.textContent);
       if (!text || isAudioLikeMessage(node)) continue;
       const fp = fingerprint(text);
+      invalidateStaleTranslation(node, fp, conversationKey);
       if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
         node.dataset.linguaFingerprint = fp;
       } else if (!settings.autoTranslateHistorical && !force) {
@@ -1360,6 +1392,7 @@ function scanMessages(force = false) {
     const text = cleanText(node.innerText || node.textContent);
     if (!text) continue;
     const fp = fingerprint(text);
+    invalidateStaleTranslation(node, fp, conversationKey);
     if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
       node.dataset.linguaFingerprint = fp;
       removeManualTranslateAction(node);
@@ -1386,6 +1419,7 @@ function scanMessages(force = false) {
       const text = cleanText(node.innerText || node.textContent);
       if (!text) continue;
       const fp = fingerprint(text);
+      invalidateStaleTranslation(node, fp, conversationKey);
       if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
         removeManualTranslateAction(node);
         continue;
@@ -2023,7 +2057,20 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
     pendingIncoming.delete(result.id);
     const { node, fp, targetLang, pendingKey, conversationKey } = pending;
     pendingIncomingFingerprints.delete(pendingKey);
+    // Successful replies belong to the requested text, even if its DOM node
+    // was virtualized away or the user has since switched conversations.
+    if (result.ok && typeof result.translatedText === 'string' && result.translatedText.trim()) {
+      clearTranslationFailure(fp, targetLang);
+      rememberTranslation(fp, result.translatedText, result.provider, targetLang, conversationKey);
+      scheduleScan();
+    }
     if (!node.isConnected || node.dataset.linguaFingerprint !== fp) return;
+    // Messenger edits can arrive before the mutation scanner updates dataset.
+    if (fingerprint(cleanText(node.innerText || node.textContent)) !== fp) {
+      invalidateStaleTranslation(node, fingerprint(cleanText(node.innerText || node.textContent)), currentConversationCacheScope());
+      scheduleScan();
+      return;
+    }
     // Do not attach a late result to a different conversation after the user switches chats.
     if (conversationKey && conversationKey !== currentConversationCacheScope()) return;
     // A result from a previous language selection must never be inserted into
@@ -2048,8 +2095,10 @@ ipcRenderer.on('lingua-translation-result', async (_event, result) => {
       }
       return;
     }
-    clearTranslationFailure(fp, targetLang);
-    rememberTranslation(fp, result.translatedText, result.provider, targetLang, conversationKey);
+    if (typeof result.translatedText !== 'string' || !result.translatedText.trim()) {
+      ensureManualTranslateAction(node);
+      return;
+    }
     const host = ensureTranslationHost(node);
     setInlineTranslation(host, result.translatedText, result.provider, node);
     return;
