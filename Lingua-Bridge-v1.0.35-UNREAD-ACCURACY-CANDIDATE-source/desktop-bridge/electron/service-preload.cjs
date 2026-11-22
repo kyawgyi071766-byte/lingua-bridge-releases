@@ -1332,27 +1332,31 @@ function scanMessages(force = false) {
     }
   }
 
-  // First open of a conversation: restore already-translated messages locally.
-  // Do not spend translation-provider requests on old history unless the user
-  // explicitly enabled historical translation.
+  // First open of a conversation: restore cached history without provider calls,
+  // but still translate the newest incoming messages. v1.0.36 marked every
+  // initially-visible message as "seen" and returned here, so a freshly-opened
+  // chat could appear completely broken until another message arrived.
+  const newestFirst = found.slice().reverse();
   if (firstScan) {
+    const recentRealtimeNodes = new Set(
+      newestFirst.filter(node => !isOutgoingMessage(node) && !isAudioLikeMessage(node)).slice(0, 3)
+    );
     for (const node of found) {
       const text = cleanText(node.innerText || node.textContent);
       if (!text || isAudioLikeMessage(node)) continue;
       const fp = fingerprint(text);
       if (restoreCachedTranslation(node, fp, settings.incomingTarget || 'en', conversationKey)) {
         node.dataset.linguaFingerprint = fp;
-      } else if (!settings.autoTranslateHistorical && !force) {
+      } else if (!settings.autoTranslateHistorical && !force && !recentRealtimeNodes.has(node)) {
+        // Older history stays local/manual; leave the newest incoming messages
+        // unmarked so the realtime pass below can translate them immediately.
         node.dataset.linguaFingerprint = fp;
         node.dataset.linguaSeenConversation = conversationKey;
         if (!isOutgoingMessage(node)) ensureManualTranslateAction(node);
       }
     }
     primedConversationKeys.add(conversationKey);
-    if (!settings.autoTranslateHistorical && !force) return;
   }
-
-  const newestFirst = found.slice().reverse();
   const realtimeBudget = force ? 5 : 3;
   let realtimeQueued = 0;
   for (const node of newestFirst) {
