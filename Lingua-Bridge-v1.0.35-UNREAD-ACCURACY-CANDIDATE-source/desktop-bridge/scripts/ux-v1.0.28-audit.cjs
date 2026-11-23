@@ -6,7 +6,7 @@ const preload = fs.readFileSync(path.join(root, 'electron', 'service-preload.cjs
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
 const checks = [
-  ['current package version is valid semver', /^\\d+\\.\\d+\\.\\d+$/.test(pkg.version)],
+  ['current package version is valid semver', /^\d+\.\d+\.\d+$/.test(pkg.version)],
   ['current version marker matches package version', app.includes(`lingua.desktopVersion', '${pkg.version}`) && app.includes(`v${pkg.version}`)],
   ['composer hint source label payload', app.includes('sourceLangLabel:') && preload.includes('settings.sourceLangLabel')],
   ['empty composer hint survives focus', preload.includes('if (hasText)') && !preload.includes('if (focused || hasText)')],
