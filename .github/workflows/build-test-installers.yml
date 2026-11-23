@@ -41,6 +41,8 @@ jobs:
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
       - run: npm ci
       - run: npm run audit:static
+      - run: npm run audit:translation-resilience
+      - run: npm run audit:translation-languages
       - run: npm run audit:gemini
       - run: npm run audit:public-release
       - run: node desktop-bridge/scripts/copy-message-regression.cjs

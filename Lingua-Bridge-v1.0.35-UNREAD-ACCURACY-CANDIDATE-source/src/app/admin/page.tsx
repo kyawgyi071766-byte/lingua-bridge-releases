@@ -10,6 +10,7 @@ import AdminPayments, { AdminPaymentRow } from '@/components/AdminPayments';
 import AdminAccessCodes, { AccessCodeRow } from '@/components/AdminAccessCodes';
 import { decryptAccessCode } from '@/lib/accessCodes';
 import { deviceLimitFor } from '@/lib/devices';
+import { getTranslationProviderUsageStatus } from '@/lib/translationProviderGuard';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -35,7 +36,7 @@ export default async function AdminPage() {
     data: { plan: 'free', paidUntil: null, grantType: 'free', accessCodeId: null },
   });
 
-  const [users, payments, accessCodes, dailyRevenue, monthlyRevenue, totalRevenue] = await Promise.all([
+  const [users, payments, accessCodes, dailyRevenue, monthlyRevenue, totalRevenue, providerUsage] = await Promise.all([
     prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       include: { devices: { where: { revokedAt: null }, orderBy: { lastSeenAt: 'desc' } } },
@@ -53,6 +54,7 @@ export default async function AdminPage() {
     prisma.payment.aggregate({ where: { status: 'confirmed', confirmedAt: { gte: dayStart } }, _sum: { amount: true } }),
     prisma.payment.aggregate({ where: { status: 'confirmed', confirmedAt: { gte: monthStart } }, _sum: { amount: true } }),
     prisma.payment.aggregate({ where: { status: 'confirmed' }, _sum: { amount: true } }),
+    getTranslationProviderUsageStatus(),
   ]);
 
   const totalUsers = users.length;
@@ -144,6 +146,63 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      <section className="mt-8 bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Translation provider usage</h2>
+            <p className="text-sm text-slate-500 mt-1">UTC month: {providerUsage.period} · Aggregated counters only; no message text or API keys are stored here.</p>
+          </div>
+          <span className="text-xs text-slate-500">Owner-only view</span>
+        </div>
+        <div className="overflow-x-auto mt-4">
+          <table className="w-full min-w-[760px] text-sm text-left">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-500">
+                <th className="py-3 pr-4 font-medium">Provider</th>
+                <th className="py-3 pr-4 font-medium">Characters reserved</th>
+                <th className="py-3 pr-4 font-medium">Local limit</th>
+                <th className="py-3 pr-4 font-medium">Remaining</th>
+                <th className="py-3 pr-4 font-medium">Requests</th>
+                <th className="py-3 pr-4 font-medium">Failures</th>
+                <th className="py-3 font-medium">Cooldown</th>
+              </tr>
+            </thead>
+            <tbody>
+              {providerUsage.providers.map((provider) => {
+                const name = provider.provider === 'deepl'
+                  ? 'DeepL'
+                  : provider.provider === 'gemini'
+                    ? 'Gemini'
+                    : provider.provider === 'microsoft'
+                      ? 'Microsoft Translator'
+                      : 'Google Cloud Translation';
+                const localLimit = provider.monthlyLimit === null
+                  ? 'No local cap'
+                  : provider.monthlyLimit.toLocaleString();
+                const remaining = provider.charactersRemaining === null
+                  ? '—'
+                  : provider.charactersRemaining.toLocaleString();
+                const cooldown = provider.cooldownUntil
+                  ? `${provider.cooldownUntil.replace('T', ' ').slice(0, 16)} UTC`
+                  : 'None';
+                return (
+                  <tr key={provider.provider} className="border-b border-slate-100 last:border-0">
+                    <td className="py-3 pr-4 font-semibold text-slate-800">{name}</td>
+                    <td className="py-3 pr-4 tabular-nums">{provider.charactersUsed.toLocaleString()}</td>
+                    <td className="py-3 pr-4 tabular-nums">{localLimit}</td>
+                    <td className="py-3 pr-4 tabular-nums">{remaining}</td>
+                    <td className="py-3 pr-4 tabular-nums">{provider.requests.toLocaleString()}</td>
+                    <td className="py-3 pr-4 tabular-nums">{provider.failures.toLocaleString()}</td>
+                    <td className="py-3 text-xs text-slate-600">{cooldown}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-slate-500 mt-4">Local caps only count requests made by Lingua Bridge. Other apps using the same provider key or Google Cloud project may consume separate shared quotas. Google Cloud Translation still requires an active Cloud Billing account.</p>
+      </section>
 
       <AdminAccessCodes initialCodes={codeRows} />
       <AdminUserTable initialUsers={userRows} />
