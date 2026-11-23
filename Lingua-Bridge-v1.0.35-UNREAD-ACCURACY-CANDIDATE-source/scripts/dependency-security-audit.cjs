@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function parseVersion(value) {
-  const match = /^(\\d+)\\.(\\d+)\\.(\\d+)/.exec(String(value || ''));
+  const match = /^([0-9]+)[.]([0-9]+)[.]([0-9]+)/.exec(String(value || ''));
   if (!match) throw new Error(`Invalid package version: ${value}`);
   return match.slice(1).map(Number);
 }
