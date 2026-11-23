@@ -19,7 +19,7 @@ const checks = [
   ['monthly character ceiling is checked atomically',
     guard.includes('where.count = { lte: limit - characters }') && guard.includes('count: { increment: characters }')],
   ['DeepL API Free receives a conservative default ceiling',
-    guard.includes("endsWith(':fx')") && guard.includes('450_000')],
+    guard.includes("endsWith(':fx')") && guard.includes('api-free.deepl.com') && guard.includes('450_000')],
   ['provider cooldown is persistent across serverless instances',
     guard.includes("keyFor('cooldown', provider)") && guard.includes('resetAt: cooldownUntil')],
   ['successful provider clears its persistent cooldown',
