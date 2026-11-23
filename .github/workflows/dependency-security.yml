@@ -1,9 +1,6 @@
 name: Dependency security verification
 
 on:
-  push:
-    branches:
-      - security/patch-postcss-electron-nov-2026
   pull_request:
     branches:
       - main
