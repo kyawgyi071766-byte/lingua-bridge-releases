@@ -26,5 +26,10 @@ assert.match(app, /const PROVIDER_EXTRA_CODES = new Set\(PROVIDER_EXTRA_LANGS\.m
 assert.match(app, /if \(PROVIDER_EXTRA_CODES\.has\(value\)\)/,
   'language selection checks the broad-provider gate only for broad-provider languages');
 
+assert.match(app, /Burmese\/Myanmar is available through DeepL/,
+  'provider status text confirms Burmese is available through DeepL');
+assert.doesNotMatch(app, /DeepL-only[^\n]*Myanmar\/Burmese/,
+  'provider status text no longer says Burmese requires a broad provider');
+
 console.log('PASS Burmese is a regular selectable DeepL language');
 console.log('PASS Burmese is not disabled when optional broad-language providers are absent');
