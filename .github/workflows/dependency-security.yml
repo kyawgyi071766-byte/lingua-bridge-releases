@@ -14,6 +14,9 @@ on:
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/dependency-security-audit.cjs'
       - '.github/workflows/dependency-security.yml'
 
+env:
+  SERVER_URL: https://lingua-github-import.vercel.app
+
 permissions:
   contents: read
 
