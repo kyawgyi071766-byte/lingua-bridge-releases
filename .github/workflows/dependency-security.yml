@@ -13,6 +13,14 @@ on:
       - '.github/workflows/dependency-security.yml'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/DEPENDENCY_SECURITY_PATCH_NOV_2026.md'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/.nvmrc'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/src/app.js'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/electron/service-preload.cjs'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/package.json'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/scripts/webview-settings-regression.cjs'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/scripts/composer-target-hint-regression.cjs'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/scripts/language-picker-regression.cjs'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/RELEASE_NOTES_v1.0.36.md'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/README.md'
   workflow_dispatch:
 
 concurrency:
@@ -55,6 +63,8 @@ jobs:
       - run: node desktop-bridge/scripts/copy-message-regression.cjs
       - run: node desktop-bridge/scripts/multi-app-adapter-regression.cjs
       - run: node desktop-bridge/scripts/webview-settings-regression.cjs
+      - run: node desktop-bridge/scripts/composer-target-hint-regression.cjs
+      - run: node desktop-bridge/scripts/language-picker-regression.cjs
       - run: node desktop-bridge/scripts/electron-security-regression.cjs
       - run: npm run build
       - name: Capture complete npm advisory report
@@ -68,6 +78,63 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dependency-audit.json
           retention-days: 7
           if-no-files-found: warn
+
+  verify-desktop-bridge-windows-installer:
+    name: Verify Lingua Bridge desktop Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 45
+    needs: verify-web-and-dependencies
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/package-lock.json
+      - name: Confirm pinned Node.js runtime
+        run: |
+          node -e "if (process.versions.node.split('.')[0] !== '22') process.exit(1)"
+          node --version
+          npm --version
+      - run: npm ci
+      - run: npm run qa
+      - run: npm run build:win:public
+      - name: Verify Lingua Bridge installer and generate SHA-256
+        shell: pwsh
+        run: |
+          $installer = Join-Path $PWD "release-v1.0.36-public/Lingua-Bridge-Setup-1.0.36.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw "Expected Lingua Bridge Windows installer was not produced: $installer"
+          }
+          $file = Get-Item -LiteralPath $installer
+          if ($file.Length -lt 1MB) {
+            throw "Lingua Bridge installer is unexpectedly small ($($file.Length) bytes)."
+          }
+          $stream = [System.IO.File]::OpenRead($installer)
+          try {
+            $header = New-Object byte[] 2
+            if ($stream.Read($header, 0, 2) -ne 2 -or $header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+              throw "Lingua Bridge installer does not have a valid Windows PE (MZ) header."
+            }
+          } finally {
+            $stream.Dispose()
+          }
+          $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          $manifest = "$hash  Lingua-Bridge-Setup-1.0.36.exe"
+          Set-Content -LiteralPath "release-v1.0.36-public/SHA256SUMS.txt" -Value $manifest -Encoding ascii
+          Write-Host $manifest
+      - name: Upload unsigned Lingua Bridge test installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-bridge-desktop-test-v1.0.36
+          retention-days: 7
+          path: |
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.36-public/Lingua-Bridge-Setup-1.0.36.exe
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.36-public/SHA256SUMS.txt
+          if-no-files-found: error
 
   verify-windows-installer:
     name: Verify packaged Electron Windows installer
