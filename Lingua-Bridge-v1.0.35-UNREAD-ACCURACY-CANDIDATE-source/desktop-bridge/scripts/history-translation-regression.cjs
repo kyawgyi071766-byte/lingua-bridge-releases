@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '..', 'electron', 'service-preload.cjs'), 'utf8');
 assert.match(source, /const historyEnabled = !previous\.autoTranslateHistorical && settings\.autoTranslateHistorical/);
-assert.match(source, /if \(translationChanged \|\| historyEnabled\) clearMessageFingerprints\(\)/);
+assert.match(source, /if \(translationChanged \|\| historyEnabled\) clearMessageFingerprints\(\{ removeTranslations: previous\.incomingTarget !== settings\.incomingTarget \}\)/);
 assert.match(source, /incomingEnabled \|\| historyEnabled/);
 // First open must still auto-translate the newest customer message when history is off.
 assert.match(source, /const newestIncomingNode = found\.slice\(\)\.reverse\(\)\.find\(node => !isOutgoingMessage\(node\)\)/);
