@@ -12,15 +12,19 @@ on:
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package.json'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/dependency-security-audit.cjs'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/static-audit.js'
       - '.github/workflows/dependency-security.yml'
-  workflow_dispatch:
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/DEPENDENCY_SECURITY_PATCH_NOV_2026.md'
+
+concurrency:
+  group: dependency-security-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 env:
   SERVER_URL: https://lingua-github-import.vercel.app
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 jobs:
   verify-web-and-dependencies:
@@ -37,29 +41,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
-      - run: npm install --package-lock-only --ignore-scripts --no-audit
-      - name: Upload regenerated npm lockfile for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: lingua-dependency-lockfile-nov-2026
-          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
-          retention-days: 7
-          if-no-files-found: error
-      - name: Commit regenerated lockfile to the security branch
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Confirm pinned Node.js runtime
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          if git diff --cached --quiet; then
-            echo "Lockfile is already current."
-          else
-            git commit -m "chore(deps): commit regenerated security lockfile"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-            gh workflow run dependency-security.yml --ref "${GITHUB_REF_NAME}"
-          fi
+          node -e "if (process.versions.node.split('.')[0] !== '22') process.exit(1)"
+          node --version
+          npm --version
       - run: npm ci
       - run: npm run audit:dependency-security
       - run: npm run audit:static
@@ -96,6 +82,10 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
-      - run: npm install --package-lock-only --ignore-scripts --no-audit
+      - name: Confirm pinned Node.js runtime
+        run: |
+          node -e "if (process.versions.node.split('.')[0] !== '22') process.exit(1)"
+          node --version
+          npm --version
       - run: npm ci
       - run: npm run electron:build:win
