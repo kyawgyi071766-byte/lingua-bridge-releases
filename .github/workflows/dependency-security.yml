@@ -13,12 +13,14 @@ on:
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/dependency-security-audit.cjs'
       - '.github/workflows/dependency-security.yml'
+  workflow_dispatch:
 
 env:
   SERVER_URL: https://lingua-github-import.vercel.app
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
 
 jobs:
   verify-web-and-dependencies:
@@ -43,6 +45,21 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
           retention-days: 7
           if-no-files-found: error
+      - name: Commit regenerated lockfile to the security branch
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile is already current."
+          else
+            git commit -m "chore(deps): commit regenerated security lockfile"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+            gh workflow run dependency-security.yml --ref "${GITHUB_REF_NAME}"
+          fi
       - run: npm ci
       - run: npm run audit:dependency-security
       - run: npm run audit:static
