@@ -16,6 +16,7 @@ const checks = [
     const end = app.indexOf("\n  document.querySelector('#toggleSettings')", start);
     const handler = start >= 0 && end > start ? app.slice(start, end) : '';
     return Boolean(handler) && handler.includes('applyUiLanguage();') && !handler.includes('render()');
+  })()],
   ['observer translates inserted footer controls', app.includes('record.addedNodes.forEach(node => translateUiSubtree(node, activeDict))')],
 ];
 
