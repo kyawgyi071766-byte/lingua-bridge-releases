@@ -1,5 +1,21 @@
 # Lingua Bridge Desktop v1.0.36
 
+# Lingua Bridge Desktop v1.0.36 — language refresh hotfix
+
+## Burmese DeepL routing and live composer language hint
+
+- Move Burmese / Myanmar (`my`) into the regular DeepL language list using API code `MY`; it no longer requires a Gemini/Microsoft/Google fallback to be selectable.
+- On every language-setting edit, send the active conversation's effective profile to its messenger webview immediately, bypassing a stale settings signature.
+- Refresh the native composer pill immediately and again after the next layout frame; retry briefly when a messenger SPA replaces the composer during a language switch.
+- Add deterministic regression tests for both directions of the source/target label update and for Burmese's availability in the standard language picker.
+- No messenger page reload is performed when a language setting changes.
+
+The installer version remains 1.0.36 for this hotfix. Existing installations that already report 1.0.36 may need to install the refreshed test build manually because version-only update checks cannot distinguish two builds with the same version number.
+
+Live provider translation quality still depends on an active authorized account/provider key. These CI tests verify routing and immediate UI-state synchronization; they do not send a live DeepL request or certify translation quality.
+
+---
+
 ## Multi-app outgoing translation fix
 
 - Prefer the actual focused message editor when sending with Enter, even when a messaging site's DOM class names change.
