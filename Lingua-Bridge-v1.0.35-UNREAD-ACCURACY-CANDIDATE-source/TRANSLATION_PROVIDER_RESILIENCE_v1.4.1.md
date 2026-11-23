@@ -21,6 +21,8 @@ The optional environment variables are:
 
 A value of `0` means no local cap. For DeepL API Free, detected either from a key ending in `:fx` or the `api-free.deepl.com` endpoint, the default local cap is 450,000 Unicode characters per UTC calendar month, leaving a margin below the plan's published monthly allowance. Google Cloud Translation Basic (the v2 endpoint used here) also defaults to 450,000 characters per UTC calendar month. Google currently applies a $10 monthly credit to the first 500,000 NMT text-translation characters, but Cloud Translation still requires an active Cloud Billing account; this is not a no-billing API. Usage above the credit can be billed to the linked billing account, and other apps in the same Google Cloud project can consume the shared allowance. Explicit provider limit variables override the local defaults.
 
+DeepL's published API Free plan allows up to 500,000 characters per month, but DeepL states that the API Free plan can no longer be purchased. This local limit protects an already-active Free subscription; it does not grant a new free subscription. Existing usage of the same provider key outside Lingua Bridge is not included in Lingua's local counter and can still consume the provider's quota.
+
 Counters are conservative: characters are reserved before the provider call and are not rolled back on provider errors, because a timeout can happen after a provider has received and processed a request. This favors preventing accidental overuse over maximizing the displayed remaining balance.
 
 ## Operational notes
