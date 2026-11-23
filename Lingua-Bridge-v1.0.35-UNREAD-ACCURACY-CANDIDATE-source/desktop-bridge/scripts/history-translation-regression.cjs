@@ -11,5 +11,9 @@ assert.match(source, /incomingEnabled \|\| historyEnabled/);
 assert.match(source, /const newestIncomingNode = found\.slice\(\)\.reverse\(\)\.find\(node => !isOutgoingMessage\(node\)\)/);
 assert.match(source, /newestIncomingNode\.dataset\.linguaFingerprint = ''/);
 assert.match(source, /removeManualTranslateAction\(newestIncomingNode\)/);
+// Changing the target language must remove stale cards so they cannot block a new request.
+assert.match(source, /function clearMessageFingerprints\(\{ removeTranslations = false \} = \{\}\)/);
+assert.match(source, /removeTranslations: previous\.incomingTarget !== settings\.incomingTarget/);
+assert.match(source, /findBubble\(node\)\?\.querySelector\(':scope > \.lingua-inline-translation'\)\?\.remove\(\)/);
 assert.match(source, /node\.dataset\.linguaFingerprint === fp\) \{/);
 console.log('Visible history opt-in regression guards passed');
