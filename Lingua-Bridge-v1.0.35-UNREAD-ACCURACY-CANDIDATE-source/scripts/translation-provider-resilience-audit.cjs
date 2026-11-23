@@ -13,11 +13,11 @@ const checks = [
     translator.indexOf('reserveTranslationProvider(provider') >= 0 &&
     translator.indexOf('reserveTranslationProvider(provider') < translator.indexOf('await runProvider(provider')],
   ['provider chain continues after a provider budget/cooldown skip',
-    translator.includes('if (!reservation.allowed)') && translator.includes('continue;')],
+    translator.includes('if (reservation.allowed === false)') && translator.includes('continue;')],
   ['provider usage is stored in the shared database rate-limit table',
     guard.includes('prisma.rateLimitBucket') && guard.includes('requestFingerprint') && guard.includes('translation-provider-')],
   ['monthly character ceiling is checked atomically',
-    guard.includes('count: { lte: limit - characters }') && guard.includes('count: { increment: characters }')],
+    guard.includes('where.count = { lte: limit - characters }') && guard.includes('count: { increment: characters }')],
   ['DeepL API Free receives a conservative default ceiling',
     guard.includes("endsWith(':fx')") && guard.includes('450_000')],
   ['provider cooldown is persistent across serverless instances',
