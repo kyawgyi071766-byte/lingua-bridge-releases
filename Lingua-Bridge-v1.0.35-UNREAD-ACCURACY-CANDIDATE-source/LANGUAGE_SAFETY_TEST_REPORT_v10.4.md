@@ -35,3 +35,10 @@ Old saved settings using a removed language are migrated safely:
 
 ## Release note
 This is a conservative safety release. Broader language coverage should only be re-enabled after Google Translation fallback is configured, cost-guarded and live-tested.
+
+
+## Superseding update — 2026-11-23
+
+This report remains a historical record of the 2026-09-21 implementation. Its statement that Burmese/Myanmar was outside the DeepL mapping is no longer current. DeepL API's Burmese source/target code `MY` is now included in `DEEPL_SUPPORTED`, and Burmese is a normal DeepL option in Desktop Bridge. The other test results and the migration behavior above describe the earlier release only.
+
+Current language support and remaining live-quality validation are documented in `LANGUAGE_PAIR_SUPPORT_v1.4.1.md`.
