@@ -15,6 +15,7 @@ on:
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/static-audit.js'
       - '.github/workflows/dependency-security.yml'
       - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/DEPENDENCY_SECURITY_PATCH_NOV_2026.md'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/.nvmrc'
 
 concurrency:
   group: dependency-security-${{ github.head_ref || github.ref_name }}
@@ -89,3 +90,36 @@ jobs:
           npm --version
       - run: npm ci
       - run: npm run electron:build:win
+      - name: Verify Windows installer and generate SHA-256
+        shell: pwsh
+        run: |
+          $installer = Join-Path $PWD "dist-electron/Lingua Translate Setup 1.0.35.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw "Expected Windows installer was not produced: $installer"
+          }
+          $file = Get-Item -LiteralPath $installer
+          if ($file.Length -lt 1MB) {
+            throw "Windows installer is unexpectedly small ($($file.Length) bytes)."
+          }
+          $stream = [System.IO.File]::OpenRead($installer)
+          try {
+            $header = New-Object byte[] 2
+            if ($stream.Read($header, 0, 2) -ne 2 -or $header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+              throw "Installer does not have a valid Windows PE (MZ) header."
+            }
+          } finally {
+            $stream.Dispose()
+          }
+          $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          $manifest = "$hash  Lingua Translate Setup 1.0.35.exe"
+          Set-Content -LiteralPath "dist-electron/SHA256SUMS.txt" -Value $manifest -Encoding ascii
+          Write-Host $manifest
+      - name: Upload unsigned Windows test installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-saas-windows-test-v1.0.35
+          retention-days: 7
+          path: |
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/Lingua Translate Setup 1.0.35.exe
+            Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dist-electron/SHA256SUMS.txt
+          if-no-files-found: error
