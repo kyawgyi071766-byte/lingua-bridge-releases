@@ -19,7 +19,7 @@ The optional environment variables are:
 - `MICROSOFT_TRANSLATOR_MONTHLY_CHAR_LIMIT`
 - `GOOGLE_TRANSLATE_MONTHLY_CHAR_LIMIT`
 
-A value of `0` means no local cap. For an existing DeepL API Free key ending in `:fx`, the default local cap is 450,000 Unicode characters per UTC calendar month, leaving a margin below the plan's published monthly allowance. An explicit `DEEPL_MONTHLY_CHAR_LIMIT` overrides that default.
+A value of `0` means no local cap. For an existing DeepL API Free key ending in `:fx`, the default local cap is 450,000 Unicode characters per UTC calendar month, leaving a margin below the plan's published monthly allowance. Google Cloud Translation Basic (the v2 endpoint used here) also defaults to 450,000 characters per UTC calendar month, below Google's published first-500,000-character monthly free usage credit. Explicit provider limit variables override the defaults.
 
 Counters are conservative: characters are reserved before the provider call and are not rolled back on provider errors, because a timeout can happen after a provider has received and processed a request. This favors preventing accidental overuse over maximizing the displayed remaining balance.
 
