@@ -40,6 +40,7 @@ jobs:
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
       - run: npm ci
+      - run: npm run audit:dependency-security
       - run: npm run audit:static
       - run: npm run audit:translation-resilience
       - run: npm run audit:translation-languages
