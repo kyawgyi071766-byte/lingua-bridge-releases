@@ -34,6 +34,9 @@ function monthlyLimit(provider: NetworkProvider): number {
   // Leave a safety margin below the 500k monthly ceiling on DeepL API Free.
   // Paid DeepL plans are not capped unless the owner configures an explicit limit.
   if (provider === 'deepl' && process.env.DEEPL_API_KEY?.trim().endsWith(':fx')) return 450_000;
+  // Cloud Translation Basic (v2) has a first-500k monthly free usage credit.
+  // Keep Lingua below that ceiling by default; other callers may share the project.
+  if (provider === 'google') return 450_000;
   return 0;
 }
 
