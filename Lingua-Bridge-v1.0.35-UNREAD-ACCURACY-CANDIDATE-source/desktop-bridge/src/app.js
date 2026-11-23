@@ -25,19 +25,18 @@ const SERVICES = [
 
 const LANGS = [["auto", "Auto detect"], ["bg", "Bulgarian (Български)"], ["cs", "Czech (Čeština)"], ["da", "Danish (Dansk)"], ["de", "German (Deutsch)"], ["el", "Greek (Ελληνικά)"], ["en", "English"], ["es", "Spanish (Español)"], ["et", "Estonian (Eesti)"], ["fi", "Finnish (Suomi)"], ["fr", "French (Français)"], ["hu", "Hungarian (Magyar)"], ["id", "Indonesian (Bahasa)"], ["it", "Italian (Italiano)"], ["ja", "Japanese (日本語)"], ["ko", "Korean (한국어)"], ["lt", "Lithuanian (Lietuvių)"], ["lv", "Latvian (Latviešu)"], ["no", "Norwegian (Norsk)"], ["nl", "Dutch (Nederlands)"], ["pl", "Polish (Polski)"], ["pt", "Portuguese (Português)"], ["ro", "Romanian (Română)"], ["ru", "Russian (Русский)"], ["sk", "Slovak (Slovenčina)"], ["sl", "Slovenian (Slovenščina)"], ["sv", "Swedish (Svenska)"], ["tr", "Turkish (Türkçe)"], ["uk", "Ukrainian (Українська)"], ["zh", "Chinese (中文)"]];
 
-// v1.0.19 broad-language provider set. These languages use server-side
-// Gemini, Microsoft Translator, or Google Translate and are only selectable when the
-// authenticated provider-status endpoint confirms at least one broad provider.
+// Languages below are limited to the official DeepL Translator supported-language
+// list. The broad-language entries are still served by configured Gemini/Microsoft/
+// Google fallback providers in this app; this list does not claim DeepL API support
+// for every language or feature. Unsupported entries are intentionally excluded.
 const PROVIDER_EXTRA_LANGS = [
   ["af", "Afrikaans · Gemini/Microsoft/Google"],
   ["sq", "Albanian (Shqip) · Gemini/Microsoft/Google"],
-  ["am", "Amharic (አማርኛ) · Gemini/Microsoft/Google"],
   ["ar", "Arabic (العربية) · Gemini/Microsoft/Google"],
   ["hy", "Armenian (Հայերեն) · Gemini/Microsoft/Google"],
   ["az", "Azerbaijani (Azərbaycanca) · Gemini/Microsoft/Google"],
   ["bn", "Bangla (বাংলা) · Gemini/Microsoft/Google"],
   ["eu", "Basque (Euskara) · Gemini/Microsoft/Google"],
-  ["fil", "Filipino · Gemini/Microsoft/Google"],
   ["gl", "Galician (Galego) · Gemini/Microsoft/Google"],
   ["ka", "Georgian (ქართული) · Gemini/Microsoft/Google"],
   ["gu", "Gujarati (ગુજરાતી) · Gemini/Microsoft/Google"],
@@ -45,10 +44,7 @@ const PROVIDER_EXTRA_LANGS = [
   ["hi", "Hindi (हिन्दी) · Gemini/Microsoft/Google"],
   ["is", "Icelandic (Íslenska) · Gemini/Microsoft/Google"],
   ["ga", "Irish (Gaeilge) · Gemini/Microsoft/Google"],
-  ["kn", "Kannada (ಕನ್ನಡ) · Gemini/Microsoft/Google"],
   ["kk", "Kazakh (Қазақша) · Gemini/Microsoft/Google"],
-  ["km", "Khmer (ខ្មែរ) · Gemini/Microsoft/Google"],
-  ["lo", "Lao (ລາວ) · Gemini/Microsoft/Google"],
   ["ms", "Malay (Bahasa Melayu) · Gemini/Microsoft/Google"],
   ["ml", "Malayalam (മലയാളം) · Gemini/Microsoft/Google"],
   ["mt", "Maltese (Malti) · Gemini/Microsoft/Google"],
@@ -57,8 +53,7 @@ const PROVIDER_EXTRA_LANGS = [
   ["ne", "Nepali (नेपाली) · Gemini/Microsoft/Google"],
   ["fa", "Persian (فارسی) · Gemini/Microsoft/Google"],
   ["pa", "Punjabi (ਪੰਜਾਬੀ) · Gemini/Microsoft/Google"],
-  ["sr-Latn", "Serbian Latin (Srpski) · Gemini/Microsoft/Google"],
-  ["sr-Cyrl", "Serbian Cyrillic (Српски) · Gemini/Microsoft/Google"],
+  ["sr", "Serbian (Srpski) · Gemini/Microsoft/Google"],
   ["sw", "Swahili (Kiswahili) · Gemini/Microsoft/Google"],
   ["ta", "Tamil (தமிழ்) · Gemini/Microsoft/Google"],
   ["te", "Telugu (తెలుగు) · Gemini/Microsoft/Google"],
@@ -66,7 +61,8 @@ const PROVIDER_EXTRA_LANGS = [
   ["ur", "Urdu (اردو) · Gemini/Microsoft/Google"],
   ["vi", "Vietnamese (Tiếng Việt) · Gemini/Microsoft/Google"],
   ["cy", "Welsh (Cymraeg) · Gemini/Microsoft/Google"],
-  ["zu", "Zulu (isiZulu) · Gemini/Microsoft/Google"]
+  ["zu", "Zulu (isiZulu) · Gemini/Microsoft/Google"],
+  ["tl", "Tagalog (Tagalog) · Gemini/Microsoft/Google"]
 ];
 
 const DEEPL_LANGUAGE_CODES = new Set(LANGS.map(([id]) => id));
@@ -941,7 +937,7 @@ function syncPersistentWebviews() {
 // Legacy v1.0.3 per-instance Current settings are migrated lazily to the first
 // detected conversation in that instance so an existing Korean/Chinese/etc.
 // chat keeps its previous target instead of suddenly inheriting Global.
-if (localStorage.getItem('lingua.desktopVersion') !== '1.0.36') {
+if (localStorage.getItem('lingua.desktopVersion') !== '1.0.37') {
   if (!ALL_LANGUAGE_CODES.has(state.globalSettings.sourceLang)) state.globalSettings.sourceLang = 'auto';
   if (!INCOMING_LANGUAGE_CODES.has(state.globalSettings.incomingTarget) || state.globalSettings.incomingTarget === 'auto') state.globalSettings.incomingTarget = 'en';
   if (!ALL_LANGUAGE_CODES.has(state.globalSettings.outgoingTarget) || state.globalSettings.outgoingTarget === 'auto') state.globalSettings.outgoingTarget = 'en';
@@ -967,7 +963,7 @@ if (localStorage.getItem('lingua.desktopVersion') !== '1.0.36') {
 
   state.translationMode = 'live';
   persist();
-  localStorage.setItem('lingua.desktopVersion', '1.0.36');
+  localStorage.setItem('lingua.desktopVersion', '1.0.37');
 }
 
 if (!state.instances.length) {
@@ -2020,7 +2016,7 @@ function render() {
   document.querySelector('#app').innerHTML = `
     <div class="app-shell ${state.showFallbackComposer ? 'fallback-open' : ''} ${state.settingsCollapsed ? 'settings-collapsed' : ''} ${state.instancesCollapsed ? 'instances-collapsed' : ''}">
       <aside class="instances">
-        <div class="brand"><img class="brand-logo" src="./lingua-logo.png" alt="Lingua logo"><span>Lingua</span><small class="version-badge">v1.0.36</small></div>
+        <div class="brand"><img class="brand-logo" src="./lingua-logo.png" alt="Lingua logo"><span>Lingua</span><small class="version-badge">v1.0.37</small></div>
         <div class="instance-list" aria-label="Messaging accounts. Drag to reorder.">
           ${state.instances.map(item => {
             const s = serviceFor(item);
