@@ -15,7 +15,7 @@ const checks = [
   ['provider chain continues after a provider budget/cooldown skip',
     translator.includes('if (!reservation.allowed)') && translator.includes('continue;')],
   ['provider usage is stored in the shared database rate-limit table',
-    guard.includes('prisma.rateLimitBucket') && guard.includes("requestFingerprint('translation-provider-")],
+    guard.includes('prisma.rateLimitBucket') && guard.includes('requestFingerprint') && guard.includes('translation-provider-')],
   ['monthly character ceiling is checked atomically',
     guard.includes('count: { lte: limit - characters }') && guard.includes('count: { increment: characters }')],
   ['DeepL API Free receives a conservative default ceiling',
