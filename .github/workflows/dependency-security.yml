@@ -52,7 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+          git add package-lock.json
           if git diff --cached --quiet; then
             echo "Lockfile is already current."
           else
