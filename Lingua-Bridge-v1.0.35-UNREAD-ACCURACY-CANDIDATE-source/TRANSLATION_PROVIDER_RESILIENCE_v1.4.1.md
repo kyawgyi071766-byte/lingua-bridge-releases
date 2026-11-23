@@ -19,7 +19,7 @@ The optional environment variables are:
 - `MICROSOFT_TRANSLATOR_MONTHLY_CHAR_LIMIT`
 - `GOOGLE_TRANSLATE_MONTHLY_CHAR_LIMIT`
 
-A value of `0` means no local cap. For an existing DeepL API Free key ending in `:fx`, the default local cap is 450,000 Unicode characters per UTC calendar month, leaving a margin below the plan's published monthly allowance. Google Cloud Translation Basic (the v2 endpoint used here) also defaults to 450,000 characters per UTC calendar month, below Google's published first-500,000-character monthly free usage credit. Explicit provider limit variables override the defaults.
+A value of `0` means no local cap. For an existing DeepL API Free key ending in `:fx`, the default local cap is 450,000 Unicode characters per UTC calendar month, leaving a margin below the plan's published monthly allowance. Google Cloud Translation Basic (the v2 endpoint used here) also defaults to 450,000 characters per UTC calendar month. Google currently applies a $10 monthly credit to the first 500,000 NMT text-translation characters, but Cloud Translation still requires an active Cloud Billing account; this is not a no-billing API. Usage above the credit can be billed to the linked billing account, and other apps in the same Google Cloud project can consume the shared allowance. Explicit provider limit variables override the local defaults.
 
 Counters are conservative: characters are reserved before the provider call and are not rolled back on provider errors, because a timeout can happen after a provider has received and processed a request. This favors preventing accidental overuse over maximizing the displayed remaining balance.
 
@@ -37,3 +37,13 @@ Counters are conservative: characters are reserved before the provider call and 
 2. Add a translation-result cache only after defining a privacy/retention policy for message text.
 3. Evaluate a Burmese-capable local model on realistic Burmese ↔ Bulgarian samples before selecting it as an offline fallback.
 4. Run the desktop incoming/outgoing regression suite and live provider smoke tests before publishing a production release.
+
+
+## Official provider references
+
+- Google Cloud Translation language support: https://docs.cloud.google.com/translate/docs/languages
+- Google Cloud Translation Basic setup and billing requirement: https://docs.cloud.google.com/translate/docs/setup
+- Google Cloud Translation pricing and monthly NMT credit: https://cloud.google.com/products/translate/pricing
+- Microsoft Translator language support: https://learn.microsoft.com/azure/ai-services/Translator/language-support
+
+These references document provider support, not the translation quality of Lingua Bridge's selected language pairs. Real Burmese ↔ Bulgarian sample tests are still required before production release.
