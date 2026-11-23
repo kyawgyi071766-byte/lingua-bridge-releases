@@ -9,7 +9,7 @@ const forbidden = ['am','fil','kn','km','lo','sr-Latn','sr-Cyrl'];
 const checks = [
   ['DeepL-Translator-listed extended languages remain available', Boolean(block) && required.every(code => new RegExp('\\["' + code + '"').test(block))],
   ['languages absent from the DeepL Translator list are excluded', Boolean(block) && forbidden.every(code => !new RegExp('\\["' + code + '"').test(block))],
-  ['Serbian is listed once without claiming script-specific variants', (block.match(/\\["sr"/g) || []).length === 1],
+  ['Serbian is listed once without claiming script-specific variants', block.split('["sr",').length === 2],
   ['Tagalog uses the DeepL-listed language name and code', block.includes('["tl", "Tagalog (Tagalog)')],
   ['the source documents that broad languages use fallback providers, not an implied DeepL API guarantee', app.includes('does not claim DeepL API support')],
   ['existing stored unsupported language selections are sanitized by the version migration', app.includes("localStorage.getItem('lingua.desktopVersion') !== '1.0.37'") && app.includes("localStorage.setItem('lingua.desktopVersion', '1.0.37')")]
