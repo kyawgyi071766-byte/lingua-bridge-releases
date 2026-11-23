@@ -127,9 +127,9 @@ jobs:
       - name: Publish Lingua Bridge desktop installer
         uses: actions/upload-artifact@v4
         with:
-          name: lingua-bridge-desktop-windows-v1.0.37
+          name: lingua-bridge-desktop-windows-v1.0.38
           retention-days: 14
-          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.37-public/*.exe
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/desktop-bridge/release-v1.0.38-public/*.exe
           if-no-files-found: error
 
   linux:
@@ -205,9 +205,9 @@ jobs:
           path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/lingua-ios-simulator.zip
 
   publish-desktop-1-0-37:
-    name: Publish verified Windows 1.0.37 release
+    name: Publish verified Windows 1.0.38 release
     if: >-
-      github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release: publish 1.0.37')
+      github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release: publish 1.0.38')
     needs: desktop-bridge-windows
     runs-on: ubuntu-latest
     permissions:
@@ -215,7 +215,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: lingua-bridge-desktop-windows-v1.0.37
+          name: lingua-bridge-desktop-windows-v1.0.38
           path: installer
       - name: Verify installer and publish versioned release
         env:
@@ -225,12 +225,12 @@ jobs:
         run: |
           set -euo pipefail
           cd installer
-          test -s Lingua-Bridge-Setup-1.0.37.exe
-          python3 -c "from pathlib import Path; p=Path('Lingua-Bridge-Setup-1.0.37.exe'); assert p.stat().st_size > 1000000; assert p.open('rb').read(2) == b'MZ'"
-          sha256sum Lingua-Bridge-Setup-1.0.37.exe > SHA256SUMS.txt
-          if gh release view v1.0.37 >/dev/null 2>&1; then
-            gh release upload v1.0.37 Lingua-Bridge-Setup-1.0.37.exe SHA256SUMS.txt --clobber
-            gh release edit v1.0.37 --target "$RELEASE_COMMIT" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix, multi-app outgoing translation, and Electron WebView hardening. CI web audits and desktop QA passed before publication."
+          test -s Lingua-Bridge-Setup-1.0.38.exe
+          python3 -c "from pathlib import Path; p=Path('Lingua-Bridge-Setup-1.0.38.exe'); assert p.stat().st_size > 1000000; assert p.open('rb').read(2) == b'MZ'"
+          sha256sum Lingua-Bridge-Setup-1.0.38.exe > SHA256SUMS.txt
+          if gh release view v1.0.38 >/dev/null 2>&1; then
+            gh release upload v1.0.38 Lingua-Bridge-Setup-1.0.38.exe SHA256SUMS.txt --clobber
+            gh release edit v1.0.38 --target "$RELEASE_COMMIT" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix, multi-app outgoing translation, and Electron WebView hardening. CI web audits and desktop QA passed before publication."
           else
-            gh release create v1.0.37 Lingua-Bridge-Setup-1.0.37.exe SHA256SUMS.txt --target "$RELEASE_COMMIT" --title "Lingua Bridge v1.0.37" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix. CI audits and desktop QA passed."
+            gh release create v1.0.38 Lingua-Bridge-Setup-1.0.38.exe SHA256SUMS.txt --target "$RELEASE_COMMIT" --title "Lingua Bridge v1.0.38" --notes "Windows x64 installer. Includes visible chat history translation opt-in fix. CI audits and desktop QA passed."
           fi
