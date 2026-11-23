@@ -1974,8 +1974,8 @@ function render() {
             <div class="provider-row"><span>Microsoft Translator</span><span class="health ${state.providerStatus?.microsoftConfigured?'ok':'off'}">${state.providerStatus?.microsoftConfigured?'Configured':'Not configured / unknown'}</span></div>
             <div class="provider-row"><span>Google Cloud Translation</span><span class="health ${state.providerStatus?.googleConfigured?'ok':'off'}">${state.providerStatus?.googleConfigured?'Configured':'Not configured / unknown'}</span></div>
             <div class="provider-capability ${broadProviderConfigured() ? 'ok' : 'warning'}">${broadProviderConfigured()
-              ? 'Broad languages enabled: Gemini/Microsoft/Google fallback can serve Myanmar/Burmese and the extended language list.'
-              : 'DeepL-only mode: Myanmar/Burmese and other extended languages stay disabled until Gemini, Microsoft Translator, or Google Translate is configured on the server.'}</div>
+              ? 'Broad languages enabled: Gemini/Microsoft/Google fallback can serve Arabic, Hindi, Thai, Vietnamese and the extended language list.'
+              : 'DeepL-only mode: Arabic, Hindi, Thai, Vietnamese and other extended languages stay disabled until Gemini, Microsoft Translator, or Google Translate is configured on the server. Burmese/Myanmar is available through DeepL.'}</div>
             <div class="provider-action-grid"><button class="secondary" id="refreshProviderStatus">Refresh provider status</button><button class="secondary" id="testLiveTranslation">Test live translation</button></div>
             ${state.liveTestResult ? `<div class="mini-result">${esc(state.liveTestResult)}</div>` : ''}
             </div>
@@ -2213,8 +2213,8 @@ function bindEvents() {
   document.querySelector('#refreshProviderStatus')?.addEventListener('click', async () => {
     state.providerStatus = await window.linguaDesktop.providerStatus().catch(() => ({ok:false}));
     setNotice(broadProviderConfigured()
-      ? 'Broad-language provider is ready. Myanmar/Burmese and other Gemini/Microsoft/Google languages are available.'
-      : 'Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Myanmar/Burmese and other broad languages.',
+      ? 'Broad-language provider is ready. Arabic, Hindi, Thai, Vietnamese and other Gemini/Microsoft/Google languages are available.'
+      : 'Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Arabic, Hindi, Thai, Vietnamese and other broad languages. Burmese/Myanmar is available through DeepL.',
       !broadProviderConfigured());
     render();
   });
