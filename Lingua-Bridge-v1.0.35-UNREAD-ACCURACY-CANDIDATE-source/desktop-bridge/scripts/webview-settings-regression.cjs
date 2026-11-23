@@ -13,23 +13,29 @@ function functionSource(name, endMarker) {
   return appSource.slice(start, end);
 }
 
+const instance = { id: 'tiktok-1', service: 'tiktok' };
+const cachedInstanceSettings = {
+  sourceLang: 'auto',
+  incomingTarget: 'my',
+  outgoingTarget: 'en',
+  autoTranslateIncoming: true,
+  translateBeforeSending: true,
+  showInlineTranslations: true,
+};
+let latestEffectiveSettings = { ...cachedInstanceSettings };
 const context = vm.createContext({
   serviceFor: () => ({ browser: false }),
-  settingsForInstance: () => ({
-    sourceLang: 'auto',
-    incomingTarget: 'my',
-    outgoingTarget: 'en',
-    autoTranslateIncoming: true,
-    translateBeforeSending: true,
-    showInlineTranslations: true,
-  }),
-  languageName: code => ({ auto: 'Auto detect', my: 'Myanmar', en: 'English' }[code] || String(code || '')),
+  settingsForInstance: () => ({ ...cachedInstanceSettings }),
+  currentSettings: () => ({ ...latestEffectiveSettings }),
+  activeInstance: () => instance,
+  activePersistentView: () => view,
+  languageName: code => ({
+    auto: 'Auto detect',
+    my: 'Myanmar / Burmese',
+    en: 'English',
+    es: 'Spanish'
+  }[code] || String(code || '')),
 });
-vm.runInContext(
-  functionSource('sendSettingsToPersistentView', '\nfunction rememberBrowserUrlFor') +
-  '\nglobalThis.__sendSettingsToPersistentView = sendSettingsToPersistentView;',
-  context
-);
 
 let deliveries = [];
 let failNextSend = false;
@@ -43,7 +49,15 @@ const view = {
     deliveries.push({ channel, payload });
   },
 };
-const instance = { id: 'tiktok-1', service: 'tiktok' };
+
+vm.runInContext(
+  functionSource('sendSettingsToPersistentView', '\nfunction rememberBrowserUrlFor') +
+  functionSource('sendSettings', '\nfunction incomingQueueKey') +
+  '\nglobalThis.__sendSettingsToPersistentView = sendSettingsToPersistentView;' +
+  '\nglobalThis.__sendSettings = sendSettings;',
+  context
+);
+
 const sendSettings = (force = false) =>
   context.__sendSettingsToPersistentView(view, instance, true, { force });
 
@@ -73,6 +87,23 @@ sendSettings();
 assert.equal(deliveries.length, 3, 'a later ordinary sync retries the failed delivery');
 assert.notEqual(view.dataset.linguaSettingsSignature, '', 'successful retry records the signature');
 
+// A language edit must send the latest effective Current conversation profile,
+// not a stale per-instance snapshot, and must bypass a cached signature.
+latestEffectiveSettings = { ...latestEffectiveSettings, outgoingTarget: 'es' };
+const expectedLatestPayload = {
+  ...latestEffectiveSettings,
+  isActive: true,
+  incomingTargetLabel: 'Myanmar / Burmese',
+  sourceLangLabel: 'Auto detect',
+  outgoingTargetLabel: 'Spanish'
+};
+view.dataset.linguaSettingsSignature = JSON.stringify(expectedLatestPayload);
+const beforeLanguageEdit = deliveries.length;
+context.__sendSettings();
+assert.equal(deliveries.length, beforeLanguageEdit + 1, 'explicit language change is force-delivered despite a cached signature');
+assert.equal(deliveries.at(-1).payload.outgoingTarget, 'es', 'active guest receives the newest effective target language');
+assert.equal(deliveries.at(-1).payload.outgoingTargetLabel, 'Spanish', 'active guest receives the matching display label');
+
 // The actual webview lifecycle must force settings after every full navigation.
 assert.match(appSource, /view\.addEventListener\('dom-ready', \(\) => \{[\s\S]*?sendSettingsToPersistentView\(view, instance, true, \{ force: true \}\)/);
 assert.match(appSource, /sendSettingsToPersistentView\(view, instance, false, \{ force: true \}\)/);
@@ -81,3 +112,4 @@ assert.match(appSource, /view\.addEventListener\('did-start-loading', \(\) => \{
 console.log('PASS webview settings are sent only after DOM ready');
 console.log('PASS reload forces settings into the newly-created service preload');
 console.log('PASS a failed IPC delivery remains retryable');
+console.log('PASS language changes force the latest effective profile to the active webview');
