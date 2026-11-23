@@ -76,7 +76,7 @@ export const LANGUAGES = [
 ];
 
 export const DEEPL_SUPPORTED: Record<string, string> = {
-  bg: "BG", cs: "CS", da: "DA", de: "DE", el: "EL", en: "EN", es: "ES", et: "ET",
+  bg: "BG", my: "MY", cs: "CS", da: "DA", de: "DE", el: "EL", en: "EN", es: "ES", et: "ET",
   fi: "FI", fr: "FR", hu: "HU", id: "ID", it: "IT", ja: "JA", ko: "KO", lt: "LT",
   lv: "LV", no: "NB", nl: "NL", pl: "PL", pt: "PT-PT", ro: "RO", ru: "RU", sk: "SK",
   sl: "SL", sv: "SV", tr: "TR", uk: "UK", zh: "ZH",
