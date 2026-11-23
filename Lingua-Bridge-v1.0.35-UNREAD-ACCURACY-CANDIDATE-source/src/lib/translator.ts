@@ -495,7 +495,7 @@ export async function translateText(text: string, targetLang: string, sourceLang
   const failures: string[] = [];
   for (const provider of order) {
     const reservation = await reserveTranslationProvider(provider, countCharacters(text));
-    if (!reservation.allowed) {
+    if (reservation.allowed === false) {
       failures.push(`${provider}: ${reservation.reason}`);
       continue;
     }
