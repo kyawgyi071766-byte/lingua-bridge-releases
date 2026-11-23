@@ -11,7 +11,10 @@ const checks = [
   ['account footer add button has Burmese translation', app.includes('"Add messaging account": "စာတိုအကောင့် ထည့်ရန်"')],
   ['original text is preserved across language switches', app.includes('const uiTextSource = new WeakMap()') && app.includes('previous && current === previous.translated ? previous.source : current')],
   ['dynamic text and attributes are observed', app.includes('new MutationObserver(records =>') && app.includes('characterData: true') && app.includes("attributeFilter: ['title', 'aria-label', 'placeholder']")],
-  ['language selection applies immediately without rerender', /#uiLanguage[\s\S]{0,420}applyUiLanguage\(\);\s*\}\);/.test(app) && !/#uiLanguage[\s\S]{0,420}render\(\)/.test(app)],
+  ['language selection applies immediately without rerender', (() => {
+    const match = app.match(/document\\.querySelector\\('#uiLanguage'\\)\\?\\.addEventListener\\('change', e => \\{[\\s\\S]*?applyUiLanguage\\(\\);[\\s\\S]*?\\}\\);/);
+    return Boolean(match) && !match[0].includes('render()');
+  })()],
   ['observer translates inserted footer controls', app.includes('record.addedNodes.forEach(node => translateUiSubtree(node, activeDict))')],
 ];
 
