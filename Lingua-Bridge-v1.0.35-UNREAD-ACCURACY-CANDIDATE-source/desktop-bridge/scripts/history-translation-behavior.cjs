@@ -39,8 +39,10 @@ const context = vm.createContext({
 });
 vm.runInContext(source.slice(begin, end), context);
 context.scanMessages(false);
-assert.equal(calls.length, 0, 'history off should not auto-send old bubbles for translation');
-assert(messages.every(node => node.dataset.linguaSeenConversation === scope));
+assert.equal(calls.length, 1, 'history off should auto-translate only the newest incoming bubble');
+assert.equal(calls[0].text, 'Past message 5', 'the newest incoming bubble must receive realtime priority');
+assert.equal(calls[0].priority, 'realtime');
+assert(messages.slice(0, -1).every(node => node.dataset.linguaSeenConversation === scope), 'older bubbles remain marked as history');
 context.settings.autoTranslateHistorical = true;
 context.clearMessageFingerprints();
 context.scanMessages(false);
