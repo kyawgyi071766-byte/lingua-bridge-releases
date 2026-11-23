@@ -12,9 +12,10 @@ const checks = [
   ['original text is preserved across language switches', app.includes('const uiTextSource = new WeakMap()') && app.includes('previous && current === previous.translated ? previous.source : current')],
   ['dynamic text and attributes are observed', app.includes('new MutationObserver(records =>') && app.includes('characterData: true') && app.includes("attributeFilter: ['title', 'aria-label', 'placeholder']")],
   ['language selection applies immediately without rerender', (() => {
-    const match = app.match(/document\\.querySelector\\('#uiLanguage'\\)\\?\\.addEventListener\\('change', e => \\{[\\s\\S]*?applyUiLanguage\\(\\);[\\s\\S]*?\\}\\);/);
-    return Boolean(match) && !match[0].includes('render()');
-  })()],
+    const start = app.indexOf("document.querySelector('#uiLanguage')?.addEventListener('change'");
+    const end = app.indexOf("\n  document.querySelector('#toggleSettings')", start);
+    const handler = start >= 0 && end > start ? app.slice(start, end) : '';
+    return Boolean(handler) && handler.includes('applyUiLanguage();') && !handler.includes('render()');
   ['observer translates inserted footer controls', app.includes('record.addedNodes.forEach(node => translateUiSubtree(node, activeDict))')],
 ];
 
