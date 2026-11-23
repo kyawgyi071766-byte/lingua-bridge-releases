@@ -12,7 +12,7 @@ const checks = [
   ['Serbian is listed once without claiming script-specific variants', block.split('["sr",').length === 2],
   ['Tagalog uses the DeepL-listed language name and code', block.includes('["tl", "Tagalog (Tagalog)')],
   ['the source documents that broad languages use fallback providers, not an implied DeepL API guarantee', app.includes('does not claim DeepL API support')],
-  ['existing stored unsupported language selections are sanitized by the version migration', app.includes("localStorage.getItem('lingua.desktopVersion') !== '1.0.37'") && app.includes("localStorage.setItem('lingua.desktopVersion', '1.0.37')")]
+  ['existing stored unsupported language selections are sanitized by the version migration', app.includes("localStorage.getItem('lingua.desktopVersion') !== '1.0.38'") && app.includes("localStorage.setItem('lingua.desktopVersion', '1.0.38')")]
 ];
 let failed = 0;
 for (const [name, ok] of checks) {
