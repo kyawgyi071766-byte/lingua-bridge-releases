@@ -197,28 +197,169 @@ const UI_TRANSLATIONS = {
     "Start translating free": "免费开始翻译",
     "See pricing →": "查看价格 →",
     "Customer download →": "客户下载 →"
+  },
+  "my": {
+    "No service selected": "ဝန်ဆောင်မှု မရွေးရသေးပါ",
+    "Messaging accounts. Drag to reorder.": "စာတိုပို့အကောင့်များ။ အစီအစဉ်ပြောင်းရန် ဆွဲရွှေ့ပါ။",
+    "Expand messaging account sidebar": "စာတိုအကောင့်ဘေးဘားကို ချဲ့ရန်",
+    "Collapse messaging account sidebar": "စာတိုအကောင့်ဘေးဘားကို ခေါက်ရန်",
+    "Add messaging account": "စာတိုအကောင့် ထည့်ရန်",
+    "Lingua login required": "Lingua သို့ ဝင်ရောက်ရန် လိုအပ်သည်",
+    "Hide fallback": "အစားထိုးစာရိုက်ခန်းကို ဖျောက်ရန်",
+    "Fallback composer": "အစားထိုးစာရိုက်ခန်း",
+    "Account details": "အကောင့်အသေးစိတ်",
+    "Rename": "အမည်ပြောင်းရန်",
+    "Remove": "ဖယ်ရှားရန်",
+    "Reload": "ပြန်ဖွင့်ရန်",
+    "Open Signal Desktop": "Signal Desktop ဖွင့်ရန်",
+    "Reset login": "ဝင်ရောက်မှု ပြန်သတ်မှတ်ရန်",
+    "App settings, cache, proxy and updates": "အက်ပ်ဆက်တင်၊ ကက်ရှ်၊ ပရောက်စီနှင့် အပ်ဒိတ်များ",
+    "Search Google or enter a web address": "Google တွင်ရှာရန် သို့မဟုတ် ဝဘ်လိပ်စာထည့်ရန်",
+    "Go": "သွားရန်",
+    "Add a messaging service.": "စာတိုပို့ဝန်ဆောင်မှုတစ်ခု ထည့်ပါ။",
+    "Translate & Insert": "ဘာသာပြန်ပြီး ထည့်ရန်",
+    "Translate & Send": "ဘာသာပြန်ပြီး ပို့ရန်",
+    "Translation": "ဘာသာပြန်ချက်",
+    "Current": "လက်ရှိ",
+    "Global": "အထွေထွေ",
+    "Owner diagnostics": "ပိုင်ရှင် စစ်ဆေးမှု",
+    "Live": "တိုက်ရိုက်",
+    "Test": "စမ်းသပ်ရန်",
+    "Provider status": "ဘာသာပြန်ဝန်ဆောင်မှုပေးသူ အခြေအနေ",
+    "Ready": "အသင့်ဖြစ်ပြီ",
+    "Server": "ဆာဗာ",
+    "Unknown": "မသိရှိပါ",
+    "Configured": "ပြင်ဆင်ပြီး",
+    "Not configured / unknown": "မပြင်ဆင်ရသေး / မသိရှိပါ",
+    "Refresh provider status": "ဝန်ဆောင်မှုပေးသူ အခြေအနေ ပြန်စစ်ရန်",
+    "Test live translation": "တိုက်ရိုက်ဘာသာပြန်မှု စမ်းသပ်ရန်",
+    "Service": "ဝန်ဆောင်မှု",
+    "Yes": "ဟုတ်ကဲ့",
+    "No": "မဟုတ်ပါ",
+    "Translate visible messages now": "မြင်ရသောစာများကို ယခုပင် ဘာသာပြန်ရန်",
+    "Lingua account": "Lingua အကောင့်",
+    "Signed in as": "ဝင်ရောက်ထားသူ -",
+    "Log out": "ထွက်ရန်",
+    "Billing": "ငွေပေးချေမှု",
+    "Redeem Gift Code": "လက်ဆောင်ကုဒ် အသုံးပြုရန်",
+    "Owner Admin": "ပိုင်ရှင် စီမံခန့်ခွဲမှု",
+    "Refresh plan": "အစီအစဉ် ပြန်စစ်ရန်",
+    "Email": "အီးမေးလ်",
+    "Password": "စကားဝှက်",
+    "Log in": "ဝင်ရန်",
+    "Languages & direct send": "ဘာသာစကားများနှင့် တိုက်ရိုက်ပို့ခြင်း",
+    "You type": "သင် ရိုက်ထည့်မည်",
+    "Customer receives": "ဖောက်သည် လက်ခံရရှိမည်",
+    "My/source language": "ကျွန်ုပ်၏ / မူရင်းဘာသာစကား",
+    "Show incoming customer messages in": "ဖောက်သည်ထံမှ ဝင်လာသောစာများကို ပြသမည့်ဘာသာစကား",
+    "Send my messages in (customer language)": "ကျွန်ုပ်၏စာများကို ပို့မည့်ဘာသာစကား (ဖောက်သည်၏ဘာသာစကား)",
+    "Easy Translate mode": "လွယ်ကူသော ဘာသာပြန်မုဒ်",
+    "Translate directly inside messenger": "စာတိုအက်ပ်အတွင်း တိုက်ရိုက်ဘာသာပြန်ရန်",
+    "Auto-translate before Send / Enter": "ပို့မီ / Enter နှိပ်မီ အလိုအလျောက်ဘာသာပြန်ရန်",
+    "Confirm translated text before send": "မပို့မီ ဘာသာပြန်စာသားကို အတည်ပြုရန်",
+    "Incoming message display": "ဝင်လာသောစာများ ပြသမှု",
+    "Auto translate incoming customer messages": "ဖောက်သည်ထံမှ ဝင်လာသောစာများကို အလိုအလျောက်ဘာသာပြန်ရန်",
+    "Auto translate visible history": "မြင်ရသော ယခင်စာများကို အလိုအလျောက်ဘာသာပြန်ရန်",
+    "Show clean translation card under message": "စာတစ်ခုအောက်တွင် ဘာသာပြန်ကတ်ကို ရှင်းလင်းစွာပြရန်",
+    "Also translate my own sent messages": "ကျွန်ုပ်ပို့သောစာများကိုလည်း ဘာသာပြန်ရန်",
+    "Add messaging service": "စာတိုပို့ဝန်ဆောင်မှု ထည့်ရန်",
+    "Close": "ပိတ်ရန်",
+    "Quantity": "အရေအတွက်",
+    "Experimental": "စမ်းသပ်ဆဲ",
+    "Back": "နောက်သို့",
+    "Forward": "ရှေ့သို့",
+    "Google home": "Google ပင်မစာမျက်နှာ",
+    "Enter a valid web address or search.": "မှန်ကန်သော ဝဘ်လိပ်စာ သို့မဟုတ် ရှာဖွေမှု ထည့်ပါ။",
+    "Could not open that web address.": "ထိုဝဘ်လိပ်စာကို ဖွင့်မရပါ။",
+    "Account refreshed": "အကောင့်ကို ပြန်လည်စစ်ဆေးပြီးပါပြီ",
+    "Could not refresh account plan.": "အကောင့်အစီအစဉ်ကို ပြန်စစ်မရပါ။",
+    "Translate anything,": "မည်သည့်စာကိုမဆို ဘာသာပြန်ပါ၊",
+    "in seconds.": "စက္ကန့်ပိုင်းအတွင်း။",
+    "Start translating free": "အခမဲ့ ဘာသာပြန်စတင်ရန်",
+    "See pricing →": "ဈေးနှုန်းကြည့်ရန် →",
+    "Customer download →": "အသုံးပြုသူ ဒေါင်းလုဒ် →"
   }
 };
+
+const uiTextSource = new WeakMap();
+const uiAttributeSource = new WeakMap();
+let uiLanguageObserver = null;
+
+function translateUiTextNode(node, dict) {
+  const current = node.nodeValue || '';
+  const previous = uiTextSource.get(node);
+  const source = previous && current === previous.translated ? previous.source : current;
+  const key = source.trim();
+  const translated = dict?.[key] || key;
+  const next = key && translated !== key ? source.replace(key, translated) : source;
+  if (next !== current) node.nodeValue = next;
+  uiTextSource.set(node, { source, translated: next });
+}
+
+function translateUiElementAttributes(element, dict) {
+  let records = uiAttributeSource.get(element);
+  if (!records) {
+    records = new Map();
+    uiAttributeSource.set(element, records);
+  }
+  for (const attr of ['title', 'aria-label', 'placeholder']) {
+    const current = element.getAttribute(attr);
+    if (current == null) continue;
+    const previous = records.get(attr);
+    const source = previous && current === previous.translated ? previous.source : current;
+    const translated = dict?.[source] || source;
+    if (translated !== current) element.setAttribute(attr, translated);
+    records.set(attr, { source, translated });
+  }
+}
+
+function translateUiSubtree(root, dict) {
+  if (!root) return;
+  if (root.nodeType === Node.TEXT_NODE) {
+    translateUiTextNode(root, dict);
+    return;
+  }
+  if (root.nodeType === Node.ELEMENT_NODE) translateUiElementAttributes(root, dict);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) translateUiTextNode(walker.currentNode, dict);
+  if (root.querySelectorAll) {
+    root.querySelectorAll('[title],[aria-label],[placeholder]').forEach(element => {
+      translateUiElementAttributes(element, dict);
+    });
+  }
+}
 
 function applyUiLanguage() {
   const lang = state.uiLanguage || 'en';
   const dict = UI_TRANSLATIONS[lang];
-  document.documentElement.lang = lang === 'zh-CN' ? 'zh-CN' : 'en';
-  if (!dict) return;
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(node => {
-    const raw = node.nodeValue || '';
-    const key = raw.trim();
-    if (dict[key]) node.nodeValue = raw.replace(key, dict[key]);
-  });
-  document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(el => {
-    for (const attr of ['title','aria-label','placeholder']) {
-      const value = el.getAttribute(attr);
-      if (value && dict[value]) el.setAttribute(attr, dict[value]);
-    }
-  });
+  document.documentElement.lang = lang === 'zh-CN' ? 'zh-CN' : lang === 'my' ? 'my' : 'en';
+  translateUiSubtree(document.body, dict);
+
+  // Keep dynamically-rendered controls (including the account footer bar) in the
+  // selected language without requiring a page refresh or a full app re-render.
+  if (!uiLanguageObserver && document.body && typeof MutationObserver !== 'undefined') {
+    uiLanguageObserver = new MutationObserver(records => {
+      const activeDict = UI_TRANSLATIONS[state.uiLanguage];
+      for (const record of records) {
+        if (record.type === 'characterData') {
+          translateUiTextNode(record.target, activeDict);
+          continue;
+        }
+        if (record.type === 'attributes') {
+          translateUiElementAttributes(record.target, activeDict);
+          continue;
+        }
+        record.addedNodes.forEach(node => translateUiSubtree(node, activeDict));
+      }
+    });
+    uiLanguageObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['title', 'aria-label', 'placeholder']
+    });
+  }
 }
 
 const state = {
@@ -1916,7 +2057,7 @@ function render() {
           <button class="small-btn" id="reloadService">Reload</button>
           ${svc.id === 'signal' ? `<button class="small-btn" id="openSignalDesktop">Open Signal Desktop</button>` : ''}
           <button class="small-btn" id="clearSession">Reset login</button>
-          <select class="small-btn ui-language-select" id="uiLanguage" aria-label="Interface language"><option value="en" ${state.uiLanguage==='en'?'selected':''}>English</option><option value="zh-CN" ${state.uiLanguage==='zh-CN'?'selected':''}>简体中文</option></select><button class="small-btn settings-launch" id="appSettingsBtn" title="App settings, cache, proxy and updates">⚙ Settings</button>
+          <select class="small-btn ui-language-select" id="uiLanguage" aria-label="Interface language"><option value="en" ${state.uiLanguage==='en'?'selected':''}>English</option><option value="my" ${state.uiLanguage==='my'?'selected':''}>မြန်မာ</option><option value="zh-CN" ${state.uiLanguage==='zh-CN'?'selected':''}>简体中文</option></select><button class="small-btn settings-launch" id="appSettingsBtn" title="App settings, cache, proxy and updates">⚙ Settings</button>
         </div>
 
         ${browserMode ? `<div class="browser-toolbar" aria-label="Chrome web navigation">
@@ -2188,7 +2329,12 @@ function bindEvents() {
     if (event.key === 'Enter') { event.preventDefault(); navigateBrowser(); }
   });
 
-  document.querySelector('#uiLanguage')?.addEventListener('change', e => { state.uiLanguage = e.target.value === 'zh-CN' ? 'zh-CN' : 'en'; localStorage.setItem('lingua.uiLanguage', state.uiLanguage); render(); });
+  document.querySelector('#uiLanguage')?.addEventListener('change', e => {
+    const selected = e.target.value;
+    state.uiLanguage = ['en', 'my', 'zh-CN'].includes(selected) ? selected : 'en';
+    localStorage.setItem('lingua.uiLanguage', state.uiLanguage);
+    applyUiLanguage();
+  });
   document.querySelector('#toggleSettings')?.addEventListener('click', () => {
     state.settingsCollapsed = !state.settingsCollapsed;
     persist();
