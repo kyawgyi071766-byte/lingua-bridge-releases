@@ -1,4 +1,9 @@
 import { DEEPL_SUPPORTED, LANGUAGES } from './languages';
+import {
+  recordTranslationProviderFailure,
+  recordTranslationProviderSuccess,
+  reserveTranslationProvider,
+} from './translationProviderGuard';
 
 export type TranslationProvider = 'deepl' | 'gemini' | 'microsoft' | 'google' | 'identity';
 export type TranslationResult = { text: string; provider: TranslationProvider; detectedSource?: string };
@@ -373,7 +378,6 @@ async function translateGoogle(text: string, target: string, source?: string): P
 
   return withRetry(async () => {
     const url = new URL('https://translation.googleapis.com/language/translate/v2');
-    url.searchParams.set('key', key!);
 
     const params = new URLSearchParams();
     params.set('q', text);
@@ -383,7 +387,10 @@ async function translateGoogle(text: string, target: string, source?: string): P
 
     const res = await fetch(url.toString(), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'x-goog-api-key': key!,
+      },
       body: params.toString(),
       signal: AbortSignal.timeout(20_000),
     });
@@ -487,18 +494,34 @@ export async function translateText(text: string, targetLang: string, sourceLang
   let lastError: unknown;
   const failures: string[] = [];
   for (const provider of order) {
+    const reservation = await reserveTranslationProvider(provider, countCharacters(text));
+    if (!reservation.allowed) {
+      failures.push(`${provider}: ${reservation.reason}`);
+      continue;
+    }
+
     try {
       const result = await runProvider(provider, text, target, source);
       recordProviderSuccess(provider);
+      await recordTranslationProviderSuccess(provider).catch((error) => {
+        console.error('Could not persist translation provider success:', provider, error);
+      });
       return result;
     } catch (error) {
       lastError = error;
       recordProviderFailure(provider, error);
+      await recordTranslationProviderFailure(provider, {
+        status: error instanceof ProviderError ? error.status : undefined,
+        retryAfterMs: error instanceof ProviderError ? error.retryAfterMs : undefined,
+        timedOut: error instanceof Error && /timed out|timeout|aborted/i.test(error.message),
+      }).catch((persistError) => {
+        console.error('Could not persist translation provider failure:', provider, persistError);
+      });
       failures.push(`${provider}: ${error instanceof Error ? error.message : 'unknown error'}`);
       // TRANSLATE_PROVIDER selects the preferred provider; it is not a
       // fail-closed mode unless TRANSLATE_PROVIDER_STRICT is explicitly set.
-      // Keep falling through so a 429/503/timeout on the preferred provider
-      // does not make an otherwise healthy translation chain fail.
+      // Keep falling through so provider outages and exhausted budgets do not
+      // prevent another configured provider from translating the message.
     }
   }
 
