@@ -30,11 +30,11 @@ assert.match(app, /Burmese\/Myanmar is available through DeepL/,
   'provider status text confirms Burmese is available through DeepL');
 assert.doesNotMatch(app, /DeepL-only mode: Myanmar\/Burmese and other extended languages stay disabled/,
   'provider status text no longer disables Burmese when broad providers are absent');
-assert.doesNotMatch(app, /DeepL-only for broad-language purposes\\. Configure[^\\n]*Myanmar\/Burmese and other broad languages/,
+assert.doesNotMatch(app, /DeepL-only for broad-language purposes\. Configure[^\n]*Myanmar\/Burmese and other broad languages/,
   'refresh-provider notice no longer says Burmese requires a broad provider');
-assert.match(app, /DeepL-only mode: Arabic, Hindi, Thai, Vietnamese[\\s\\S]{0,600}Burmese\/Myanmar is available through DeepL/,
+assert.match(app, /DeepL-only mode: Arabic, Hindi, Thai, Vietnamese[\s\S]{0,600}Burmese\/Myanmar is available through DeepL/,
   'owner provider panel distinguishes DeepL Burmese from other broad-only languages');
-assert.match(app, /Current server is DeepL-only for broad-language purposes[\\s\\S]{0,600}Burmese\/Myanmar is available through DeepL/,
+assert.match(app, /Current server is DeepL-only for broad-language purposes[\s\S]{0,600}Burmese\/Myanmar is available through DeepL/,
   'provider refresh notice explains Burmese remains available through DeepL');
 
 console.log('PASS Burmese is a regular selectable DeepL language');
