@@ -15,8 +15,8 @@ Desktop client for the Lingua SaaS backend. It is designed to behave like an Eas
 
 The desktop app never contains a DeepL or Google API key. It signs in to the existing Lingua server and calls `/api/translate`. The server chooses the provider:
 
-- DeepL for supported language pairs when configured.
-- Microsoft Translator Stage 1 broad-language fallback for Burmese/Myanmar, Arabic, Hindi, Thai and Vietnamese; Google remains an optional later fallback.
+- DeepL for supported language pairs when configured, including Burmese (`my` → API code `MY`) and Bulgarian (`bg` → API code `BG`).
+- Microsoft Translator Stage 1 broad-language fallback for Arabic, Hindi, Thai and Vietnamese; Google remains an optional later fallback. Burmese is in the regular DeepL-supported list and is not gated on a broad-language provider.
 - `TRANSLATE_PROVIDER=auto` is recommended.
 
 This keeps API keys private and keeps plan quotas, account suspension, billing, and usage accounting under the owner's control.

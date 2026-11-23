@@ -33,13 +33,14 @@
     "audit:gemini": "node scripts/gemini-translator-audit.js",
     "audit:public-release": "node scripts/public-release-audit.js",
     "audit:global-public": "node scripts/global-public-release-audit.js",
-    "audit:safe-send-payment": "node scripts/safe-send-payment-audit.js"
+    "audit:safe-send-payment": "node scripts/safe-send-payment-audit.js",
+    "audit:dependency-security": "node scripts/dependency-security-audit.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.6.3",
-    "next": "^15.5.27",
+    "next": "^15.5.29",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "stripe": "^16.8.0"
@@ -54,7 +55,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.19",
-    "electron": "44.4.3",
+    "electron": "44.9.1",
     "electron-builder": "26.16.1",
     "postcss": "^8.4.40",
     "prisma": "^5.18.0",
@@ -62,11 +63,35 @@
     "typescript": "^5.5.4"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": "22.x"
   },
   "homepage": "https://lingua-github-import.vercel.app",
   "author": {
     "name": "Lingua Translate",
     "email": "kyawgyi071766@gmail.com"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.28"
+    },
+    "@capacitor/cli": {
+      "tar": "7.5.23",
+      "rimraf": "6.1.4"
+    },
+    "sharp": "0.35.5",
+    "source-map-js": "1.2.2",
+    "postcss-selector-parser": "6.1.5",
+    "fast-uri": "3.1.9",
+    "qs": "6.16.1",
+    "undici": "7.30.1",
+    "node-gyp": {
+      "undici": "6.29.1"
+    },
+    "app-builder-lib": {
+      "minimatch": "11.0.9"
+    },
+    "@electron/universal": {
+      "minimatch": "11.0.9"
+    }
   }
 }

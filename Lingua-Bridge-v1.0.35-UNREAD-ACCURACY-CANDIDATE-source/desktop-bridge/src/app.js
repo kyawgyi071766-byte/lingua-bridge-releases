@@ -23,7 +23,7 @@ const SERVICES = [
   { id:'custom', name:'Custom Web Chat', url:'https://', color:'#6B7280', letter:'+', duplicate:true, experimental:true }
 ];
 
-const LANGS = [["auto", "Auto detect"], ["bg", "Bulgarian (Български)"], ["cs", "Czech (Čeština)"], ["da", "Danish (Dansk)"], ["de", "German (Deutsch)"], ["el", "Greek (Ελληνικά)"], ["en", "English"], ["es", "Spanish (Español)"], ["et", "Estonian (Eesti)"], ["fi", "Finnish (Suomi)"], ["fr", "French (Français)"], ["hu", "Hungarian (Magyar)"], ["id", "Indonesian (Bahasa)"], ["it", "Italian (Italiano)"], ["ja", "Japanese (日本語)"], ["ko", "Korean (한국어)"], ["lt", "Lithuanian (Lietuvių)"], ["lv", "Latvian (Latviešu)"], ["no", "Norwegian (Norsk)"], ["nl", "Dutch (Nederlands)"], ["pl", "Polish (Polski)"], ["pt", "Portuguese (Português)"], ["ro", "Romanian (Română)"], ["ru", "Russian (Русский)"], ["sk", "Slovak (Slovenčina)"], ["sl", "Slovenian (Slovenščina)"], ["sv", "Swedish (Svenska)"], ["tr", "Turkish (Türkçe)"], ["uk", "Ukrainian (Українська)"], ["zh", "Chinese (中文)"]];
+const LANGS = [["auto", "Auto detect"], ["bg", "Bulgarian (Български)"], ["cs", "Czech (Čeština)"], ["da", "Danish (Dansk)"], ["de", "German (Deutsch)"], ["el", "Greek (Ελληνικά)"], ["en", "English"], ["es", "Spanish (Español)"], ["et", "Estonian (Eesti)"], ["fi", "Finnish (Suomi)"], ["fr", "French (Français)"], ["hu", "Hungarian (Magyar)"], ["id", "Indonesian (Bahasa)"], ["it", "Italian (Italiano)"], ["ja", "Japanese (日本語)"], ["ko", "Korean (한국어)"], ["lt", "Lithuanian (Lietuvių)"], ["lv", "Latvian (Latviešu)"], ["my", "Myanmar / Burmese (မြန်မာ)"], ["no", "Norwegian (Norsk)"], ["nl", "Dutch (Nederlands)"], ["pl", "Polish (Polski)"], ["pt", "Portuguese (Português)"], ["ro", "Romanian (Română)"], ["ru", "Russian (Русский)"], ["sk", "Slovak (Slovenčina)"], ["sl", "Slovenian (Slovenščina)"], ["sv", "Swedish (Svenska)"], ["tr", "Turkish (Türkçe)"], ["uk", "Ukrainian (Українська)"], ["zh", "Chinese (中文)"]];
 
 // v1.0.19 broad-language provider set. These languages use server-side
 // Gemini, Microsoft Translator, or Google Translate and are only selectable when the
@@ -53,7 +53,6 @@ const PROVIDER_EXTRA_LANGS = [
   ["ml", "Malayalam (മലയാളം) · Gemini/Microsoft/Google"],
   ["mt", "Maltese (Malti) · Gemini/Microsoft/Google"],
   ["mr", "Marathi (मराठी) · Gemini/Microsoft/Google"],
-  ["my", "Myanmar / Burmese (မြန်မာ) · Gemini/Microsoft/Google"],
   ["ne", "Nepali (नेपाली) · Gemini/Microsoft/Google"],
   ["fa", "Persian (فارسی) · Gemini/Microsoft/Google"],
   ["pa", "Punjabi (ਪੰਜਾਬੀ) · Gemini/Microsoft/Google"],
@@ -186,8 +185,8 @@ const UI_TRANSLATIONS = {
     "Enter a valid web address or search.": "请输入有效网址或搜索内容。",
     "Could not open that web address.": "无法打开该网址。",
     "This language needs Gemini, Microsoft Translator, or Google Translate on the Lingua server. The current server has no broad-language provider configured, so your language setting was not changed.": "此语言需要 Lingua 服务器上的 Gemini、Microsoft Translator 或 Google Translate。当前服务器未配置广泛语言服务商，因此语言设置未更改。",
-    "Broad-language provider is ready. Myanmar/Burmese and other Gemini/Microsoft/Google languages are available.": "广泛语言服务商已就绪。缅甸语及其他 Gemini/Microsoft/Google 语言可用。",
-    "Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Myanmar/Burmese and other broad languages.": "当前服务器仅提供 DeepL。要使用缅甸语及其他广泛语言，请在 Vercel 上配置 Gemini、Microsoft Translator 或 Google Translate。",
+    "Broad-language provider is ready. Arabic, Hindi, Thai, Vietnamese and other Gemini/Microsoft/Google languages are available.": "广泛语言服务商已就绪。阿拉伯语、印地语、泰语、越南语及其他广泛语言可用。",
+    "Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Arabic, Hindi, Thai, Vietnamese and other broad languages. Burmese/Myanmar is available through DeepL.": "当前服务器未配置广泛语言服务商。要使用阿拉伯语、印地语、泰语、越南语等广泛语言，请在 Vercel 上配置 Gemini、Microsoft Translator 或 Google Translate。缅甸语可通过 DeepL 使用。",
     "Scanning visible messages for translation…": "正在扫描可见消息进行翻译…",
     "Account refreshed": "账户已刷新",
     "Could not refresh account plan.": "无法刷新账户套餐。",
@@ -433,7 +432,7 @@ async function refreshSignalDesktopStatus({ rerender=false } = {}) {
   return state.signalStatus;
 }
 
-function sendSettingsToPersistentView(view, instance, isActive, { force = false } = {}) {
+function sendSettingsToPersistentView(view, instance, isActive, { force = false, settingsOverride = null } = {}) {
   if (!view || !instance || serviceFor(instance).browser) return;
   // Electron can emit host-side render/sync events before a webview guest has
   // finished navigation. Do not mark settings as delivered until the guest is
@@ -441,7 +440,12 @@ function sendSettingsToPersistentView(view, instance, isActive, { force = false 
   // all automatic translation stays disabled until a setting is changed.
   if (view.dataset?.ready !== '1') return;
 
-  const settings = settingsForInstance(instance);
+  // An explicit user edit supplies the exact effective profile to the active
+  // guest. This avoids a stale conversation snapshot or signature suppressing
+  // a language change before the composer hint receives its new labels.
+  const settings = settingsOverride && typeof settingsOverride === 'object'
+    ? { ...settingsOverride }
+    : settingsForInstance(instance);
   const payload = {
     ...settings,
     isActive: Boolean(isActive),
@@ -1970,8 +1974,8 @@ function render() {
             <div class="provider-row"><span>Microsoft Translator</span><span class="health ${state.providerStatus?.microsoftConfigured?'ok':'off'}">${state.providerStatus?.microsoftConfigured?'Configured':'Not configured / unknown'}</span></div>
             <div class="provider-row"><span>Google Cloud Translation</span><span class="health ${state.providerStatus?.googleConfigured?'ok':'off'}">${state.providerStatus?.googleConfigured?'Configured':'Not configured / unknown'}</span></div>
             <div class="provider-capability ${broadProviderConfigured() ? 'ok' : 'warning'}">${broadProviderConfigured()
-              ? 'Broad languages enabled: Gemini/Microsoft/Google fallback can serve Myanmar/Burmese and the extended language list.'
-              : 'DeepL-only mode: Myanmar/Burmese and other extended languages stay disabled until Gemini, Microsoft Translator, or Google Translate is configured on the server.'}</div>
+              ? 'Broad languages enabled: Gemini/Microsoft/Google fallback can serve Arabic, Hindi, Thai, Vietnamese and the extended language list.'
+              : 'DeepL-only mode: Arabic, Hindi, Thai, Vietnamese and other extended languages stay disabled until Gemini, Microsoft Translator, or Google Translate is configured on the server. Burmese/Myanmar is available through DeepL.'}</div>
             <div class="provider-action-grid"><button class="secondary" id="refreshProviderStatus">Refresh provider status</button><button class="secondary" id="testLiveTranslation">Test live translation</button></div>
             ${state.liveTestResult ? `<div class="mini-result">${esc(state.liveTestResult)}</div>` : ''}
             </div>
@@ -2209,8 +2213,8 @@ function bindEvents() {
   document.querySelector('#refreshProviderStatus')?.addEventListener('click', async () => {
     state.providerStatus = await window.linguaDesktop.providerStatus().catch(() => ({ok:false}));
     setNotice(broadProviderConfigured()
-      ? 'Broad-language provider is ready. Myanmar/Burmese and other Gemini/Microsoft/Google languages are available.'
-      : 'Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Myanmar/Burmese and other broad languages.',
+      ? 'Broad-language provider is ready. Arabic, Hindi, Thai, Vietnamese and other Gemini/Microsoft/Google languages are available.'
+      : 'Current server is DeepL-only for broad-language purposes. Configure Gemini, Microsoft Translator, or Google Translate on Vercel for Arabic, Hindi, Thai, Vietnamese and other broad languages. Burmese/Myanmar is available through DeepL.',
       !broadProviderConfigured());
     render();
   });
@@ -2525,7 +2529,13 @@ function sendSettings() {
   const instance = activeInstance();
   const view = activePersistentView();
   if (!view || !instance) return;
-  sendSettingsToPersistentView(view, instance, true);
+  // A settings control change is an explicit state transition, not an
+  // opportunistic background sync. Always deliver the latest effective
+  // conversation profile even if an earlier signature was cached.
+  sendSettingsToPersistentView(view, instance, true, {
+    force: true,
+    settingsOverride: currentSettings()
+  });
 }
 
 function incomingQueueKey(payload) {
