@@ -1980,10 +1980,29 @@ ipcRenderer.on('lingua-native-enter', () => {
   requestOutgoingTranslation(null, 'chromium-before-input', composerForSendAction());
 });
 
-ipcRenderer.on('lingua-settings', (_event, next) => {
+function scheduleComposerHintRefresh() {
+  const refresh = (attempt = 0) => {
+    updateComposerHint();
+    const composer = findComposer();
+    if ((!composer || !isVisible(composer)) && attempt < 4) {
+      setTimeout(() => refresh(attempt + 1), 50 * (attempt + 1));
+    }
+  };
+
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => refresh(0));
+  else setTimeout(() => refresh(0), 0);
+}
+
+function applySettingsUpdate(next) {
   const previous = settings;
   settings = { ...settings, ...(next || {}) };
   clearTimeout(scanTimer);
+
+  const composerLanguageChanged = previous.sourceLang !== settings.sourceLang
+    || previous.sourceLangLabel !== settings.sourceLangLabel
+    || previous.outgoingTarget !== settings.outgoingTarget
+    || previous.outgoingTargetLabel !== settings.outgoingTargetLabel;
+
   if (!settings.isActive) {
     updateComposerHint();
     return;
@@ -2007,9 +2026,16 @@ ipcRenderer.on('lingua-settings', (_event, next) => {
   } else {
     reportDiagnostics(findMessageNodes().length);
   }
+
+  // Refresh synchronously, then after the browser's next layout frame. On a
+  // messenger SPA, the composer can be replaced during the same settings
+  // change, so briefly retry while its replacement node becomes available.
   updateComposerHint();
+  if (composerLanguageChanged) scheduleComposerHintRefresh();
   reportConversation(true);
-});
+}
+
+ipcRenderer.on('lingua-settings', (_event, next) => applySettingsUpdate(next));
 
 ipcRenderer.on('lingua-rescan', (_event, payload) => {
   if (!settings.isActive) return;
