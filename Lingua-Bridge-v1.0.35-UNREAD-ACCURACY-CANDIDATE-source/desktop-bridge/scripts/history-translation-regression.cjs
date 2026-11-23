@@ -7,5 +7,9 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'electron', 'service-p
 assert.match(source, /const historyEnabled = !previous\.autoTranslateHistorical && settings\.autoTranslateHistorical/);
 assert.match(source, /if \(translationChanged \|\| historyEnabled\) clearMessageFingerprints\(\)/);
 assert.match(source, /incomingEnabled \|\| historyEnabled/);
+// First open must still auto-translate the newest customer message when history is off.
+assert.match(source, /const newestIncomingNode = found\.slice\(\)\.reverse\(\)\.find\(node => !isOutgoingMessage\(node\)\)/);
+assert.match(source, /newestIncomingNode\.dataset\.linguaFingerprint = ''/);
+assert.match(source, /removeManualTranslateAction\(newestIncomingNode\)/);
 assert.match(source, /node\.dataset\.linguaFingerprint === fp\) \{/);
 console.log('Visible history opt-in regression guards passed');
