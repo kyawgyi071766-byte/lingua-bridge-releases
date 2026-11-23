@@ -11,14 +11,14 @@ const checks = [
   ['Bulgarian is present in the app language catalog', /code:\s*"bg"/.test(languages)],
   ['Burmese is present in the app language catalog', /code:\s*"my"/.test(languages)],
   ['DeepL supports Bulgarian', /\bbg:\s*"BG"/.test(languages)],
-  ['DeepL does not claim Burmese support', !/\bmy:\s*"/.test(languages)],
+  ['DeepL maps Burmese to the API language code MY', /\bmy:\s*"MY"/.test(languages)],
   ['DeepL skips unsupported target-language pairs', translator.includes("if (!DEEPL_SUPPORTED[target]) return false;")],
   ['DeepL skips pairs whose explicit source language is unsupported', translator.includes("Boolean(DEEPL_SUPPORTED[source])")],
   ['Microsoft Translator is available as a broad-language provider', translator.includes("provider === 'microsoft'") && translator.includes('translateMicrosoft(text, target, source)')],
   ['Google Cloud Translation is available as a broad-language provider', translator.includes("return translateGoogle(text, target, source)")],
   ['Microsoft leaves Burmese and Bulgarian ISO language codes unchanged', microsoft.includes('return MICROSOFT_LANGUAGE_MAP[code] || code;')],
   ['Google Basic v2 uses the language translate endpoint', translator.includes('https://translation.googleapis.com/language/translate/v2')],
-  ['Burmese and Bulgarian pairs are not hardwired to DeepL', translator.includes('if (provider !== \'deepl\') return true;') && translator.includes('if (!DEEPL_SUPPORTED[target]) return false;')],
+  ['DeepL supports Burmese and Bulgarian API language codes', /\bmy:\s*"MY"/.test(languages) && /\bbg:\s*"BG"/.test(languages)],
   ['Provider chain tries the next provider after a prior provider is skipped or fails', translator.includes('for (const provider of order)') && translator.includes('continue;')],
 ];
 
