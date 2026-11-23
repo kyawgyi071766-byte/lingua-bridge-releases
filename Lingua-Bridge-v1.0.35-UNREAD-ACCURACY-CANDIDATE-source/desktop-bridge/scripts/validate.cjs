@@ -18,6 +18,7 @@ for (const [label, rel] of checks) {
 }
 const app = fs.readFileSync(path.join(root, 'src/app.js'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'electron/main.cjs'), 'utf8');
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 for (const [label, condition] of [
   ['test-mode UI present', app.includes('TEST MODE') && app.includes('engineTest')],
   ['historical translation toggle present', app.includes('historicalMessages')],
@@ -44,7 +45,7 @@ for (const [label, condition] of [
   ['voice translator UI present', app.includes('Voice translator') && app.includes('voiceTranslate')],
   ['unfinished voice UI is owner-only', app.includes('Voice translator · owner beta') && app.includes("${owner ? `")],
   ['server-side voice endpoints wired', main.includes('/api/voice/usage') && main.includes('/api/voice/translate')],
-  ['current version marker present', /lingua\.desktopVersion', '1\.0\.36'/.test(app)],
+  ['current version marker matches package version', app.includes(`localStorage.getItem('lingua.desktopVersion') !== '${packageJson.version}'`) && app.includes(`localStorage.setItem('lingua.desktopVersion', '${packageJson.version}')`) && app.includes(`v${packageJson.version}`)],
   ['Current profiles are conversation-scoped', app.includes("perConversation") && app.includes("conversationScopeKey") && app.includes("lingua-conversation")],
   ['Global editor is decoupled from active-chat settings', app.includes("function editorSettings()") && app.includes("function currentSettings()") && app.includes("Switching the editor tab must never change/reload the chat")],
   ['Current profile snapshots Global to prevent later overwrite', app.includes("state.perConversation[key] = { ...currentSettings() }")],

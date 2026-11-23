@@ -1310,9 +1310,18 @@ function reportDiagnostics(messageCount) {
   } catch (_) {}
 }
 
-function clearMessageFingerprints() {
+function clearMessageFingerprints({ removeTranslations = false } = {}) {
   for (const node of findMessageNodes()) {
-    try { node.dataset.linguaFingerprint = ''; } catch (_) {}
+    try {
+      node.dataset.linguaFingerprint = '';
+      if (removeTranslations) {
+        // A translation card is valid only for the target language that
+        // produced it. Remove stale cards before rescanning after a target
+        // change, otherwise the old card blocks requestIncomingTranslation().
+        findBubble(node)?.querySelector(':scope > .lingua-inline-translation')?.remove();
+        removeManualTranslateAction(node);
+      }
+    } catch (_) {}
   }
 }
 
@@ -1336,6 +1345,11 @@ function scanMessages(force = false) {
   // Do not spend translation-provider requests on old history unless the user
   // explicitly enabled historical translation.
   if (firstScan) {
+    // On first open, leave older visible messages as manual-translate items
+    // unless historical translation was explicitly enabled. However, do not
+    // skip the newest incoming customer message: it should still be translated
+    // automatically even when history translation is off.
+    const newestIncomingNode = found.slice().reverse().find(node => !isOutgoingMessage(node));
     for (const node of found) {
       const text = cleanText(node.innerText || node.textContent);
       if (!text || isAudioLikeMessage(node)) continue;
@@ -1349,7 +1363,14 @@ function scanMessages(force = false) {
       }
     }
     primedConversationKeys.add(conversationKey);
-    if (!settings.autoTranslateHistorical && !force) return;
+    if (!settings.autoTranslateHistorical && !force && newestIncomingNode
+      && !newestIncomingNode.closest?.('.lingua-inline-translation')) {
+      // Release only the latest incoming bubble back to the realtime scanner;
+      // older history remains untouched and keeps its manual action.
+      newestIncomingNode.dataset.linguaFingerprint = '';
+      newestIncomingNode.dataset.linguaSeenConversation = '';
+      removeManualTranslateAction(newestIncomingNode);
+    }
   }
 
   const newestFirst = found.slice().reverse();
@@ -1999,7 +2020,7 @@ ipcRenderer.on('lingua-settings', (_event, next) => {
 
   // Previously visible bubbles were fingerprinted when history translation was off.
   // Clear those markers when the user opts in so old messages can be queued.
-  if (translationChanged || historyEnabled) clearMessageFingerprints();
+  if (translationChanged || historyEnabled) clearMessageFingerprints({ removeTranslations: previous.incomingTarget !== settings.incomingTarget });
   if (settings.autoTranslateIncoming && (becameActive || translationChanged || incomingEnabled || historyEnabled)) {
     // Normal scan preserves existing message fingerprints. Do not force a full
     // history retranslation merely because the host UI rendered again.

@@ -11,7 +11,7 @@ const migration = read('prisma/migrations/20260925000100_payment_receipt_review/
 const checks = [
   ['busy/suppressed follow-up send events are cancelled', preload.includes('outgoingBusy || (Date.now() < suppressNativeUntil') && preload.includes('preventEvent(event);')],
   ['composer replacement is exact before send', preload.includes('composer replacement verification failed') && preload.includes('composerText(active) !== expectedText')],
-  ['WhatsApp old+translated merge regression guarded', preload.includes('make WhatsApp merge') && preload.includes('nothing was sent')],
+  ['WhatsApp original draft is cleared and translated composer text is verified before send', preload.includes('preventEvent(event);') && preload.includes("setComposerText(composer, '');") && preload.includes("if (rule().id === 'whatsapp') await new Promise(resolve => setTimeout(resolve, 100));") && preload.includes('if (composerText(composer) !== expectedText)') && preload.includes('setComposerText(composer, pending.original || \'\')')],
   ['receipt upload is size/type limited', proof.includes('MAX_RECEIPT_BYTES') && proof.includes('ALLOWED_TYPES')],
   ['duplicate receipt hash is detected', proof.includes('duplicateReceipt') && schema.includes('receiptHash String?') && migration.includes('Payment_receipt_hash_key')],
   ['AI receipt review cannot directly activate plan', receipt.includes('Final confirmation must come from an independent blockchain lookup') && proof.includes('findMatchingTransfer(payment)')],

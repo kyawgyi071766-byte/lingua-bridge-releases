@@ -2,10 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
 const app = fs.readFileSync(path.join(root, 'src/app.js'), 'utf8');
+const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const main = fs.readFileSync(path.join(root, 'electron/main.cjs'), 'utf8');
 const cfg = JSON.parse(fs.readFileSync(path.join(root, 'electron-builder.public-installer.json'), 'utf8'));
 const checks = [
-  ['current version marker', app.includes("lingua.desktopVersion', '1.0.36")],
+  ['current version marker matches package version', app.includes(`lingua.desktopVersion', '${pkg.version}`)],
   ['Signal service card in-app', app.includes("id:'signal'") && !app.includes("external:'signal'")],
   ['Signal protocol guarded', main.includes('signalProtocolRegistered()') && main.includes("shell.openExternal('sgnl://')")],
   ['Signal browser fallback removed', !main.includes("shell.openExternal('https://signal.org/')")],
@@ -22,7 +23,7 @@ const checks = [
   ['Template deletion preserves instances', app.includes('Existing instances already added to Lingua will remain')],
   ['Stable upgrade app ID', cfg.appId === 'com.lingua.bridge'],
   ['Stable product name', cfg.productName === 'Lingua Bridge'],
-  ['Stable public output', cfg.directories?.output === 'release-v1.0.36-public'],
+  ['Stable public output matches package version', cfg.directories?.output === `release-v${pkg.version}-public`],
 ];
 let failed = false;
 for (const [name, ok] of checks) {
