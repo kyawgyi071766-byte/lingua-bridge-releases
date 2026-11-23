@@ -1,0 +1,72 @@
+name: Dependency security verification
+
+on:
+  push:
+    branches:
+      - security/patch-postcss-electron-nov-2026
+  pull_request:
+    branches:
+      - main
+      - feat/provider-resilience-1.4.1
+    paths:
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package.json'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json'
+      - 'Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/scripts/dependency-security-audit.cjs'
+      - '.github/workflows/dependency-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-web-and-dependencies:
+    name: Verify patched dependency tree and web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm ci
+      - run: npm run audit:dependency-security
+      - run: npm run audit:static
+      - run: npm run audit:translation-resilience
+      - run: npm run audit:translation-languages
+      - run: npm run audit:gemini
+      - run: npm run audit:public-release
+      - run: node desktop-bridge/scripts/electron-security-regression.cjs
+      - run: npm run build
+      - name: Capture complete npm advisory report
+        if: always()
+        run: npm audit --json > dependency-audit.json || true
+      - name: Upload npm advisory report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-dependency-audit-nov-2026
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/dependency-audit.json
+          retention-days: 7
+          if-no-files-found: warn
+
+  verify-windows-installer:
+    name: Verify packaged Electron Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: verify-web-and-dependencies
+    defaults:
+      run:
+        working-directory: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm ci
+      - run: npm run electron:build:win
