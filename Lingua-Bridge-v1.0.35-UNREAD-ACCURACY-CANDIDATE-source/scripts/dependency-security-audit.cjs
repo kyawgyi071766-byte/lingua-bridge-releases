@@ -50,6 +50,13 @@ function main() {
   const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
   const packages = lock.packages;
 
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+  );
+  if (packageJson.engines?.node !== '22.x') {
+    throw new Error(`Node.js runtime must be pinned to 22.x; found ${packageJson.engines?.node || 'missing'}`);
+  }
+
   if (lock.lockfileVersion !== 3 || !packages) {
     throw new Error('Expected npm package-lock v3');
   }
