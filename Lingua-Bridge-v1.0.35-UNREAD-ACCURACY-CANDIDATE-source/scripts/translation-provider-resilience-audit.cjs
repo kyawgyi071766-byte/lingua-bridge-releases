@@ -7,6 +7,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const translator = read('src/lib/translator.ts');
 const guard = read('src/lib/translationProviderGuard.ts');
 const status = read('src/app/api/translate/status/route.ts');
+const adminPage = read('src/app/admin/page.tsx');
 
 const checks = [
   ['provider budget is reserved before an external provider call',
@@ -28,6 +29,11 @@ const checks = [
     status.includes('isOwnerAdminUser(user)') && status.includes('getTranslationProviderUsageStatus()')],
   ['Google API key is sent in a header, not in the request URL',
     translator.includes("'x-goog-api-key': key!") && !translator.includes("url.searchParams.set('key', key!)")],
+  ['owner dashboard renders provider usage from the shared quota guard',
+    adminPage.includes('getTranslationProviderUsageStatus()') &&
+    adminPage.includes('Translation provider usage') &&
+    adminPage.includes('Characters reserved') &&
+    adminPage.includes('Cooldown')],
 ];
 
 let failed = 0;
