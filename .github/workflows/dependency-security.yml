@@ -35,6 +35,14 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm install --package-lock-only --ignore-scripts --no-audit
+      - name: Upload regenerated npm lockfile for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-dependency-lockfile-nov-2026
+          path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+          retention-days: 7
+          if-no-files-found: error
       - run: npm ci
       - run: npm run audit:dependency-security
       - run: npm run audit:static
@@ -71,5 +79,6 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: Lingua-Bridge-v1.0.35-UNREAD-ACCURACY-CANDIDATE-source/package-lock.json
+      - run: npm install --package-lock-only --ignore-scripts --no-audit
       - run: npm ci
       - run: npm run electron:build:win
